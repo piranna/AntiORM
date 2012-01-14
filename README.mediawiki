@@ -1,0 +1,6 @@
+AntiORM is the ORM that goes against all: while others create internally SQL queries and tables from a class architecture, AntiORM give you a Python function parsing the SQL code, allowing to do more optimizations or to access special, hand-made queries. It's said: it works exactly oposite ORMs do.
+
+Originally from PirannaFS project and focused in SQLite, it have been modified to be usable with any other DB engine.
+
+= Dependencies =
+* Python-SQLparse
