@@ -5,7 +5,8 @@ Created on 04/08/2010
 '''
 
 from os      import listdir
-from os.path import join, splitext
+from os.path import basename, join, splitext
+from re import sub
 
 from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
@@ -49,129 +50,140 @@ class AntiORM():
     '''
     classdocs
     '''
-    def _parseFunctions(self, dirPath):
-        import re
+    def ParseDir(self, dirPath='sql'):
+        "Build functions from the SQL queries inside the files at `dirPath`"
+
+        for filename in listdir(dirPath):
+            self.ParseFile(join(dirPath, filename), includePath=dirPath)
+
+    def ParseFile(self, filePath, methodName=None, includePath='sql'):
+        "Build a function from a file containing a SQL query"
+
+        if not methodName:
+            methodName = splitext(basename(filePath))[0]
+
+        with open(filePath) as f:
+            self.ParseString(f.read(), methodName, includePath)
+
+    def ParseString(self, sql, methodName, includePath='sql'):
+        "Build a function from a string containing a SQL query"
 
         def S2SF(sql):
             "Convert from SQLite escape query format to Python string format"
-            return re.sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
+            return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
 
-        for filename in listdir(dirPath):
-            methodName = splitext(filename)[0]
+        stream = Compact(sql, includePath)
 
-            with open(join(dirPath, filename)) as f:
-                stream = Compact(f.read(), dirPath)
-
-            # Insert statement (return last row id)
-            if IsType('INSERT')(stream):
-                stmts = split2(stream)
-
-                # One statement query
-                if len(stmts) == 1:
-                    def applyMethod(sql, methodName):
-                        def method(self, **kwargs):
-                            cursor = self.connection.cursor()
-                            cursor.execute(sql, kwargs)
-                            return cursor.lastrowid
-
-                        setattr(self.__class__, methodName, method)
-
-                    applyMethod(unicode(stmts[0]), methodName)
-
-                # Multiple statement query (return last row id of first one)
-                else:
-                    def applyMethod(stmts, methodName):
-                        def method(self, **kwargs):
-                            cursor = self.connection.cursor()
-                            cursor.execute(stmts[0] % kwargs)
-                            rowid = cursor.lastrowid
-
-                            for stmt in stmts[1:]:
-                                cursor.execute(stmt % kwargs)
-
-                            return rowid
-
-                        setattr(self.__class__, methodName, method)
-
-                    applyMethod([S2SF(unicode(x)) for x in stmts], methodName)
+        # Insert statement (return last row id)
+        if IsType('INSERT')(stream):
+            stmts = split2(stream)
 
             # One statement query
-            elif len(split2(stream)) == 1:
-                # One-value function
-                if GetLimit(stream) == 1:
-                    columns = GetColumns(stream)
+            if len(stmts) == 1:
+                def applyMethod(sql, methodName):
+                    def method(self, **kwargs):
+                        cursor = self.connection.cursor()
+                        cursor.execute(sql, kwargs)
+                        return cursor.lastrowid
 
-                    # Value function (one register, one field)
-                    if len(columns) == 1 and columns[0] != '*':
-                        def applyMethod(sql, methodName, column):
-                            def method(self, **kwargs):
-                                result = self.connection.execute(sql, kwargs)
-                                result = result.fetchone()
-                                if result:
-                                    return result[column]
+                    setattr(self.__class__, methodName, method)
 
-                            setattr(self.__class__, methodName, method)
+                applyMethod(unicode(stmts[0]), methodName)
 
-                        applyMethod(Tokens2Unicode(stream), methodName,
-                                    columns[0])
+            # Multiple statement query (return last row id of first one)
+            else:
+                def applyMethod(stmts, methodName):
+                    def method(self, **kwargs):
+                        cursor = self.connection.cursor()
+                        cursor.execute(stmts[0] % kwargs)
+                        rowid = cursor.lastrowid
 
-                    # Register function (one register, several fields)
-                    else:
-                        def applyMethod(sql, methodName):
-                            def method(self, **kwargs):
-                                result = self.connection.execute(sql, kwargs)
-                                return result.fetchone()
+                        for stmt in stmts[1:]:
+                            cursor.execute(stmt % kwargs)
 
-                            setattr(self.__class__, methodName, method)
+                        return rowid
 
-                        applyMethod(Tokens2Unicode(stream), methodName)
+                    setattr(self.__class__, methodName, method)
 
-                # Table function (several registers)
+                applyMethod([S2SF(unicode(x)) for x in stmts], methodName)
+
+        # One statement query
+        elif len(split2(stream)) == 1:
+            # One-value function
+            if GetLimit(stream) == 1:
+                columns = GetColumns(stream)
+
+                # Value function (one register, one field)
+                if len(columns) == 1 and columns[0] != '*':
+                    def applyMethod(sql, methodName, column):
+                        def method(self, **kwargs):
+                            result = self.connection.execute(sql, kwargs)
+                            result = result.fetchone()
+                            if result:
+                                return result[column]
+
+                        setattr(self.__class__, methodName, method)
+
+                    applyMethod(Tokens2Unicode(stream), methodName,
+                                columns[0])
+
+                # Register function (one register, several fields)
                 else:
                     def applyMethod(sql, methodName):
-                        def method(self, _=None, **kwargs):
-                            # Received un-named parameter
-                            if _:
-                                # Parameters are given as a dictionary,
-                                # put them in the correct place (bad guy...)
-                                if isinstance(_, dict):
-                                    kwargs = _
-
-                                # Iterable of parameters, use executemany()
-                                else:
-                                    return self.connection.executemany(sql, _)
-
-                            # Execute single SQL statement
+                        def method(self, **kwargs):
                             result = self.connection.execute(sql, kwargs)
-                            return result.fetchall()
+                            return result.fetchone()
 
                         setattr(self.__class__, methodName, method)
 
                     applyMethod(Tokens2Unicode(stream), methodName)
 
-            # Multiple statement query
+            # Table function (several registers)
             else:
-                import sys
-                if 'sqlite3' in sys.modules:
-                    def applyMethod(sql, methodName):
-                        def method(self, **kwargs):
-                            self.connection.executescript(sql % kwargs)
+                def applyMethod(sql, methodName):
+                    def method(self, _=None, **kwargs):
+                        # Received un-named parameter
+                        if _:
+                            # Parameters are given as a dictionary,
+                            # put them in the correct place (bad guy...)
+                            if isinstance(_, dict):
+                                kwargs = _
 
-                        setattr(self.__class__, methodName, method)
+                            # Iterable of parameters, use executemany()
+                            else:
+                                return self.connection.executemany(sql, _)
 
-                    applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
+                        # Execute single SQL statement
+                        result = self.connection.execute(sql, kwargs)
+                        return result.fetchall()
 
-                else:
-                    stmts = split2(stream)
+                    setattr(self.__class__, methodName, method)
 
-                    def applyMethod(stmts, methodName):
-                        def method(self, **kwargs):
-                            for stmt in stmts:
-                                self.connection.execute(stmt, kwargs)
+                applyMethod(Tokens2Unicode(stream), methodName)
 
-                        setattr(self.__class__, methodName, method)
+        # Multiple statement query
+        else:
+            import sys
+            if 'sqlite3' in sys.modules:
+                def applyMethod(sql, methodName):
+                    def method(self, **kwargs):
+                        self.connection.executescript(sql % kwargs)
 
-                    applyMethod([unicode(x) for x in stmts], methodName)
+                    setattr(self.__class__, methodName, method)
+
+                applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
+
+            else:
+                stmts = split2(stream)
+
+                def applyMethod(stmts, methodName):
+                    def method(self, **kwargs):
+                        for stmt in stmts:
+                            self.connection.execute(stmt, kwargs)
+
+                    setattr(self.__class__, methodName, method)
+
+                applyMethod([unicode(x) for x in stmts], methodName)
 
 
     def __init__(self, db_conn):
