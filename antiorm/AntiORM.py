@@ -19,6 +19,16 @@ def S2SF(sql):
     return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
 
 
+def _transaction(func):
+    def wrapper(self, *args, **kwargs):
+        self.cursor.execute("BEGIN DEFERRED TRANSACTION")
+        result = func(self, *args, **kwargs)
+        self.connection.commit()
+#        self.cursor.execute("END TRANSACTION")
+        return result
+    return wrapper
+
+
 class AntiORM():
     '''
     classdocs
@@ -62,6 +72,7 @@ class AntiORM():
         # One statement query
         if len(stmts) == 1:
             def applyMethod(sql, methodName):
+                @_transaction
                 def method(self, **kwargs):
                     self.cursor.execute(sql, kwargs)
                     return self.cursor.lastrowid
@@ -73,6 +84,7 @@ class AntiORM():
         # Multiple statement query (return last row id of first one)
         else:
             def applyMethod(stmts, methodName):
+                @_transaction
                 def method(self, **kwargs):
                     self.cursor.execute(stmts[0] % kwargs)
                     rowid = self.cursor.lastrowid
@@ -97,6 +109,7 @@ class AntiORM():
             def applyMethod(sql, methodName, column):
                 # Value function (one register, one field)
                 if len(columns) == 1 and columns[0] != '*':
+                    @_transaction
                     def method(self, **kwargs):
                         result = self.cursor.execute(sql, kwargs)
                         result = result.fetchone()
@@ -105,6 +118,7 @@ class AntiORM():
 
                 # Register function (one register, several fields)
                 else:
+                    @_transaction
                     def method(self, **kwargs):
                         result = self.cursor.execute(sql, kwargs)
                         return result.fetchone()
@@ -116,6 +130,7 @@ class AntiORM():
         # Table function (several registers)
         else:
             def applyMethod(sql, methodName):
+                @_transaction
                 def method(self, _=None, **kwargs):
                     # Received un-named parameter, it would be a iterable
                     if _:
@@ -140,6 +155,7 @@ class AntiORM():
         import sys
         if 'sqlite3' in sys.modules:
             def applyMethod(sql, methodName):
+                @_transaction
                 def method(self, **kwargs):
                     self.cursor.executescript(sql % kwargs)
 
@@ -151,6 +167,7 @@ class AntiORM():
             stmts = split2(stream)
 
             def applyMethod(stmts, methodName):
+                @_transaction
                 def method(self, **kwargs):
                     for stmt in stmts:
                         self.cursor.execute(stmt, kwargs)
