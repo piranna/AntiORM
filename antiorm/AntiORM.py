@@ -186,11 +186,13 @@ class AntiORM():
                 applyMethod([unicode(x) for x in stmts], methodName)
 
 
-    def __init__(self, db_conn):
+    def __init__(self, db_conn, dirPath=None):
         '''
         Constructor
         '''
         self.connection = db_conn
+        if dirPath:
+            self.ParseDir(dirPath)
 
     def __del__(self):
         self.connection.commit()
