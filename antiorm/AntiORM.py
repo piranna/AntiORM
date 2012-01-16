@@ -11,7 +11,7 @@ from re import sub
 from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
 
-from sql2 import Compact, GetColumns, GetLimit, IsType
+from sql import Compact, GetColumns, GetLimit, IsType
 
 
 def S2SF(sql):

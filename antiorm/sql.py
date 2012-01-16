@@ -16,55 +16,48 @@ from sqlparse.tokens import Keyword, Whitespace
 
 def Compact(sql, includePath="sql"):
     """Function that return a compacted version of the input SQL query"""
-    stack = FilterStack()
+    pipe = Pipeline()
 
-    stack.preprocess.append(IncludeStatement(includePath))
-    stack.preprocess.append(StripComments())
-    stack.stmtprocess.append(StripWhitespaceFilter())
-    stack.postprocess.append(SerializerUnicode())
+    pipe.append(tokenize)
+    pipe.append(IncludeStatement(includePath))
+    pipe.append(StripComments())
+#    pipe.append(StripWhitespaceFilter())
+#    pipe.append(SerializerUnicode())
 
-    return ''.join(stack.run(sql))
+    return pipe(sql)
 
 
-def GetLimit(sql):
+def GetLimit(stream):
     """Function that return the LIMIT of a input SQL """
-    stack = FilterStack()
+    pipe = Pipeline()
 
-    stack.preprocess.append(Limit())
+    pipe.append(Limit())
 
-    result = stack.run(sql)
+    result = pipe(stream)
     try:
         return int(result)
     except ValueError:
         return result
 
 
-def GetColumns(sql):
+def GetColumns(stream):
     """Function that return the colums of a SELECT query"""
-    stack = FilterStack()
+    pipe = Pipeline()
 
-    stack.preprocess.append(ColumnsSelect())
+    pipe.append(ColumnsSelect())
 
-    return list(stack.run(sql))
+    return list(pipe(stream))
 
 
 class IsType():
+    """Functor that return is the statement is of a specific type"""
     def __init__(self, type):
         self.type = type
 
-    def process(self, stack, stream):
+    def __call__(self, stream):
         for token_type, value in stream:
             if token_type in Whitespace: continue
             return token_type in Keyword and value == self.type
-
-
-def FirstIsInsert(sql):
-    """Function that return is the statement is a SELECT query"""
-    stack = FilterStack()
-
-    stack.preprocess.append(IsType('INSERT'))
-
-    return stack.run(sql)
 
 
 if __name__ == '__main__':
