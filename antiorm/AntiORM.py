@@ -68,7 +68,7 @@ class AntiORM():
 
                 setattr(self.__class__, methodName, method)
 
-            applyMethod(unicode(stmts[0]), methodName)
+            sql = unicode(stmts[0])
 
         # Multiple statement query (return last row id of first one)
         else:
@@ -84,7 +84,9 @@ class AntiORM():
 
                 setattr(self.__class__, methodName, method)
 
-            applyMethod([S2SF(unicode(x)) for x in stmts], methodName)
+            sql = [S2SF(unicode(x)) for x in stmts]
+
+        applyMethod(sql, methodName)
 
 
     def _oneStatement(self, stream, methodName):
@@ -92,30 +94,24 @@ class AntiORM():
         if GetLimit(stream) == 1:
             columns = GetColumns(stream)
 
-            # Value function (one register, one field)
-            if len(columns) == 1 and columns[0] != '*':
-                def applyMethod(sql, methodName, column):
+            def applyMethod(sql, methodName, column):
+                # Value function (one register, one field)
+                if len(columns) == 1 and columns[0] != '*':
                     def method(self, **kwargs):
                         result = self.cursor.execute(sql, kwargs)
                         result = result.fetchone()
                         if result:
                             return result[column]
 
-                    setattr(self.__class__, methodName, method)
-
-                applyMethod(Tokens2Unicode(stream), methodName,
-                            columns[0])
-
-            # Register function (one register, several fields)
-            else:
-                def applyMethod(sql, methodName):
+                # Register function (one register, several fields)
+                else:
                     def method(self, **kwargs):
                         result = self.cursor.execute(sql, kwargs)
                         return result.fetchone()
 
-                    setattr(self.__class__, methodName, method)
+                setattr(self.__class__, methodName, method)
 
-                applyMethod(Tokens2Unicode(stream), methodName)
+            applyMethod(Tokens2Unicode(stream), methodName, columns[0])
 
         # Table function (several registers)
         else:
@@ -149,7 +145,7 @@ class AntiORM():
 
                 setattr(self.__class__, methodName, method)
 
-            applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
+            sql = S2SF(Tokens2Unicode(stream))
 
         else:
             stmts = split2(stream)
@@ -161,7 +157,9 @@ class AntiORM():
 
                 setattr(self.__class__, methodName, method)
 
-            applyMethod([unicode(x) for x in stmts], methodName)
+            sql = [unicode(x) for x in stmts]
+
+        applyMethod(sql, methodName)
 
 
     def __init__(self, db_conn, dirPath=None):
