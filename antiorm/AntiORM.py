@@ -63,9 +63,8 @@ class AntiORM():
         if len(stmts) == 1:
             def applyMethod(sql, methodName):
                 def method(self, **kwargs):
-                    cursor = self.connection.cursor()
-                    cursor.execute(sql, kwargs)
-                    return cursor.lastrowid
+                    self.cursor.execute(sql, kwargs)
+                    return self.cursor.lastrowid
 
                 setattr(self.__class__, methodName, method)
 
@@ -75,12 +74,11 @@ class AntiORM():
         else:
             def applyMethod(stmts, methodName):
                 def method(self, **kwargs):
-                    cursor = self.connection.cursor()
-                    cursor.execute(stmts[0] % kwargs)
-                    rowid = cursor.lastrowid
+                    self.cursor.execute(stmts[0] % kwargs)
+                    rowid = self.cursor.lastrowid
 
                     for stmt in stmts[1:]:
-                        cursor.execute(stmt % kwargs)
+                        self.cursor.execute(stmt % kwargs)
 
                     return rowid
 
@@ -98,7 +96,7 @@ class AntiORM():
             if len(columns) == 1 and columns[0] != '*':
                 def applyMethod(sql, methodName, column):
                     def method(self, **kwargs):
-                        result = self.connection.execute(sql, kwargs)
+                        result = self.cursor.execute(sql, kwargs)
                         result = result.fetchone()
                         if result:
                             return result[column]
@@ -112,7 +110,7 @@ class AntiORM():
             else:
                 def applyMethod(sql, methodName):
                     def method(self, **kwargs):
-                        result = self.connection.execute(sql, kwargs)
+                        result = self.cursor.execute(sql, kwargs)
                         return result.fetchone()
 
                     setattr(self.__class__, methodName, method)
@@ -123,7 +121,7 @@ class AntiORM():
         else:
             def applyMethod(sql, methodName):
                 def method(self, _=None, **kwargs):
-                    # Received un-named parameter
+                    # Received un-named parameter, it would be a iterable
                     if _:
                         # Parameters are given as a dictionary,
                         # put them in the correct place (bad guy...)
@@ -132,10 +130,10 @@ class AntiORM():
 
                         # Iterable of parameters, use executemany()
                         else:
-                            return self.connection.executemany(sql, _)
+                            return self.cursor.executemany(sql, _)
 
                     # Execute single SQL statement
-                    result = self.connection.execute(sql, kwargs)
+                    result = self.cursor.execute(sql, kwargs)
                     return result.fetchall()
 
                 setattr(self.__class__, methodName, method)
@@ -147,7 +145,7 @@ class AntiORM():
         if 'sqlite3' in sys.modules:
             def applyMethod(sql, methodName):
                 def method(self, **kwargs):
-                    self.connection.executescript(sql % kwargs)
+                    self.cursor.executescript(sql % kwargs)
 
                 setattr(self.__class__, methodName, method)
 
@@ -159,7 +157,7 @@ class AntiORM():
             def applyMethod(stmts, methodName):
                 def method(self, **kwargs):
                     for stmt in stmts:
-                        self.connection.execute(stmt, kwargs)
+                        self.cursor.execute(stmt, kwargs)
 
                 setattr(self.__class__, methodName, method)
 
@@ -171,6 +169,8 @@ class AntiORM():
         Constructor
         '''
         self.connection = db_conn
+        self.cursor = db_conn.cursor()
+
         if dirPath:
             self.ParseDir(dirPath)
 
