@@ -65,7 +65,6 @@ class AntiORM():
         else:
             self._multipleStatement(stream, methodName)
 
-
     def _statement_INSERT(self, stream, methodName):
         stmts = split2(stream)
 
@@ -99,7 +98,6 @@ class AntiORM():
             sql = [S2SF(unicode(x)) for x in stmts]
 
         applyMethod(sql, methodName)
-
 
     def _oneStatement(self, stream, methodName):
         # One-value function
@@ -177,7 +175,6 @@ class AntiORM():
             sql = [unicode(x) for x in stmts]
 
         applyMethod(sql, methodName)
-
 
     def __init__(self, db_conn, dirPath=None):
         '''
