@@ -8,7 +8,15 @@ import unittest
 from AntiORM import AntiORM, S2SF
 
 
-class Test(unittest.TestCase):
+class Test_S2SF(unittest.TestCase):
+
+    def test_S2SF(self):
+        self.assertEqual(S2SF(""), "")
+        self.assertEqual(S2SF("asdf"), "asdf")
+        self.assertEqual(S2SF("a :formated word"), "a %(formated)s word")
+
+
+class Test_AntiORM(unittest.TestCase):
 
     def setUp(self):
         pass

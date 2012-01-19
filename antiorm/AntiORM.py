@@ -102,52 +102,58 @@ class AntiORM():
     def _oneStatement(self, stream, methodName):
         # One-value function
         if GetLimit(stream) == 1:
-            columns = GetColumns(stream)
-
-            def applyMethod(sql, methodName, column):
-                # Value function (one register, one field)
-                if len(columns) == 1 and columns[0] != '*':
-                    @_transaction
-                    def method(self, **kwargs):
-                        result = self.cursor.execute(sql, kwargs)
-                        result = result.fetchone()
-                        if result:
-                            return result[column]
-
-                # Register function (one register, several fields)
-                else:
-                    @_transaction
-                    def method(self, **kwargs):
-                        result = self.cursor.execute(sql, kwargs)
-                        return result.fetchone()
-
-                setattr(self.__class__, methodName, method)
-
-            applyMethod(Tokens2Unicode(stream), methodName, columns[0])
+            self._oneStatement_value(stream, methodName)
 
         # Table function (several registers)
         else:
-            def applyMethod(sql, methodName):
+            self._oneStatement_table(stream, methodName)
+
+    def _oneStatement_value(self, stream, methodName):
+        columns = GetColumns(stream)
+
+        def applyMethod(sql, methodName, column):
+            # Value function (one register, one field)
+            if len(columns) == 1 and columns[0] != '*':
                 @_transaction
-                def method(self, _=None, **kwargs):
-                    # Received un-named parameter, it would be a iterable
-                    if _:
-                        # Parameters are given as a dictionary,
-                        # put them in the correct place (bad guy...)
-                        if isinstance(_, dict):
-                            kwargs = _
-
-                        # Iterable of parameters, use executemany()
-                        else:
-                            return self.cursor.executemany(sql, _)
-
-                    # Execute single SQL statement
+                def method(self, **kwargs):
                     result = self.cursor.execute(sql, kwargs)
-                    return result.fetchall()
+                    result = result.fetchone()
+                    if result:
+                        return result[column]
 
-                setattr(self.__class__, methodName, method)
+            # Register function (one register, several fields)
+            else:
+                @_transaction
+                def method(self, **kwargs):
+                    result = self.cursor.execute(sql, kwargs)
+                    return result.fetchone()
 
-            applyMethod(Tokens2Unicode(stream), methodName)
+            setattr(self.__class__, methodName, method)
+
+        applyMethod(Tokens2Unicode(stream), methodName, columns[0])
+
+    def _oneStatement_table(self, stream, methodName):
+        def applyMethod(sql, methodName):
+            @_transaction
+            def method(self, _=None, **kwargs):
+                # Received un-named parameter, it would be a iterable
+                if _:
+                    # Parameters are given as a dictionary,
+                    # put them in the correct place (bad guy...)
+                    if isinstance(_, dict):
+                        kwargs = _
+
+                    # Iterable of parameters, use executemany()
+                    else:
+                        return self.cursor.executemany(sql, _)
+
+                # Execute single SQL statement
+                result = self.cursor.execute(sql, kwargs)
+                return result.fetchall()
+
+            setattr(self.__class__, methodName, method)
+
+        applyMethod(Tokens2Unicode(stream), methodName)
 
     def _multipleStatement(self, stream, methodName):
         import sys
@@ -162,8 +168,6 @@ class AntiORM():
             sql = S2SF(Tokens2Unicode(stream))
 
         else:
-            stmts = split2(stream)
-
             def applyMethod(stmts, methodName):
                 @_transaction
                 def method(self, **kwargs):
@@ -172,7 +176,7 @@ class AntiORM():
 
                 setattr(self.__class__, methodName, method)
 
-            sql = [unicode(x) for x in stmts]
+            sql = [unicode(x) for x in split2(stream)]
 
         applyMethod(sql, methodName)
 
