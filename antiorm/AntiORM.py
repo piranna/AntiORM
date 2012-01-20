@@ -156,29 +156,15 @@ class AntiORM():
         applyMethod(Tokens2Unicode(stream), methodName)
 
     def _multipleStatement(self, stream, methodName):
-        import sys
-        if 'sqlite3' in sys.modules:
-            def applyMethod(sql, methodName):
-                @_transaction
-                def method(self, **kwargs):
-                    self.cursor.executescript(sql % kwargs)
+        def applyMethod(stmts, methodName):
+            @_transaction
+            def method(self, **kwargs):
+                for stmt in stmts:
+                    self.cursor.execute(stmt, kwargs)
 
-                setattr(self.__class__, methodName, method)
+            setattr(self.__class__, methodName, method)
 
-            sql = S2SF(Tokens2Unicode(stream))
-
-        else:
-            def applyMethod(stmts, methodName):
-                @_transaction
-                def method(self, **kwargs):
-                    for stmt in stmts:
-                        self.cursor.execute(stmt, kwargs)
-
-                setattr(self.__class__, methodName, method)
-
-            sql = [unicode(x) for x in split2(stream)]
-
-        applyMethod(sql, methodName)
+        applyMethod([unicode(x) for x in split2(stream)], methodName)
 
     def __init__(self, db_conn, dirPath=None):
         '''
