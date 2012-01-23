@@ -85,17 +85,20 @@ class AntiORM():
             def applyMethod(stmts, methodName):
                 @_transaction
                 def method(self, **kwargs):
-                    self.cursor.execute(stmts[0] % kwargs)
+                    print repr(stmts)
+                    self.cursor.execute(S2SF(stmts[0]) % kwargs)
+#                    self.cursor.execute(stmts[0], kwargs)
                     rowid = self.cursor.lastrowid
 
                     for stmt in stmts[1:]:
-                        self.cursor.execute(stmt % kwargs)
+                        self.cursor.execute(S2SF(stmt) % kwargs)
+#                        self.cursor.execute(stmt, kwargs)
 
                     return rowid
 
                 setattr(self.__class__, methodName, method)
 
-            sql = [S2SF(unicode(x)) for x in stmts]
+            sql = [unicode(x) for x in stmts]
 
         applyMethod(sql, methodName)
 
