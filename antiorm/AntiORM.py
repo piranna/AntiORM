@@ -6,17 +6,11 @@ Created on 04/08/2010
 
 from os      import listdir
 from os.path import basename, join, splitext
-from re import sub
 
 from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
 
 from sql import Compact, GetColumns, GetLimit, IsType
-
-
-def S2SF(sql):
-    "Convert from SQLite escape query format to Python string format"
-    return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
 
 
 def _transaction(func):
@@ -66,6 +60,7 @@ class AntiORM():
             self._multipleStatement(stream, methodName)
 
     def _statement_INSERT(self, stream, methodName):
+        "Special case because we are interested in get inserted row id"
         stmts = split2(stream)
 
         # One statement query
@@ -85,14 +80,11 @@ class AntiORM():
             def applyMethod(stmts, methodName):
                 @_transaction
                 def method(self, **kwargs):
-                    print repr(stmts)
-                    self.cursor.execute(S2SF(stmts[0]) % kwargs)
-#                    self.cursor.execute(stmts[0], kwargs)
+                    self.cursor.execute(stmts[0], kwargs)
                     rowid = self.cursor.lastrowid
 
                     for stmt in stmts[1:]:
-                        self.cursor.execute(S2SF(stmt) % kwargs)
-#                        self.cursor.execute(stmt, kwargs)
+                        self.cursor.execute(stmt, kwargs)
 
                     return rowid
 

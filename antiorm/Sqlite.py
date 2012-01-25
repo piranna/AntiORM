@@ -6,7 +6,8 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
-from AntiORM import AntiORM, S2SF, _transaction
+from . import named2pyformat
+from AntiORM import AntiORM, _transaction
 
 
 class Sqlite(AntiORM):
@@ -18,4 +19,4 @@ class Sqlite(AntiORM):
 
             setattr(self.__class__, methodName, method)
 
-        applyMethod(S2SF(Tokens2Unicode(stream)), methodName)
+        applyMethod(named2pyformat(Tokens2Unicode(stream)), methodName)

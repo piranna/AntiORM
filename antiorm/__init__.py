@@ -1,3 +1,5 @@
+from re import sub
+
 from AntiORM import AntiORM
 
 
@@ -20,3 +22,8 @@ def DictObj_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
+
+
+def named2pyformat(sql):
+    "Convert from 'named' paramstyle format to Python string 'pyformat' format"
+    return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
