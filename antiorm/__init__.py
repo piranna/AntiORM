@@ -20,14 +20,3 @@ def DictObj_factory(cursor, row):
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
     return d
-
-
-def ChunkConverted(chunk):
-    """[Hack] None objects get converted to 'None' while SQLite queries
-    expect 'NULL' instead. This function return a newly dict with
-    all None objects converted to 'NULL' valued strings.
-    """
-    d = {}
-    for key, value in chunk.iteritems():
-        d[key] = "NULL" if value == None else value
-    return d
