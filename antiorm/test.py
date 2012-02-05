@@ -5,15 +5,15 @@ Created on 19/01/2012
 '''
 import unittest
 
-from AntiORM import AntiORM, S2SF
+from AntiORM import AntiORM, named2pyformat
 
 
 class Test_S2SF(unittest.TestCase):
 
     def test_S2SF(self):
-        self.assertEqual(S2SF(""), "")
-        self.assertEqual(S2SF("asdf"), "asdf")
-        self.assertEqual(S2SF("a :formated word"), "a %(formated)s word")
+        self.assertEqual(named2pyformat(""), "")
+        self.assertEqual(named2pyformat("asdf"), "asdf")
+        self.assertEqual(named2pyformat("a :formated word"), "a %(formated)s word")
 
 
 class Test_AntiORM(unittest.TestCase):
@@ -25,9 +25,9 @@ class Test_AntiORM(unittest.TestCase):
         pass
 
     def test_S2SF(self):
-        self.assertEqual(S2SF(""), "")
-        self.assertEqual(S2SF("asdf"), "asdf")
-        self.assertEqual(S2SF("a :formated word"), "a %(formated)s word")
+        self.assertEqual(named2pyformat(""), "")
+        self.assertEqual(named2pyformat("asdf"), "asdf")
+        self.assertEqual(named2pyformat("a :formated word"), "a %(formated)s word")
 
 
 class Test_Sqlite(unittest.TestCase):
@@ -39,9 +39,9 @@ class Test_Sqlite(unittest.TestCase):
         pass
 
     def test_S2SF(self):
-        self.assertEqual(S2SF(""), "")
-        self.assertEqual(S2SF("asdf"), "asdf")
-        self.assertEqual(S2SF("a :formated word"), "a %(formated)s word")
+        self.assertEqual(named2pyformat(""), "")
+        self.assertEqual(named2pyformat("asdf"), "asdf")
+        self.assertEqual(named2pyformat("a :formated word"), "a %(formated)s word")
 
 
 if __name__ == "__main__":
