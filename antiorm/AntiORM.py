@@ -79,7 +79,21 @@ class AntiORM():
         else:
             def applyMethod(stmts, methodName):
                 @_transaction
-                def method(self, **kwargs):
+                def method(self, _=None, **kwargs):
+                    # Received un-named parameter, it would be a iterable
+                    if _ != None:
+                        # Parameters are given as a dictionary,
+                        # put them in the correct place (bad guy...)
+                        if isinstance(_, dict):
+                            kwargs = _
+
+                        # Iterable of parameters, execute as normal
+                        else:
+                            for kwargs in _:
+                                for stmt in stmts:
+                                    self.cursor.execute(stmt, kwargs)
+                            return
+
                     self.cursor.execute(stmts[0], kwargs)
                     rowid = self.cursor.lastrowid
 
