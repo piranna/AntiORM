@@ -24,6 +24,7 @@ class _TransactionManager(object):
     """
 
     _in_transaction = False
+    _cursor = None
 
     def __init__(self, cls):
         self.cls = cls
@@ -33,12 +34,26 @@ class _TransactionManager(object):
             raise InTransactionError("Already in a transaction")
 
         self._in_transaction = True
-        self.cursor = self.cls.connection.cursor()
-        return self.cursor
+
+        if not self._cursor:
+            self._cursor = self.cls.connection.cursor()
+
+        return self._cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.cls.connection.commit()
         self._in_transaction = False
+
+
+#def _transaction(func):
+#    def _wrapped(self, *args, **kwargs):
+#        try:
+#            return func(self, *args, **kwargs)
+#        finally:
+#            self.connection.commit()
+#
+#    return _wrapped
+
 
 
 class AntiORM(object):
@@ -110,7 +125,7 @@ class AntiORM(object):
 
             def _wrapped_method(self, **kwargs):
                 with self.transaction as cursor:
-                    cursor.execute(unicode(stmts[0]), kwargs)
+                    cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
         else:
