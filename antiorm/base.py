@@ -68,8 +68,6 @@ class AntiORM(object):
         if dir_path:
             self.parse_dir(dir_path)
 
-    def add_to_class(self, method_name, method):
-        setattr(self.__class__, method_name, method)
 
     def transaction(self):
         return self.tx_manager
@@ -147,7 +145,7 @@ class AntiORM(object):
                     
                     return rowid
                     
-        self.add_to_class(method_name, _wrapped_method)
+        setattr(self.__class__, method_name, _wrapped_method)
                     
     def _one_statement(self, stream, method_name):
         # One-value function
@@ -178,7 +176,7 @@ class AntiORM(object):
                 with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchone() or None
 
-        self.add_to_class(method_name, _wrapped_method)
+        setattr(self.__class__, method_name, _wrapped_method)
 
     def _one_statement_table(self, stream, method_name):
         sql = Tokens2Unicode(stream)
@@ -194,14 +192,14 @@ class AntiORM(object):
                 result = cursor.execute(sql, kwargs)
                 return result.fetchall()
 
-        self.add_to_class(method_name, _wrapped_method)
+        setattr(self.__class__, method_name, _wrapped_method)
     
     def _multiple_statement(self, stream, method_name):
-        sql = [unicode(x) for x in split2(stream)]
-
+        sql = map(unicode, split2(stream))
+        
         def _wrapped_method(self, **kwargs):
             with self.transaction() as cursor:
                 for sql_stmt in sql:
-                    self.cursor.execute(stmt, kwargs)
+                    self.cursor.execute(sql_stmt, kwargs)
 
-        self.add_to_class(method_name, _wrapped_method)
+        setattr(self.__class__, method_name, _wrapped_method)
