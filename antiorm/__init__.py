@@ -1,7 +1,7 @@
+# -*- coding: utf-8 -*-
+
 from re import sub
-
-from AntiORM import AntiORM
-
+from .base import AntiORM
 
 class DictObj(dict):
     def __getattr__(self, name):
@@ -27,3 +27,6 @@ def DictObj_factory(cursor, row):
 def named2pyformat(sql):
     "Convert from 'named' paramstyle format to Python string 'pyformat' format"
     return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
+
+
+__all__ = ['DictObj', 'DictObj_factory', 'AntiORM']
