@@ -71,7 +71,6 @@ class AntiORM(object):
     def add_to_class(self, method_name, method):
         setattr(self.__class__, method_name, method)
 
-    @property
     def transaction(self):
         return self.tx_manager
     
@@ -124,14 +123,14 @@ class AntiORM(object):
             sql = unicode(stmts[0])
 
             def _wrapped_method(self, **kwargs):
-                with self.transaction as cursor:
+                with self.transaction() as cursor:
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
         else:
             sql = map(unicode, stmts)
             def _wrapped_method(self, _=None, **kwargs):
-                with self.transaction as cursor:
+                with self.transaction() as cursor:
                     if isinstance(_, dict):
                         kwargs = _
                     else:
@@ -167,7 +166,7 @@ class AntiORM(object):
 
         if len(columns) == 1 and columns[0] != '*':
             def _wrapped_method(self, **kwargs):
-                with self.transaction as cursor:
+                with self.transaction() as cursor:
                     result = cursor.execute(sql, kwargs)
                     result = result.fetchone()
 
@@ -176,7 +175,7 @@ class AntiORM(object):
 
         else:
             def _wrapped_method(self, **kwargs):
-                with self.transaction as cursor:
+                with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchone() or None
 
         self.add_to_class(method_name, _wrapped_method)
@@ -185,7 +184,7 @@ class AntiORM(object):
         sql = Tokens2Unicode(stream)
 
         def _wrapped_method(self, _=None, **kwargs):
-            with self.transaction as cursor:
+            with self.transaction() as cursor:
                 if _ != None:
                     if isinstance(_, dict):
                         kwargs = _
@@ -201,9 +200,8 @@ class AntiORM(object):
         sql = [unicode(x) for x in split2(stream)]
 
         def _wrapped_method(self, **kwargs):
-            with self.transaction as cursor:
+            with self.transaction() as cursor:
                 for sql_stmt in sql:
                     self.cursor.execute(stmt, kwargs)
-
 
         self.add_to_class(method_name, _wrapped_method)
