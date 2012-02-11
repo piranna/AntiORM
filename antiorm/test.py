@@ -1,11 +1,8 @@
-'''
-Created on 19/01/2012
+# -*- coding: utf-8 -*-
 
-@author: piranna
-'''
 import unittest
-
-from AntiORM import AntiORM, named2pyformat
+from base import AntiORM
+from utils import named2pyformat
 
 
 class Test_S2SF(unittest.TestCase):

@@ -4,7 +4,7 @@ import io
 from os import listdir
 from os.path import basename, join, splitext
 
-from sqlparse import split2
+from sqlparse import split as split2
 from sqlparse.filters import Tokens2Unicode
 
 from sql import Compact
