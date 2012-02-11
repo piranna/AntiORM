@@ -4,7 +4,7 @@ import io
 from os import listdir
 from os.path import basename, join, splitext
 
-from sqlparse import split as split2
+from sqlparse import split2
 from sqlparse.filters import Tokens2Unicode
 
 from sql import Compact
@@ -33,49 +33,32 @@ class _TransactionManager(object):
             raise InTransactionError("Already in a transaction")
 
         self._in_transaction = True
-        self.cls.cursor.execute("BEGIN DEFERRED TRANSACTION;")
+        self.cursor = self.cls.connection.cursor()
+        return self.cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.cls.cursor.execute("COMMIT;")
-        del self.cls.cursor
+        self.cls.connection.commit()
         self._in_transaction = False
-
 
 
 class AntiORM(object):
     # TODO: database independent layer with full transaction managment
 
     _cursor = None
-    _tx_manager = _TransactionManager
 
     def __init__(self, db_conn, dir_path=None):
         self.connection = db_conn
+        self.tx_manager = _TransactionManager(self)
 
         if dir_path:
             self.parse_dir(dir_path)
 
-    def __del__(self):
-        self.connection.commit()
-        self.connection.close()
-    
-    @property
-    def cursor(self):
-        if self._cursor is None:
-            self._cursor = self.connection.cursor()
-        return self._cursor
-    
-    @cursor.deleter
-    def cursor(self):
-        if self._cursor is not None:
-            self._cursor.close()
-            self._cursor = None
-
     def add_to_class(self, method_name, method):
-        setattr(self, method_name, method_name)
+        setattr(self.__class__, method_name, method)
 
     @property
     def transaction(self):
-        return self._tx_manager(self)
+        return self.tx_manager
     
     def parse_dir(self, dir_path='sql'):
         """
@@ -93,7 +76,7 @@ class AntiORM(object):
         if not method_name:
             method_name = splitext(basename(file_path))[0]
 
-        with io.open(filePath, 'rt') as f:
+        with io.open(file_path, 'rt') as f:
             self.parse_string(f.read(), method_name, include_path)
 
     def parse_string(self, sql, method_name, include_path='sql'):
@@ -101,7 +84,7 @@ class AntiORM(object):
         Build a function from a string containing a SQL query
         """
 
-        stream = Compact(sql, include_path)
+        stream = Compact(sql.strip(), include_path)
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
@@ -119,7 +102,6 @@ class AntiORM(object):
         """
         Special case because we are interested in get inserted row id
         """
-        
         stmts = split2(stream)
         _wrapped_method = lambda x: None
 
