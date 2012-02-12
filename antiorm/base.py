@@ -61,26 +61,47 @@ class AntiORM(object):
 
     _cursor = None
 
-    def __init__(self, db_conn, dir_path=None):
+    def __init__(self, db_conn, dir_path=None, lazy=False):
         self.connection = db_conn
         self.tx_manager = _TransactionManager(self)
 
-        if dir_path:
-            self.parse_dir(dir_path)
+        self._lazy = {}
 
+        if dir_path:
+            self.parse_dir(dir_path, lazy)
+
+    def __getattr__(self, name):
+        """
+        Parse and return the methods marked previously for lazy loading
+        """
+        # Get the lazy loading stored data
+        try:
+            sql, include_path = self._lazy[name]
+
+        # method was not marked for lazy loading, raise exception
+        except KeyError:
+            raise AttributeError
+
+        # Do the parsing right now, unmark the method and return it
+        self.parse_string(sql, name, include_path)
+        del self._lazy[name]
+        print self.__dict__
+        return getattr(self, name)
 
     def transaction(self):
         return self.tx_manager
 
-    def parse_dir(self, dir_path='sql'):
+    def parse_dir(self, dir_path='sql', lazy=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`
         """
 
         for filename in listdir(dir_path):
-            self.parse_file(join(dir_path, filename), include_path=dir_path)
+            self.parse_file(join(dir_path, filename), include_path=dir_path,
+                            lazy=lazy)
 
-    def parse_file(self, file_path, method_name=None, include_path='sql'):
+    def parse_file(self, file_path, method_name=None, include_path='sql',
+                   lazy=False):
         """
         Build a function from a file containing a SQL query
         """
@@ -89,12 +110,17 @@ class AntiORM(object):
             method_name = splitext(basename(file_path))[0]
 
         with io.open(file_path, 'rt') as f:
-            self.parse_string(f.read(), method_name, include_path)
+            self.parse_string(f.read(), method_name, include_path, lazy)
 
-    def parse_string(self, sql, method_name, include_path='sql'):
+    def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """
         Build a function from a string containing a SQL query
         """
+
+        # Lazy processing, store data & only do the parse if later is required
+        if lazy:
+            self._lazy[method_name] = (sql, include_path)
+            return
 
         stream = Compact(sql.strip(), include_path)
 
@@ -115,7 +141,6 @@ class AntiORM(object):
         Special case because we are interested in get inserted row id
         """
         stmts = split2(stream)
-        _wrapped_method = lambda x: None
 
         # One statement query
         if len(stmts) == 1:
@@ -170,8 +195,6 @@ class AntiORM(object):
         """
         columns = GetColumns(stream)
         sql = Tokens2Unicode(stream)
-
-        _wrapped_method = lambda x: None
 
         # Value function (one row, one field)
         if len(columns) == 1 and columns[0] != '*':
