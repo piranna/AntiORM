@@ -6,17 +6,16 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
-from . import named2pyformat
-from AntiORM import AntiORM, _transaction
+from ..utils import named2pyformat
+from .. import AntiORM
 
 
 class Sqlite(AntiORM):
-    def _multipleStatement(self, stream, methodName):
-        def applyMethod(sql, methodName):
-            @_transaction
-            def method(self, **kwargs):
-                self.cursor.executescript(sql % kwargs)
+    def _multiple_statement(self, stream, method_name):
+        sql = named2pyformat(Tokens2Unicode(stream))
 
-            setattr(self.__class__, methodName, method)
+        def _wrapped_method(self, **kwargs):
+            with self.transaction() as cursor:
+                cursor.executescript(sql % kwargs)
 
-        applyMethod(named2pyformat(Tokens2Unicode(stream)), methodName)
+        setattr(self.__class__, method_name, _wrapped_method)

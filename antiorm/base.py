@@ -71,7 +71,7 @@ class AntiORM(object):
 
     def transaction(self):
         return self.tx_manager
-    
+
     def parse_dir(self, dir_path='sql'):
         """
         Build functions from the SQL queries inside the files at `dir_path`
@@ -127,26 +127,28 @@ class AntiORM(object):
 
         else:
             sql = map(unicode, stmts)
+
             def _wrapped_method(self, _=None, **kwargs):
                 with self.transaction() as cursor:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        for _kwargs in _:
-                            for stmt in sql:
-                                cursor.execute(stmt, kwargs)
-                        return
+                    if _ != None:
+                        if isinstance(_, dict):
+                            kwargs = _
+                        else:
+                            for _kwargs in _:
+                                for stmt in sql:
+                                    cursor.execute(stmt, kwargs)
+                            return
 
-                    cursor.execute(stmts[0], kwargs)
+                    cursor.execute(sql[0], kwargs)
                     rowid = cursor.lastrowid
-                    
+
                     for stmt in sql[1:]:
                         cursor.execute(stmt, kwargs)
-                    
+
                     return rowid
-                    
+
         setattr(self.__class__, method_name, _wrapped_method)
-                    
+
     def _one_statement(self, stream, method_name):
         # One-value function
         if GetLimit(stream) == 1:
@@ -193,13 +195,13 @@ class AntiORM(object):
                 return result.fetchall()
 
         setattr(self.__class__, method_name, _wrapped_method)
-    
+
     def _multiple_statement(self, stream, method_name):
         sql = map(unicode, split2(stream))
-        
+
         def _wrapped_method(self, **kwargs):
             with self.transaction() as cursor:
                 for sql_stmt in sql:
-                    self.cursor.execute(sql_stmt, kwargs)
+                    cursor.execute(sql_stmt, kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
