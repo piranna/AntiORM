@@ -117,6 +117,7 @@ class AntiORM(object):
         stmts = split2(stream)
         _wrapped_method = lambda x: None
 
+        # One statement query
         if len(stmts) == 1:
             sql = unicode(stmts[0])
 
@@ -125,11 +126,13 @@ class AntiORM(object):
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
+        # Multiple statement query (return last row id of first one)
         else:
             sql = map(unicode, stmts)
 
             def _wrapped_method(self, _=None, **kwargs):
                 with self.transaction() as cursor:
+                    # Received un-named parameter, it would be a iterable
                     if _ != None:
                         if isinstance(_, dict):
                             kwargs = _
@@ -150,6 +153,9 @@ class AntiORM(object):
         setattr(self.__class__, method_name, _wrapped_method)
 
     def _one_statement(self, stream, method_name):
+        """
+        `stream` SQL code only have one statement
+        """
         # One-value function
         if GetLimit(stream) == 1:
             self._one_statement_value(stream, method_name)
@@ -159,11 +165,15 @@ class AntiORM(object):
             self._one_statement_table(stream, method_name)
 
     def _one_statement_value(self, stream, method_name):
+        """
+        `stream` SQL statement only return one value (a row or a cell)
+        """
         columns = GetColumns(stream)
         sql = Tokens2Unicode(stream)
 
         _wrapped_method = lambda x: None
 
+        # Value function (one row, one field)
         if len(columns) == 1 and columns[0] != '*':
             def _wrapped_method(self, **kwargs):
                 with self.transaction() as cursor:
@@ -173,6 +183,7 @@ class AntiORM(object):
                     if result:
                         return result[columns[0]]
 
+        # Register function (one row, several fields)
         else:
             def _wrapped_method(self, **kwargs):
                 with self.transaction() as cursor:
@@ -181,6 +192,9 @@ class AntiORM(object):
         setattr(self.__class__, method_name, _wrapped_method)
 
     def _one_statement_table(self, stream, method_name):
+        """
+        `stream` SQL statement return several values (a table)
+        """
         sql = Tokens2Unicode(stream)
 
         def _wrapped_method(self, _=None, **kwargs):
@@ -197,6 +211,9 @@ class AntiORM(object):
         setattr(self.__class__, method_name, _wrapped_method)
 
     def _multiple_statement(self, stream, method_name):
+        """
+        `stream` SQL have several statements (script)
+        """
         sql = map(unicode, split2(stream))
 
         def _wrapped_method(self, **kwargs):
