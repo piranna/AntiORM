@@ -3,15 +3,18 @@
 import sys
 sys.path.insert(0, '..')
 
-import unittest
-from antiorm import AntiORM
-from antiorm.utils import named2pyformat
+from sqlite3  import connect
+from unittest import main, TestCase
 
-class MainTestCase(unittest.TestCase):
+from antiorm                 import AntiORM
+from antiorm.backends.sqlite import Sqlite
+from antiorm.utils           import DictObj_factory, named2pyformat
+
+
+class MainTestCase(TestCase):
     @classmethod
     def setUpClass(cls):
-        import sqlite3
-        cls.connection = sqlite3.connect(":memory:")
+        cls.connection = connect(":memory:")
         cursor = cls.connection.cursor()
         cursor.execute("CREATE TABLE test_table (key TEXT);")
         cursor.close()
@@ -23,7 +26,7 @@ class MainTestCase(unittest.TestCase):
 
     def setUp(self):
         self.engine = AntiORM(self.connection, "./samples_sql")
-    
+
     def test_sample_method_exists(self):
         self.engine.test_simple_insert(key="hola")
         attr = getattr(self.engine, 'test_simple_insert', None)
@@ -36,41 +39,52 @@ class MainTestCase(unittest.TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(result[0][0], u'hola')
 
-class Test_S2SF(unittest.TestCase):
-    def test_S2SF(self):
+
+class TestUtils(TestCase):
+    "Test for the AntiORM utility functions"
+    def test_DictObj_factory(self):
+        class FakeCursor:
+            def __init__(self, description):
+                self.description = description
+
+        dictobj = DictObj_factory(FakeCursor(('a', 'b', 'c')), ('x', 'y', 'z'))
+
+        self.assertEqual(dictobj, {'a': 'x', 'b': 'y', 'c': 'z'})
+
+    def test_named2pyformat(self):
         self.assertEqual(named2pyformat(""), "")
         self.assertEqual(named2pyformat("asdf"), "asdf")
-        self.assertEqual(named2pyformat("a :formated word"), "a %(formated)s word")
+        self.assertEqual(named2pyformat("a :formated word"),
+                         "a %(formated)s word")
 
 
-class Test_AntiORM(unittest.TestCase):
+class TestAntiORM(TestCase):
+    "Test for the AntiORM base driver"
+    @classmethod
+    def setUpClass(cls):
+        cls.connection = connect(":memory:")
+        cursor = cls.connection.cursor()
+        cursor.execute("CREATE TABLE test_table (key TEXT);")
+        cursor.close()
+        cls.connection.commit()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.connection.close()
+
     def setUp(self):
-        pass
+        self.engine = AntiORM(self.connection, "./samples_sql")
 
-    def tearDown(self):
-        pass
-
-    def test_S2SF(self):
-        self.assertEqual(named2pyformat(""), "")
-        self.assertEqual(named2pyformat("asdf"), "asdf")
-        self.assertEqual(named2pyformat("a :formated word"), "a %(formated)s word")
+    def test_notparsed(self):
+        with self.assertRaises(AttributeError):
+            self.engine.notparsed()
 
 
-class Test_Sqlite(unittest.TestCase):
+class TestSqlite(TestAntiORM):
+    "Test for the AntiORM SQLite driver"
     def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_S2SF(self):
-        self.assertEqual(named2pyformat(""), "")
-        self.assertEqual(named2pyformat("asdf"), "asdf")
-        self.assertEqual(named2pyformat("a :formated word"), "a %(formated)s word")
-
-
-
+        self.engine = Sqlite(self.connection, "./samples_sql")
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()
