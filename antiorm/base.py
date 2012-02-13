@@ -56,6 +56,12 @@ class _TransactionManager(object):
 
 
 class AntiORM(object):
+    """Base driver for AntiORM.
+
+    Using this should be enought for any project, but it's recomended to use a
+    specific driver for your type of database connection to able to use some
+    optimizations.
+    """
     # TODO: database independent layer with full transaction managment
 
     _cursor = None
@@ -86,6 +92,7 @@ class AntiORM(object):
         return getattr(self, name)
 
     def transaction(self):
+        "Return the current transaction manager"
         return self.tx_manager
 
     def parse_dir(self, dir_path='sql', lazy=False):
@@ -154,6 +161,7 @@ class AntiORM(object):
             sql = unicode(stmts[0])
 
             def _wrapped_method(self, **kwargs):
+                "Execute the INSERT statement and return the inserted row id"
                 with self.transaction() as cursor:
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
@@ -163,6 +171,8 @@ class AntiORM(object):
             sql = map(unicode, stmts)
 
             def _wrapped_method(self, _=None, **kwargs):
+                """Execute the statements sequentially and return the inserted
+                row id from the first INSERT one"""
                 with self.transaction() as cursor:
                     # Received un-named parameter, it would be a iterable
                     if _ != None:
@@ -207,6 +217,7 @@ class AntiORM(object):
         column = columns[0]
         if len(columns) == 1 and column != '*':
             def _wrapped_method(self, **kwargs):
+                "Execute the statement and return its cell value"
                 with self.transaction() as cursor:
                     result = cursor.execute(sql, kwargs)
                     result = result.fetchone()
@@ -217,6 +228,7 @@ class AntiORM(object):
         # Register function (one row, several fields)
         else:
             def _wrapped_method(self, **kwargs):
+                "Execute the statement and return a row"
                 with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchone()
 
@@ -229,6 +241,7 @@ class AntiORM(object):
         sql = Tokens2Unicode(stream)
 
         def _wrapped_method(self, _=None, **kwargs):
+            "Execute a statement. If a list is given, they are exec at once"
             with self.transaction() as cursor:
                 if _ != None:
                     if isinstance(_, dict):
@@ -248,6 +261,7 @@ class AntiORM(object):
         sql = map(unicode, split2(stream))
 
         def _wrapped_method(self, **kwargs):
+            "Execute the statements sequentially"
             with self.transaction() as cursor:
                 for sql_stmt in sql:
                     cursor.execute(sql_stmt, kwargs)
