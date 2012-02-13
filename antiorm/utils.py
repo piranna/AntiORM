@@ -4,6 +4,7 @@ from re import sub
 
 
 def DictObj_factory(cursor, row):
+    "Create a DictObj from a DB-API 2.0 cursor description and its values"
     d = DictObj()
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
@@ -16,6 +17,8 @@ def named2pyformat(sql):
 
 
 class DictObj(dict):
+    "Dict that allow access to its elements as object attributes"
+
     def __getattr__(self, name):
         try:
             return self[name]
