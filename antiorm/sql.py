@@ -45,7 +45,7 @@ def GetColumns(stream):
 
     pipe.append(ColumnsSelect())
 
-    return list(pipe(stream))
+    return pipe(stream)
 
 
 class IsType():
@@ -65,49 +65,6 @@ if __name__ == '__main__':
     from sqlparse.engine import FilterStack
     from sqlparse.filters import KeywordCaseFilter
 
-    sql = """-- type: script
-            -- return: integer
-
-            INCLUDE "Direntry.make.sql";
-
-            INSERT INTO directories(inode)
-                            VALUES(:inode)
-            LIMIT 1"""
-
-    sql2 = """SELECT child_entry,asdf AS inode, creation
-              FROM links
-              WHERE parent_dir == :parent_dir AND name == :name
-              LIMIT 1"""
-
-    sql3 = """SELECT
-    0 AS st_dev,
-    0 AS st_uid,
-    0 AS st_gid,
-
-    dir_entries.type         AS st_mode,
-    dir_entries.inode        AS st_ino,
-    COUNT(links.child_entry) AS st_nlink,
-
-    :creation                AS st_ctime,
-    dir_entries.access       AS st_atime,
-    dir_entries.modification AS st_mtime,
---    :creation                                                AS st_ctime,
---    CAST(STRFTIME('%s',dir_entries.access)       AS INTEGER) AS st_atime,
---    CAST(STRFTIME('%s',dir_entries.modification) AS INTEGER) AS st_mtime,
-
-    COALESCE(files.size,0) AS st_size, -- Python-FUSE
-    COALESCE(files.size,0) AS size     -- PyFilesystem
-
-FROM dir_entries
-    LEFT JOIN files
-        ON dir_entries.inode == files.inode
-    LEFT JOIN links
-        ON dir_entries.inode == links.child_entry
-
-WHERE dir_entries.inode == :inode
-
-GROUP BY dir_entries.inode
-LIMIT 1"""
 
 #    print sqlparse.split(sql3)
 
@@ -120,9 +77,6 @@ LIMIT 1"""
 
 #    print sqlparse.parse(sql)[1].tokens
 
-    print repr(GetColumns(sql))
-    print repr(GetColumns(sql2))
-    print repr(GetColumns(sql3))
 
 #    stack = FilterStack()
 
