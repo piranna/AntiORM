@@ -55,7 +55,6 @@ class _TransactionManager(object):
 #    return _wrapped
 
 
-
 class AntiORM(object):
     # TODO: database independent layer with full transaction managment
 
@@ -76,16 +75,14 @@ class AntiORM(object):
         """
         # Get the lazy loading stored data
         try:
-            sql, include_path = self._lazy[name]
+            parser, data, include_path = self._lazy.pop(name)
 
         # method was not marked for lazy loading, raise exception
         except KeyError:
             raise AttributeError
 
-        # Do the parsing right now, unmark the method and return it
-        self.parse_string(sql, name, include_path)
-        del self._lazy[name]
-        print self.__dict__
+        # Do the parsing right now and return the method
+        parser(data, name, include_path)
         return getattr(self, name)
 
     def transaction(self):
@@ -95,6 +92,11 @@ class AntiORM(object):
         """
         Build functions from the SQL queries inside the files at `dir_path`
         """
+
+#        # Lazy processing, store data & only do the parse if later is required
+#        if lazy:
+#            self._lazy[method_name] = (self.parse_dir, dir_path)
+#            return
 
         for filename in listdir(dir_path):
             self.parse_file(join(dir_path, filename), include_path=dir_path,
@@ -109,8 +111,13 @@ class AntiORM(object):
         if not method_name:
             method_name = splitext(basename(file_path))[0]
 
+        # Lazy processing, store data & only do the parse if later is required
+        if lazy:
+            self._lazy[method_name] = self.parse_file, file_path, include_path
+            return
+
         with io.open(file_path, 'rt') as f:
-            self.parse_string(f.read(), method_name, include_path, lazy)
+            self.parse_string(f.read(), method_name, include_path)
 
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """
@@ -119,7 +126,7 @@ class AntiORM(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = (sql, include_path)
+            self._lazy[method_name] = (self.parse_string, sql, include_path)
             return
 
         stream = Compact(sql.strip(), include_path)
