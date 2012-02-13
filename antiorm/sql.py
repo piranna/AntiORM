@@ -5,7 +5,6 @@ Created on 01/08/2011
 '''
 
 
-from sqlparse.engine import FilterStack
 from sqlparse.filters import ColumnsSelect, IncludeStatement, Limit
 from sqlparse.filters import StripComments, SerializerUnicode
 from sqlparse.filters import StripWhitespaceFilter

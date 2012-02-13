@@ -204,20 +204,21 @@ class AntiORM(object):
         sql = Tokens2Unicode(stream)
 
         # Value function (one row, one field)
-        if len(columns) == 1 and columns[0] != '*':
+        column = columns[0]
+        if len(columns) == 1 and column != '*':
             def _wrapped_method(self, **kwargs):
                 with self.transaction() as cursor:
                     result = cursor.execute(sql, kwargs)
                     result = result.fetchone()
 
                     if result:
-                        return result[columns[0]]
+                        return result[column]
 
         # Register function (one row, several fields)
         else:
             def _wrapped_method(self, **kwargs):
                 with self.transaction() as cursor:
-                    return cursor.execute(sql, kwargs).fetchone() or None
+                    return cursor.execute(sql, kwargs).fetchone()
 
         setattr(self.__class__, method_name, _wrapped_method)
 
