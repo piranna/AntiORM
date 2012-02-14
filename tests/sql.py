@@ -84,18 +84,19 @@ class Test_Compact(Test_SQL):
 
 
 class Test_GetColumns(Test_SQL):
-    def test_getlimit1(self):
-        self.assertEqual(Tokens2Unicode(GetColumns(self.sql)), [])
+    def test_getcolumns1(self):
+        columns = GetColumns(tokenize(self.sql))
+        self.assertEqual(columns, [])
 
-    def test_getlimit2(self):
-        self.assertEqual(Tokens2Unicode(GetColumns(self.sql2)),
-                         ('child_entry', 'inode', 'creation'))
+    def test_getcolumns2(self):
+        columns = GetColumns(tokenize(self.sql2))
+        self.assertEqual(columns, ['child_entry', 'inode', 'creation'])
 
-    def test_getlimit3(self):
-        self.assertEqual(Tokens2Unicode(GetColumns(self.sql3)),
-                         ('st_dev', 'st_uid', 'st_gid', 'st_mode', 'st_ino',
-                          'st_nlink', 'st_ctime', 'st_atime', 'st_mtime',
-                          'st_size', 'size'))
+    def test_getcolumns3(self):
+        columns = GetColumns(tokenize(self.sql3))
+        self.assertEqual(columns, ['st_dev', 'st_uid', 'st_gid', 'st_mode',
+                                   'st_ino', 'st_nlink', 'st_ctime',
+                                   'st_atime', 'st_mtime', 'st_size', 'size'])
 
 
 class Test_GetLimit(Test_SQL):
