@@ -6,8 +6,7 @@ Created on 01/08/2011
 
 
 from sqlparse.filters  import ColumnsSelect, IncludeStatement, Limit
-from sqlparse.filters  import StripComments, SerializerUnicode
-from sqlparse.filters  import StripWhitespaceFilter
+from sqlparse.filters  import StripComments, StripWhitespace
 from sqlparse.lexer    import tokenize
 from sqlparse.pipeline import Pipeline
 from sqlparse.tokens   import Keyword, Whitespace
@@ -20,8 +19,7 @@ def Compact(sql, includePath="sql"):
     pipe.append(tokenize)
     pipe.append(IncludeStatement(includePath))
     pipe.append(StripComments())
-#    pipe.append(StripWhitespaceFilter())
-#    pipe.append(SerializerUnicode())
+    pipe.append(StripWhitespace)
 
     return pipe(sql)
 
