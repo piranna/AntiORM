@@ -6,6 +6,7 @@ Created on 13/02/2012
 from unittest import main, TestCase
 
 from sqlparse.filters import Tokens2Unicode
+from sqlparse.lexer   import tokenize
 
 import sys
 sys.path.insert(0, '..')
@@ -99,13 +100,16 @@ class Test_GetColumns(Test_SQL):
 
 class Test_GetLimit(Test_SQL):
     def test_getlimit1(self):
-        self.assertEqual(Tokens2Unicode(GetLimit(self.sql)), 1)
+        limit = GetLimit(tokenize(self.sql))
+        self.assertEqual(limit, 1)
 
     def test_getlimit2(self):
-        self.assertEqual(Tokens2Unicode(GetLimit(self.sql2)), 1)
+        limit = GetLimit(tokenize(self.sql2))
+        self.assertEqual(limit, 1)
 
     def test_getlimit3(self):
-        self.assertEqual(Tokens2Unicode(GetLimit(self.sql3)), 1)
+        limit = GetLimit(tokenize(self.sql3))
+        self.assertEqual(limit, 1)
 
 
 #class Test_IsType(Test_SQL):
