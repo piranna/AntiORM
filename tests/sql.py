@@ -11,7 +11,7 @@ from sqlparse.lexer   import tokenize
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.sql import Compact, GetColumns, GetLimit
+from antiorm.sql import Compact, GetColumns, GetLimit, IsType
 
 
 class Test_SQL(TestCase):
@@ -113,15 +113,13 @@ class Test_GetLimit(Test_SQL):
         self.assertEqual(limit, 1)
 
 
-#class Test_IsType(Test_SQL):
-#    def test_getlimit1(self):
-#        self.assertEqual(Tokens2Unicode(IsType(self.sql)), 1)
-#
-#    def test_getlimit2(self):
-#        self.assertEqual(Tokens2Unicode(IsType(self.sql2)), 1)
-#
-#    def test_getlimit3(self):
-#        self.assertEqual(Tokens2Unicode(IsType(self.sql3)), 1)
+class Test_IsType(Test_SQL):
+    def test_istype2(self):
+        stream = tokenize(self.sql2)
+        self.assertTrue(IsType('SELECT')(stream))
+
+        stream = tokenize(self.sql2)
+        self.assertFalse(IsType('INSERT')(stream))
 
 
 if __name__ == "__main__":
