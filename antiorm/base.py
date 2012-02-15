@@ -59,7 +59,7 @@ class AntiORM(object):
     """Base driver for AntiORM.
 
     Using this should be enought for any project, but it's recomended to use a
-    specific driver for your type of database connection to able to use some
+    specific driver for your type of database connection to be able to use some
     optimizations.
     """
     # TODO: database independent layer with full transaction managment
