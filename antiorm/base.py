@@ -123,8 +123,8 @@ class AntiORM(object):
             self._lazy[method_name] = self.parse_file, file_path, include_path
             return
 
-        with io.open(file_path, 'rt') as f:
-            self.parse_string(f.read(), method_name, include_path)
+        with io.open(file_path, 'rt') as file_sql:
+            self.parse_string(file_sql.read(), method_name, include_path)
 
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """
@@ -152,45 +152,65 @@ class AntiORM(object):
 
     def _statement_INSERT(self, stream, method_name):
         """
-        Special case because we are interested in get inserted row id
+        Special case because we are interested on inserted row id
         """
         stmts = split2(stream)
 
         # One statement query
         if len(stmts) == 1:
-            sql = unicode(stmts[0])
-
-            def _wrapped_method(self, **kwargs):
-                "Execute the INSERT statement and return the inserted row id"
-                with self.transaction() as cursor:
-                    cursor.execute(sql, kwargs)
-                    return cursor.lastrowid
+            self._statement_INSERT_single(stmts, method_name)
 
         # Multiple statement query (return last row id of first one)
         else:
-            sql = map(unicode, stmts)
+            self._statement_INSERT_multiple(stmts, method_name)
 
-            def _wrapped_method(self, _=None, **kwargs):
-                """Execute the statements sequentially and return the inserted
-                row id from the first INSERT one"""
-                with self.transaction() as cursor:
-                    # Received un-named parameter, it would be a iterable
-                    if _ != None:
-                        if isinstance(_, dict):
-                            kwargs = _
-                        else:
-                            for _kwargs in _:
-                                for stmt in sql:
-                                    cursor.execute(stmt, kwargs)
-                            return
+    def _statement_INSERT_single(self, stmts, method_name):
+        """Single INSERT statement query
 
-                    cursor.execute(sql[0], kwargs)
-                    rowid = cursor.lastrowid
+        @return: the inserted row id
+        """
+        sql = unicode(stmts[0])
 
-                    for stmt in sql[1:]:
-                        cursor.execute(stmt, kwargs)
+        def _wrapped_method(self, **kwargs):
+            """Execute the INSERT statement
 
-                    return rowid
+            @return: the inserted row id
+            """
+            with self.transaction() as cursor:
+                cursor.execute(sql, kwargs)
+                return cursor.lastrowid
+
+        setattr(self.__class__, method_name, _wrapped_method)
+
+    def _statement_INSERT_multiple(self, stmts, method_name):
+        """Multiple INSERT statement query
+
+        @return: the inserted row id of first one (or a list of first ones)
+        """
+        sql = map(unicode, stmts)
+
+        def _wrapped_method(self, _=None, **kwargs):
+            """Execute the statements sequentially and return the inserted
+            row id from the first INSERT one"""
+            with self.transaction() as cursor:
+                # Received un-named parameter, it would be a iterable
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        rowids = []
+                        for _kwargs in _:
+                            for stmt in sql:
+                                rowids.append(cursor.execute(stmt, kwargs))
+                        return rowids
+
+                cursor.execute(sql[0], kwargs)
+                rowid = cursor.lastrowid
+
+                for stmt in sql[1:]:
+                    cursor.execute(stmt, kwargs)
+
+                return rowid
 
         setattr(self.__class__, method_name, _wrapped_method)
 
@@ -211,7 +231,7 @@ class AntiORM(object):
             else:
                 self._one_statement_register(stream, method_name)
 
-        # Table function (several registers)
+        # Table function (several rows)
         else:
             self._one_statement_table(stream, method_name)
 
