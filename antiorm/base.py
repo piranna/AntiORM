@@ -199,9 +199,14 @@ class AntiORM(object):
                         kwargs = _
                     else:
                         rowids = []
-                        for _kwargs in _:
-                            for stmt in sql:
-                                rowids.append(cursor.execute(stmt, kwargs))
+
+                        for kwargs in _:
+                            cursor.execute(sql[0], kwargs)
+                            rowids.append(cursor.lastrowid)
+
+                            for stmt in sql[1:]:
+                                cursor.execute(stmt, kwargs)
+
                         return rowids
 
                 cursor.execute(sql[0], kwargs)
