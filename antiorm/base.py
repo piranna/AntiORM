@@ -198,39 +198,50 @@ class AntiORM(object):
         """
         `stream` SQL code only have one statement
         """
-        # One-value function
+        # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
-            self._one_statement_value(stream, method_name)
+            columns = GetColumns(stream)
+            column = columns[0]
+
+            # Value function (one row, one field)
+            if len(columns) == 1 and column != '*':
+                self._one_statement_value(stream, method_name, column)
+
+            # Register function (one row, several fields)
+            else:
+                self._one_statement_register(stream, method_name)
 
         # Table function (several registers)
         else:
             self._one_statement_table(stream, method_name)
 
-    def _one_statement_value(self, stream, method_name):
+    def _one_statement_value(self, stream, method_name, column):
         """
-        `stream` SQL statement only return one value (a row or a cell)
+        `stream` SQL statement return a cell
         """
-        columns = GetColumns(stream)
         sql = Tokens2Unicode(stream)
 
-        # Value function (one row, one field)
-        column = columns[0]
-        if len(columns) == 1 and column != '*':
-            def _wrapped_method(self, **kwargs):
-                "Execute the statement and return its cell value"
-                with self.transaction() as cursor:
-                    result = cursor.execute(sql, kwargs)
-                    result = result.fetchone()
+        def _wrapped_method(self, **kwargs):
+            "Execute the statement and return its cell value"
+            with self.transaction() as cursor:
+                result = cursor.execute(sql, kwargs)
+                result = result.fetchone()
 
-                    if result:
-                        return result[column]
+                if result:
+                    return result[column]
 
-        # Register function (one row, several fields)
-        else:
-            def _wrapped_method(self, **kwargs):
-                "Execute the statement and return a row"
-                with self.transaction() as cursor:
-                    return cursor.execute(sql, kwargs).fetchone()
+        setattr(self.__class__, method_name, _wrapped_method)
+
+    def _one_statement_register(self, stream, method_name):
+        """
+        `stream` SQL statement return a row
+        """
+        sql = Tokens2Unicode(stream)
+
+        def _wrapped_method(self, **kwargs):
+            "Execute the statement and return a row"
+            with self.transaction() as cursor:
+                return cursor.execute(sql, kwargs).fetchone()
 
         setattr(self.__class__, method_name, _wrapped_method)
 
