@@ -193,29 +193,23 @@ class AntiORM(object):
             """Execute the statements sequentially and return the inserted
             row id from the first INSERT one"""
             with self.transaction() as cursor:
+                def _priv(**kwargs):
+                    cursor.execute(sql[0], kwargs)
+                    rowid = cursor.lastrowid
+
+                    for stmt in sql[1:]:
+                        cursor.execute(stmt, kwargs)
+
+                    return rowid
+
                 # Received un-named parameter, it would be a iterable
                 if _ != None:
                     if isinstance(_, dict):
                         kwargs = _
                     else:
-                        rowids = []
+                        return map(_priv, _)
 
-                        for kwargs in _:
-                            cursor.execute(sql[0], kwargs)
-                            rowids.append(cursor.lastrowid)
-
-                            for stmt in sql[1:]:
-                                cursor.execute(stmt, kwargs)
-
-                        return rowids
-
-                cursor.execute(sql[0], kwargs)
-                rowid = cursor.lastrowid
-
-                for stmt in sql[1:]:
-                    cursor.execute(stmt, kwargs)
-
-                return rowid
+                return _priv(kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
 
