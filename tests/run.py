@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from os.path  import abspath, dirname, join
 from sqlite3  import connect
 from unittest import main, TestCase
 
@@ -13,6 +14,12 @@ from antiorm.utils           import DictObj_factory, named2pyformat
 
 class TestAntiORM(TestCase):
     "Test for the AntiORM base driver"
+
+    def __init__(self, methodName='runTest'):
+        TestCase.__init__(self, methodName)
+
+        self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
+
     @classmethod
     def setUpClass(cls):
         cls.connection = connect(":memory:")
@@ -26,7 +33,7 @@ class TestAntiORM(TestCase):
         cls.connection.close()
 
     def setUp(self):
-        self.engine = AntiORM(self.connection, "./samples_sql")
+        self.engine = AntiORM(self.connection, self.dir_path)
 
     def test_method_notparsed(self):
         with self.assertRaises(AttributeError):
@@ -72,7 +79,7 @@ class TestUtils(TestCase):
 class TestSqlite(TestAntiORM):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
-        self.engine = Sqlite(self.connection, "./samples_sql")
+        self.engine = Sqlite(self.connection, self.dir_path)
 
 
 if __name__ == "__main__":
