@@ -178,6 +178,7 @@ class AntiORM(object):
             """
             with self.transaction() as cursor:
                 def _priv(kwargs):
+                    "Exec the statement and return the inserted row id"
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
@@ -200,8 +201,10 @@ class AntiORM(object):
         sql = map(unicode, stmts)
 
         def _wrapped_method(self, _=None, **kwargs):
-            """Execute the statements sequentially and return the inserted
-            row id from the first INSERT one"""
+            """Execute the statements sequentially
+
+            @return: the inserted row id from the first INSERT one
+            """
             with self.transaction() as cursor:
                 def _priv(kwargs):
                     "Exec the statements and return the row id of the first"
