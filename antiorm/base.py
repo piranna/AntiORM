@@ -171,14 +171,24 @@ class AntiORM(object):
         """
         sql = unicode(stmts[0])
 
-        def _wrapped_method(self, **kwargs):
+        def _wrapped_method(self, _=None, **kwargs):
             """Execute the INSERT statement
 
-            @return: the inserted row id
+            @return: the inserted row id (or a list with them)
             """
             with self.transaction() as cursor:
-                cursor.execute(sql, kwargs)
-                return cursor.lastrowid
+                def _priv(kwargs):
+                    cursor.execute(sql, kwargs)
+                    return cursor.lastrowid
+
+                # Received un-named parameter, it would be a iterable
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        return map(_priv, _)
+
+                return _priv(kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
 
