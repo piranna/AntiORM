@@ -9,7 +9,6 @@ sys.path.insert(0, '..')
 
 from antiorm                 import AntiORM
 from antiorm.backends.sqlite import Sqlite
-from antiorm.utils           import DictObj_factory, named2pyformat
 
 
 class TestAntiORM(TestCase):
@@ -56,24 +55,6 @@ class TestAntiORM(TestCase):
         self.assertEqual(len(result), 1)
         self.assertEqual(len(result[0]), 1)
         self.assertEqual(result[0][0], u'hola')
-
-
-class TestUtils(TestCase):
-    "Test for the AntiORM utility functions"
-    def test_DictObj_factory(self):
-        class FakeCursor:
-            def __init__(self, description):
-                self.description = description
-
-        dictobj = DictObj_factory(FakeCursor(('a', 'b', 'c')), ('x', 'y', 'z'))
-
-        self.assertEqual(dictobj, {'a': 'x', 'b': 'y', 'c': 'z'})
-
-    def test_named2pyformat(self):
-        self.assertEqual(named2pyformat(""), "")
-        self.assertEqual(named2pyformat("asdf"), "asdf")
-        self.assertEqual(named2pyformat("a :formated word"),
-                         "a %(formated)s word")
 
 
 class TestSqlite(TestAntiORM):
