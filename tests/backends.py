@@ -56,6 +56,39 @@ class TestAntiORM(TestCase):
         self.assertEqual(len(result[0]), 1)
         self.assertEqual(result[0][0], u'hola')
 
+    def test_statement_INSERT_single_dict_1(self):
+        rowid = self.engine.test_statement_INSERT_single({'key': "adios"})
+
+        self.assertIsNotNone(rowid)
+
+    def test_statement_INSERT_single_dict_2(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM test_table")
+        result = cursor.fetchall()
+
+        self.assertEqual(len(result), 2)
+        self.assertEqual(len(result[1]), 1)
+        self.assertEqual(result[1][0], u'adios')
+
+    def test_statement_INSERT_single_list_1(self):
+        rowid = self.engine.test_statement_INSERT_single([{'key': 'a'},
+                                                          {'key': 'b'}])
+
+        self.assertIsNotNone(rowid)
+        self.assertIsNotNone(rowid[0])
+        self.assertIsNotNone(rowid[1])
+
+    def test_statement_INSERT_single_list_2(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM test_table")
+        result = cursor.fetchall()
+
+        self.assertEqual(len(result), 4)
+        self.assertEqual(len(result[2]), 1)
+        self.assertEqual(result[2][0], u'a')
+        self.assertEqual(len(result[3]), 1)
+        self.assertEqual(result[3][0], u'b')
+
 
 class TestSqlite(TestAntiORM):
     "Test for the AntiORM SQLite driver"
