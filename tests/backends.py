@@ -12,7 +12,7 @@ from base import TestAntiORM
 
 
 class TestAPSW(TestAntiORM):
-    "Test for the APSW SQLite driver"
+    "Test for the AntiORM APSW driver"
     def setUp(self):
         self.engine = APSW(self.connection, self.dir_path)
 
