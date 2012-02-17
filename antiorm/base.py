@@ -67,6 +67,15 @@ class AntiORM(object):
     _cursor = None
 
     def __init__(self, db_conn, dir_path=None, lazy=False):
+        """Constructor
+
+        @param db_conn: connection of the database
+        @type db_conn: DB-API 2.0 database connection
+        @param dir_path: path of the dir with files from where to load SQL code
+        @type dir_path: string
+        @param lazy: set if SQL code at dir_path should be lazy loaded
+        @type lazy: boolean
+        """
         self.connection = db_conn
         self.tx_manager = _TransactionManager(self)
 
