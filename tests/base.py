@@ -22,7 +22,12 @@ class TestAntiORM(TestCase):
     def setUpClass(cls):
         cls.connection = connect(":memory:")
         cursor = cls.connection.cursor()
-        cursor.execute("CREATE TABLE test_table (key TEXT);")
+        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
+        cursor.execute("""CREATE TABLE test_statement_INSERT_multiple
+        (
+            key   TEXT,
+            value TEXT NULL
+        );""")
         cursor.close()
         cls.connection.commit()
 
@@ -48,7 +53,7 @@ class TestAntiORM(TestCase):
 
     def test_statement_INSERT_single_2(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM test_table")
+        cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
         self.assertEqual(len(result), 1)
@@ -62,7 +67,7 @@ class TestAntiORM(TestCase):
 
     def test_statement_INSERT_single_dict_2(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM test_table")
+        cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
         self.assertEqual(len(result), 2)
@@ -79,7 +84,7 @@ class TestAntiORM(TestCase):
 
     def test_statement_INSERT_single_list_2(self):
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM test_table")
+        cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
         self.assertEqual(len(result), 4)
@@ -87,6 +92,60 @@ class TestAntiORM(TestCase):
         self.assertEqual(result[2][0], u'a')
         self.assertEqual(len(result[3]), 1)
         self.assertEqual(result[3][0], u'b')
+
+    def test_statement_INSERT_multiple_1(self):
+        rowid = self.engine.test_statement_INSERT_multiple(key='a')
+
+        self.assertIsNotNone(rowid)
+
+    def test_statement_INSERT_multiple_2(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM test_statement_INSERT_multiple")
+        result = cursor.fetchall()
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(len(result[0]), 2)
+        self.assertEqual(result[0][0], u'a')
+        self.assertEqual(result[0][0], result[0][1])
+
+    def test_statement_INSERT_multiple_dict_1(self):
+        rowid = self.engine.test_statement_INSERT_multiple({'key': 'b'})
+
+        self.assertIsNotNone(rowid)
+
+    def test_statement_INSERT_multiple_dict_2(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM test_statement_INSERT_multiple")
+        result = cursor.fetchall()
+
+        self.assertEqual(len(result), 2)
+
+        self.assertEqual(len(result[1]), 2)
+        self.assertEqual(result[1][0], u'b')
+        self.assertEqual(result[1][0], result[1][1])
+
+    def test_statement_INSERT_multiple_list_1(self):
+        rowid = self.engine.test_statement_INSERT_multiple([{'key': 'c'},
+                                                            {'key': 'd'}])
+
+        self.assertIsNotNone(rowid)
+        self.assertIsNotNone(rowid[0])
+        self.assertIsNotNone(rowid[1])
+
+    def test_statement_INSERT_multiple_list_2(self):
+        cursor = self.connection.cursor()
+        cursor.execute("SELECT * FROM test_statement_INSERT_multiple")
+        result = cursor.fetchall()
+
+        self.assertEqual(len(result), 4)
+
+        self.assertEqual(len(result[2]), 2)
+        self.assertEqual(result[2][0], u'c')
+        self.assertEqual(result[2][0], result[2][1])
+
+        self.assertEqual(len(result[3]), 2)
+        self.assertEqual(result[3][0], u'd')
+        self.assertEqual(result[3][0], result[3][1])
 
 
 if __name__ == "__main__":

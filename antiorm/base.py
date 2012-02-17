@@ -205,6 +205,9 @@ class AntiORM(object):
     def _statement_INSERT_multiple(self, stmts, method_name):
         """Multiple INSERT statement query
 
+        Function that execute several SQL statements sequentially, being the
+        first an INSERT one.
+
         @return: the inserted row id of first one (or a list of first ones)
         """
         sql = map(unicode, stmts)
