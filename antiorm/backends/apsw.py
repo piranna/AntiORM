@@ -9,7 +9,7 @@ from sys import stderr
 from .. import AntiORM
 
 
-class MyClass(AntiORM):
+class APSW(AntiORM):
     '''
     classdocs
     '''
