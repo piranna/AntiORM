@@ -10,10 +10,17 @@ from ..utils import named2pyformat
 from .. import AntiORM
 
 
+def register(func):
+    def wrapper(self, method_name, *args, **kwargs):
+        setattr(self.__class__, method_name, func(self, *args, **kwargs))
+    return wrapper
+
+
 class Sqlite(AntiORM):
     "SQLite driver for AntiORM"
 
-    def _multiple_statement(self, method_name, stream):
+    @register
+    def _multiple_statement(self, stream):
         """Execute the script optimized using SQLite non-standard method
         executescript() instead of exec the statements sequentially.
         """
@@ -24,4 +31,4 @@ class Sqlite(AntiORM):
             with self.transaction() as cursor:
                 cursor.executescript(sql % kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
