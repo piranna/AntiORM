@@ -97,7 +97,8 @@ class AntiORM(object):
             raise AttributeError
 
         # Do the parsing right now and return the method
-        return parser(data, name, include_path)
+        result = parser(data, name, include_path)
+        return result.__get__(self, self.__class__)
 
     def transaction(self):
         "Return the current transaction manager"
@@ -314,6 +315,7 @@ class AntiORM(object):
         """
         `stream` SQL have several statements (script)
         """
+        print "_multiple_statement"
         sql = map(unicode, split2(stream))
 
         def _wrapped_method(self, **kwargs):
