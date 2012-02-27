@@ -149,17 +149,17 @@ class AntiORM(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            self._statement_INSERT(stream, method_name)
+            self._statement_INSERT(method_name, stream)
 
         # One statement query
         elif len(split2(stream)) == 1:
-            self._one_statement(stream, method_name)
+            self._one_statement(method_name, stream)
 
         # Multiple statement query
         else:
-            self._multiple_statement(stream, method_name)
+            self._multiple_statement(method_name, stream)
 
-    def _statement_INSERT(self, stream, method_name):
+    def _statement_INSERT(self, method_name, stream):
         """
         Special case because we are interested on inserted row id
         """
@@ -167,13 +167,13 @@ class AntiORM(object):
 
         # One statement query
         if len(stmts) == 1:
-            self._statement_INSERT_single(stmts, method_name)
+            self._statement_INSERT_single(method_name, stmts)
 
         # Multiple statement query (return last row id of first one)
         else:
-            self._statement_INSERT_multiple(stmts, method_name)
+            self._statement_INSERT_multiple(method_name, stmts)
 
-    def _statement_INSERT_single(self, stmts, method_name):
+    def _statement_INSERT_single(self, method_name, stmts):
         """Single INSERT statement query
 
         @return: the inserted row id
@@ -202,7 +202,7 @@ class AntiORM(object):
 
         setattr(self.__class__, method_name, _wrapped_method)
 
-    def _statement_INSERT_multiple(self, stmts, method_name):
+    def _statement_INSERT_multiple(self, method_name, stmts):
         """Multiple INSERT statement query
 
         Function that execute several SQL statements sequentially, being the
@@ -239,7 +239,7 @@ class AntiORM(object):
 
         setattr(self.__class__, method_name, _wrapped_method)
 
-    def _one_statement(self, stream, method_name):
+    def _one_statement(self, method_name, stream):
         """
         `stream` SQL code only have one statement
         """
@@ -250,17 +250,17 @@ class AntiORM(object):
 
             # Value function (one row, one field)
             if len(columns) == 1 and column != '*':
-                self._one_statement_value(stream, method_name, column)
+                self._one_statement_value(method_name, stream, column)
 
             # Register function (one row, several fields)
             else:
-                self._one_statement_register(stream, method_name)
+                self._one_statement_register(method_name, stream)
 
         # Table function (several rows)
         else:
-            self._one_statement_table(stream, method_name)
+            self._one_statement_table(method_name, stream)
 
-    def _one_statement_value(self, stream, method_name, column):
+    def _one_statement_value(self, method_name, stream, column):
         """
         `stream` SQL statement return a cell
         """
@@ -277,7 +277,7 @@ class AntiORM(object):
 
         setattr(self.__class__, method_name, _wrapped_method)
 
-    def _one_statement_register(self, stream, method_name):
+    def _one_statement_register(self, method_name, stream):
         """
         `stream` SQL statement return a row
         """
@@ -290,7 +290,7 @@ class AntiORM(object):
 
         setattr(self.__class__, method_name, _wrapped_method)
 
-    def _one_statement_table(self, stream, method_name):
+    def _one_statement_table(self, method_name, stream):
         """
         `stream` SQL statement return several values (a table)
         """
@@ -309,7 +309,7 @@ class AntiORM(object):
 
         setattr(self.__class__, method_name, _wrapped_method)
 
-    def _multiple_statement(self, stream, method_name):
+    def _multiple_statement(self, method_name, stream):
         """
         `stream` SQL have several statements (script)
         """

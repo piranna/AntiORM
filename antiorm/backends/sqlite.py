@@ -13,7 +13,7 @@ from .. import AntiORM
 class Sqlite(AntiORM):
     "SQLite driver for AntiORM"
 
-    def _multiple_statement(self, stream, method_name):
+    def _multiple_statement(self, method_name, stream):
         """Execute the script optimized using SQLite non-standard method
         executescript() instead of exec the statements sequentially.
         """
