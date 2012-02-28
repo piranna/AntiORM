@@ -13,6 +13,12 @@ from sql import GetLimit
 from sql import IsType
 
 
+def register(func):
+    def wrapper(self, method_name, *args, **kwargs):
+        setattr(self.__class__, method_name, func(self, *args, **kwargs))
+    return wrapper
+
+
 class InTransactionError(Exception):
     pass
 
@@ -173,7 +179,8 @@ class AntiORM(object):
         else:
             self._statement_INSERT_multiple(method_name, stmts)
 
-    def _statement_INSERT_single(self, method_name, stmts):
+    @register
+    def _statement_INSERT_single(self, stmts):
         """Single INSERT statement query
 
         @return: the inserted row id
@@ -200,9 +207,10 @@ class AntiORM(object):
 
                 return _priv(kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
-    def _statement_INSERT_multiple(self, method_name, stmts):
+    @register
+    def _statement_INSERT_multiple(self, stmts):
         """Multiple INSERT statement query
 
         Function that execute several SQL statements sequentially, being the
@@ -237,7 +245,7 @@ class AntiORM(object):
 
                 return _priv(kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
     def _one_statement(self, method_name, stream):
         """
@@ -260,7 +268,8 @@ class AntiORM(object):
         else:
             self._one_statement_table(method_name, stream)
 
-    def _one_statement_value(self, method_name, stream, column):
+    @register
+    def _one_statement_value(self, stream, column):
         """
         `stream` SQL statement return a cell
         """
@@ -275,9 +284,10 @@ class AntiORM(object):
                 if result:
                     return result[column]
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
-    def _one_statement_register(self, method_name, stream):
+    @register
+    def _one_statement_register(self, stream):
         """
         `stream` SQL statement return a row
         """
@@ -288,9 +298,10 @@ class AntiORM(object):
             with self.transaction() as cursor:
                 return cursor.execute(sql, kwargs).fetchone()
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
-    def _one_statement_table(self, method_name, stream):
+    @register
+    def _one_statement_table(self, stream):
         """
         `stream` SQL statement return several values (a table)
         """
@@ -307,9 +318,10 @@ class AntiORM(object):
 
                 return cursor.execute(sql, kwargs).fetchall()
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
-    def _multiple_statement(self, method_name, stream):
+    @register
+    def _multiple_statement(self, stream):
         """
         `stream` SQL have several statements (script)
         """
@@ -321,4 +333,4 @@ class AntiORM(object):
                 for sql_stmt in sql:
                     cursor.execute(sql_stmt, kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method

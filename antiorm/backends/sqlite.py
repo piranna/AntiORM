@@ -6,14 +6,8 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
+from ..base  import AntiORM, register
 from ..utils import named2pyformat
-from .. import AntiORM
-
-
-def register(func):
-    def wrapper(self, method_name, *args, **kwargs):
-        setattr(self.__class__, method_name, func(self, *args, **kwargs))
-    return wrapper
 
 
 class Sqlite(AntiORM):
