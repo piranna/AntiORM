@@ -37,8 +37,8 @@ class APSW(AntiORM):
             AntiORM.parse_string(self, sql, method_name, include_path, lazy)
         except:
             raise
-        else:
-            self._cachedmethods += 1
-            if self._cachedmethods > self._max_cachedmethods:
-                warning("Surpased APSW cache size (%s > %s)",
-                        (self._cachedmethods, self._max_cachedmethods))
+
+        self._cachedmethods += 1
+        if self._cachedmethods > self._max_cachedmethods:
+            warning("Surpased APSW cache size (methods: %s; limit: %s)",
+                    (self._cachedmethods, self._max_cachedmethods))
