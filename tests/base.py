@@ -28,6 +28,7 @@ class TestAntiORM(TestCase):
             key   TEXT,
             value TEXT NULL
         );""")
+        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
         cursor.close()
         cls.connection.commit()
 
@@ -146,6 +147,14 @@ class TestAntiORM(TestCase):
         self.assertEqual(len(result[3]), 2)
         self.assertEqual(result[3][0], u'd')
         self.assertEqual(result[3][0], result[3][1])
+
+    def test_one_statement_value(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('a')")
+
+        result = self.engine.test_one_statement_value(key="hola")
+
+        self.assertEqual(result, u'a')
 
 
 if __name__ == "__main__":

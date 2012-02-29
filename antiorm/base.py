@@ -273,7 +273,8 @@ class AntiORM(object):
                 result = result.fetchone()
 
                 if result:
-                    return result[column]
+                    return result[0]
+#                    return result[column]
 
         setattr(self.__class__, method_name, _wrapped_method)
 
