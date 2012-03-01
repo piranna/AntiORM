@@ -15,17 +15,24 @@ class FakeCursor:
 
 class TestUtils(TestCase):
     "Test for the AntiORM utility functions"
+
+    fakecursor = FakeCursor(('a', 'b', 'c'))
+
     def test_DictObj_factory(self):
-        dictobj = DictObj_factory(FakeCursor(('a', 'b', 'c')), ('x', 'y', 'z'))
+        dictobj = DictObj_factory(self.fakecursor, ('x', 'y', 'z'))
 
         self.assertEqual(dictobj, {'a': 'x', 'b': 'y', 'c': 'z'})
+
+        self.assertEqual(dictobj['a'], 'x')
+        self.assertEqual(dictobj['b'], 'y')
+        self.assertEqual(dictobj['c'], 'z')
+
         self.assertEqual(dictobj.a, 'x')
         self.assertEqual(dictobj.b, 'y')
         self.assertEqual(dictobj.c, 'z')
 
     def test_TupleObj_factory(self):
-        tupleobj = TupleObj_factory(FakeCursor(('a', 'b', 'c')),
-                                    ('x', 'y', 'z'))
+        tupleobj = TupleObj_factory(self.fakecursor, ('x', 'y', 'z'))
 
 #        self.assertEqual(tupleobj, ('x', 'y', 'z'))
 
