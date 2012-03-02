@@ -263,13 +263,13 @@ class AntiORM(object):
 
             # Value function (one row, one field)
             if len(columns) == 1 and column != '*':
-                return self._one_statement_value(stream, method_name, column)
+                return self._one_statement_value(method_name, stream, column)
 
             # Register function (one row, several fields)
-            return self._one_statement_register(stream, method_name)
+            return self._one_statement_register(method_name, stream)
 
         # Table function (several rows)
-        return self._one_statement_table(stream, method_name)
+        return self._one_statement_table(method_name, stream)
 
     @register
     def _one_statement_value(self, stream, column):
