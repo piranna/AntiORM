@@ -34,15 +34,11 @@ class TestUtils(TestCase):
     def test_TupleObj_factory(self):
         tupleobj = TupleObj_factory(self.fakecursor, ('x', 'y', 'z'))
 
-#        self.assertEqual(tupleobj, ('x', 'y', 'z'))
+        self.assertEqual(tupleobj, ('x', 'y', 'z'))
 
         self.assertEqual(tupleobj[0], 'x')
         self.assertEqual(tupleobj[1], 'y')
         self.assertEqual(tupleobj[2], 'z')
-
-        self.assertEqual(tupleobj['a'], 'x')
-        self.assertEqual(tupleobj['b'], 'y')
-        self.assertEqual(tupleobj['c'], 'z')
 
         self.assertEqual(tupleobj.a, 'x')
         self.assertEqual(tupleobj.b, 'y')

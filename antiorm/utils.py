@@ -4,7 +4,7 @@ from re import sub
 
 
 def DictObj_factory(cursor, row):
-    "Create a DictObj from a DB-API 2.0 cursor description and its values"
+    "Create a DictObj from a DB-API 2.0 cursor description and its row values"
     d = DictObj()
     for idx, col in enumerate(cursor.description):
         d[col[0]] = row[idx]
@@ -12,12 +12,10 @@ def DictObj_factory(cursor, row):
 
 
 def TupleObj_factory(cursor, row):
-    "Create a TupleObj from a DB-API 2.0 cursor description and its values"
-    l = [col[0] for col in cursor.description]
-
-    t = TupleObj(l)
+    "Create a TupleObj from a DB-API 2.0 cursor description and its row values"
+    t = TupleObj(row)
     for idx, col in enumerate(cursor.description):
-        setattr(t, col[0], row[idx])
+        setattr(t, col[0], t[idx])
     return t
 
 
@@ -41,16 +39,9 @@ class DictObj(dict):
         except KeyError:
             raise AttributeError(name)
 
-
 class TupleObj(tuple):
-    "Tuple that allow access to its elements as object attributes and as dict"
+    """Tuple that allow access to its elements as objects attributes
 
-    def __getitem__(self, key):
-        try:
-            return getattr(self, tuple.__getitem__(self, key))
-
-        except TypeError:
-            return getattr(self, key)
-
-        except AttributeError:
-            raise IndexError(key)
+    Dumb class to allow set attributes to the tuple
+    """
+    pass
