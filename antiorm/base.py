@@ -119,6 +119,16 @@ class AntiORM(object):
     def parse_dir(self, dir_path='sql', lazy=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`
+
+        Also add the functions as a methods to the AntiORM class
+
+        @param dir_path: path to the dir with the SQL files (for INCLUDE)
+        @type dir_path: string
+        @param lazy: set if parsing should be postpone until required
+        @type lazy: boolean
+
+        @return: nothing
+        @rtype: None
         """
 
 #        # Lazy processing, store data & only do the parse if later is required
@@ -134,6 +144,20 @@ class AntiORM(object):
                    lazy=False):
         """
         Build a function from a file containing a SQL query
+
+        Also add the function as a method to the AntiORM class
+
+        @param file_path: the path of SQL file of the method to be parsed
+        @type file_path: string
+        @param method_name: the name of the method
+        @type method_name: string
+        @param include_path: path to the dir with the SQL files (for INCLUDE)
+        @type include_path: string
+        @param lazy: set if parsing should be postpone until required
+        @type lazy: boolean
+
+        @return: the parsed function (except if lazy is True)
+        @rtype: function
         """
 
         if not method_name:
@@ -151,6 +175,20 @@ class AntiORM(object):
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """
         Build a function from a string containing a SQL query
+
+        Also add the function as a method to the AntiORM class
+
+        @param sql: the SQL code of the method to be parsed
+        @type sql: string
+        @param method_name: the name of the method
+        @type method_name: string
+        @param include_path: path to the dir with the SQL files (for INCLUDE)
+        @type include_path: string
+        @param lazy: set if parsing should be postpone until required
+        @type lazy: boolean
+
+        @return: the parsed function (except if lazy is True)
+        @rtype: function
         """
 
         # Lazy processing, store data & only do the parse if later is required
@@ -328,7 +366,6 @@ class AntiORM(object):
         """
         `stream` SQL have several statements (script)
         """
-        print "_multiple_statement"
         sql = map(unicode, split2(stream))
 
         def _wrapped_method(self, **kwargs):
