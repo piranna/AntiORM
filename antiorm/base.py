@@ -297,11 +297,10 @@ class AntiORM(object):
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
             columns = GetColumns(stream)
-            column = columns[0]
 
             # Value function (one row, one field)
-            if len(columns) == 1 and column != '*':
-                return self._one_statement_value(method_name, stream, column)
+            if len(columns) == 1 and columns[0] != '*':
+                return self._one_statement_value(method_name, stream)
 
             # Register function (one row, several fields)
             return self._one_statement_register(method_name, stream)
@@ -310,7 +309,7 @@ class AntiORM(object):
         return self._one_statement_table(method_name, stream)
 
     @register
-    def _one_statement_value(self, stream, column):
+    def _one_statement_value(self, stream):
         """
         `stream` SQL statement return a cell
         """
@@ -324,7 +323,6 @@ class AntiORM(object):
 
                 if result:
                     return result[0]
-#                    return result[column]
 
         return _wrapped_method
 
