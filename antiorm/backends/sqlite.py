@@ -25,3 +25,4 @@ class Sqlite(AntiORM):
                 cursor.executescript(sql % kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method

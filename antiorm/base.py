@@ -97,8 +97,8 @@ class AntiORM(object):
             raise AttributeError
 
         # Do the parsing right now and return the method
-        parser(data, name, include_path)
-        return getattr(self, name)
+        result = parser(data, name, include_path)
+        return result.__get__(self, self.__class__)
 
     def transaction(self):
         "Return the current transaction manager"
@@ -133,7 +133,8 @@ class AntiORM(object):
             return
 
         with io.open(file_path, 'rt') as file_sql:
-            self.parse_string(file_sql.read(), method_name, include_path)
+            return self.parse_string(file_sql.read(), method_name,
+                                     include_path)
 
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """
@@ -149,15 +150,14 @@ class AntiORM(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            self._statement_INSERT(stream, method_name)
+            return self._statement_INSERT(stream, method_name)
 
         # One statement query
-        elif len(split2(stream)) == 1:
-            self._one_statement(stream, method_name)
+        if len(split2(stream)) == 1:
+            return self._one_statement(stream, method_name)
 
         # Multiple statement query
-        else:
-            self._multiple_statement(stream, method_name)
+        return self._multiple_statement(stream, method_name)
 
     def _statement_INSERT(self, stream, method_name):
         """
@@ -167,11 +167,10 @@ class AntiORM(object):
 
         # One statement query
         if len(stmts) == 1:
-            self._statement_INSERT_single(stmts, method_name)
+            return self._statement_INSERT_single(stmts, method_name)
 
         # Multiple statement query (return last row id of first one)
-        else:
-            self._statement_INSERT_multiple(stmts, method_name)
+        return self._statement_INSERT_multiple(stmts, method_name)
 
     def _statement_INSERT_single(self, stmts, method_name):
         """Single INSERT statement query
@@ -201,6 +200,7 @@ class AntiORM(object):
                 return _priv(kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
     def _statement_INSERT_multiple(self, stmts, method_name):
         """Multiple INSERT statement query
@@ -238,6 +238,7 @@ class AntiORM(object):
                 return _priv(kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
     def _one_statement(self, stream, method_name):
         """
@@ -250,15 +251,13 @@ class AntiORM(object):
 
             # Value function (one row, one field)
             if len(columns) == 1 and column != '*':
-                self._one_statement_value(stream, method_name, column)
+                return self._one_statement_value(stream, method_name, column)
 
             # Register function (one row, several fields)
-            else:
-                self._one_statement_register(stream, method_name)
+            return self._one_statement_register(stream, method_name)
 
         # Table function (several rows)
-        else:
-            self._one_statement_table(stream, method_name)
+        return self._one_statement_table(stream, method_name)
 
     def _one_statement_value(self, stream, method_name, column):
         """
@@ -276,6 +275,7 @@ class AntiORM(object):
                     return result[column]
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
     def _one_statement_register(self, stream, method_name):
         """
@@ -289,6 +289,7 @@ class AntiORM(object):
                 return cursor.execute(sql, kwargs).fetchone()
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
     def _one_statement_table(self, stream, method_name):
         """
@@ -308,11 +309,13 @@ class AntiORM(object):
                 return cursor.execute(sql, kwargs).fetchall()
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
 
     def _multiple_statement(self, stream, method_name):
         """
         `stream` SQL have several statements (script)
         """
+        print "_multiple_statement"
         sql = map(unicode, split2(stream))
 
         def _wrapped_method(self, **kwargs):
@@ -322,3 +325,4 @@ class AntiORM(object):
                     cursor.execute(sql_stmt, kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method

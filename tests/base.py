@@ -7,7 +7,7 @@ from unittest import main, TestCase
 import sys
 sys.path.insert(0, '..')
 
-from antiorm                 import AntiORM
+from antiorm import AntiORM
 
 
 class TestAntiORM(TestCase):

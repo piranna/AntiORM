@@ -34,7 +34,8 @@ class APSW(AntiORM):
         cache it shows an alert because performance will decrease.
         """
         try:
-            AntiORM.parse_string(self, sql, method_name, include_path, lazy)
+            result = AntiORM.parse_string(self, sql, method_name, include_path,
+                                          lazy)
         except:
             raise
 
@@ -42,3 +43,5 @@ class APSW(AntiORM):
         if self._cachedmethods > self._max_cachedmethods:
             warning("Surpased APSW cache size (methods: %s; limit: %s)",
                     (self._cachedmethods, self._max_cachedmethods))
+
+        return result
