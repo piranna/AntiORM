@@ -13,6 +13,16 @@ from sql import GetLimit
 from sql import IsType
 
 
+def register(func):
+    def wrapper(self, method_name, *args, **kwargs):
+        _wrapped_method = func(self, *args, **kwargs)
+
+        setattr(self.__class__, method_name, _wrapped_method)
+        return _wrapped_method
+
+    return wrapper
+
+
 class InTransactionError(Exception):
     pass
 
@@ -150,16 +160,16 @@ class AntiORM(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._statement_INSERT(stream, method_name)
+            return self._statement_INSERT(method_name, stream)
 
         # One statement query
         if len(split2(stream)) == 1:
-            return self._one_statement(stream, method_name)
+            return self._one_statement(method_name, stream)
 
         # Multiple statement query
-        return self._multiple_statement(stream, method_name)
+        return self._multiple_statement(method_name, stream)
 
-    def _statement_INSERT(self, stream, method_name):
+    def _statement_INSERT(self, method_name, stream):
         """
         Special case because we are interested on inserted row id
         """
@@ -167,12 +177,13 @@ class AntiORM(object):
 
         # One statement query
         if len(stmts) == 1:
-            return self._statement_INSERT_single(stmts, method_name)
+            return self._statement_INSERT_single(method_name, stmts)
 
         # Multiple statement query (return last row id of first one)
-        return self._statement_INSERT_multiple(stmts, method_name)
+        return self._statement_INSERT_multiple(method_name, stmts)
 
-    def _statement_INSERT_single(self, stmts, method_name):
+    @register
+    def _statement_INSERT_single(self, stmts):
         """Single INSERT statement query
 
         @return: the inserted row id
@@ -199,10 +210,10 @@ class AntiORM(object):
 
                 return _priv(kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
 
-    def _statement_INSERT_multiple(self, stmts, method_name):
+    @register
+    def _statement_INSERT_multiple(self, stmts):
         """Multiple INSERT statement query
 
         Function that execute several SQL statements sequentially, being the
@@ -237,10 +248,9 @@ class AntiORM(object):
 
                 return _priv(kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
 
-    def _one_statement(self, stream, method_name):
+    def _one_statement(self, method_name, stream):
         """
         `stream` SQL code only have one statement
         """
@@ -259,7 +269,8 @@ class AntiORM(object):
         # Table function (several rows)
         return self._one_statement_table(stream, method_name)
 
-    def _one_statement_value(self, stream, method_name, column):
+    @register
+    def _one_statement_value(self, stream, column):
         """
         `stream` SQL statement return a cell
         """
@@ -274,10 +285,10 @@ class AntiORM(object):
                 if result:
                     return result[column]
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
 
-    def _one_statement_register(self, stream, method_name):
+    @register
+    def _one_statement_register(self, stream):
         """
         `stream` SQL statement return a row
         """
@@ -288,10 +299,10 @@ class AntiORM(object):
             with self.transaction() as cursor:
                 return cursor.execute(sql, kwargs).fetchone()
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
 
-    def _one_statement_table(self, stream, method_name):
+    @register
+    def _one_statement_table(self, stream):
         """
         `stream` SQL statement return several values (a table)
         """
@@ -308,10 +319,10 @@ class AntiORM(object):
 
                 return cursor.execute(sql, kwargs).fetchall()
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
 
-    def _multiple_statement(self, stream, method_name):
+    @register
+    def _multiple_statement(self, stream):
         """
         `stream` SQL have several statements (script)
         """
@@ -324,5 +335,4 @@ class AntiORM(object):
                 for sql_stmt in sql:
                     cursor.execute(sql_stmt, kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method

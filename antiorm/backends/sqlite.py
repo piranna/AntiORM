@@ -6,14 +6,15 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
+from ..base  import AntiORM, register
 from ..utils import named2pyformat
-from .. import AntiORM
 
 
 class Sqlite(AntiORM):
     "SQLite driver for AntiORM"
 
-    def _multiple_statement(self, stream, method_name):
+    @register
+    def _multiple_statement(self, stream):
         """Execute the script optimized using SQLite non-standard method
         executescript() instead of exec the statements sequentially.
         """
@@ -24,5 +25,4 @@ class Sqlite(AntiORM):
             with self.transaction() as cursor:
                 cursor.executescript(sql % kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
