@@ -21,7 +21,7 @@ class TestUtils(TestCase):
     def test_DictObj_factory(self):
         dictobj = DictObj_factory(self.fakecursor, ('x', 'y', 'z'))
 
-        self.assertEqual(dictobj, {'a': 'x', 'b': 'y', 'c': 'z'})
+        self.assertDictEqual(dictobj, {'a': 'x', 'b': 'y', 'c': 'z'})
 
         self.assertEqual(dictobj['a'], 'x')
         self.assertEqual(dictobj['b'], 'y')
@@ -34,7 +34,7 @@ class TestUtils(TestCase):
     def test_TupleObj_factory(self):
         tupleobj = TupleObj_factory(self.fakecursor, ('x', 'y', 'z'))
 
-        self.assertEqual(tupleobj, ('x', 'y', 'z'))
+        self.assertTupleEqual(tupleobj, ('x', 'y', 'z'))
 
         self.assertEqual(tupleobj[0], 'x')
         self.assertEqual(tupleobj[1], 'y')
