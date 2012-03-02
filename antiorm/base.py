@@ -14,7 +14,9 @@ from sql import IsType
 
 
 def register(func):
+    "Decorator to register a wrapped method inside AntiORM class"
     def wrapper(self, method_name, *args, **kwargs):
+        "Get method name for registration and give the other args to the func"
         _wrapped_method = func(self, *args, **kwargs)
 
         setattr(self.__class__, method_name, _wrapped_method)
