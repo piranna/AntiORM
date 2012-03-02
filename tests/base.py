@@ -10,7 +10,7 @@ sys.path.insert(0, '..')
 from antiorm import AntiORM
 
 
-class TestAntiORM(TestCase):
+class Test(TestCase):
     "Test for the AntiORM base driver"
 
     def __init__(self, methodName='runTest'):
@@ -28,6 +28,10 @@ class TestAntiORM(TestCase):
             key   TEXT,
             value TEXT NULL
         );""")
+        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
+        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
+        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
+        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
         cursor.close()
         cls.connection.commit()
 
@@ -35,9 +39,8 @@ class TestAntiORM(TestCase):
     def tearDownClass(cls):
         cls.connection.close()
 
-    def setUp(self):
-        self.engine = AntiORM(self.connection, self.dir_path)
 
+class Base:
     def test_method_notparsed(self):
         with self.assertRaises(AttributeError):
             self.engine.notparsed()
@@ -46,6 +49,8 @@ class TestAntiORM(TestCase):
         attr = getattr(self.engine, 'test_statement_INSERT_single', None)
         self.assertNotEqual(attr, None)
 
+
+class StatementINSERTSingle:
     def test_statement_INSERT_single_1(self):
         rowid = self.engine.test_statement_INSERT_single(key="hola")
 
@@ -93,6 +98,8 @@ class TestAntiORM(TestCase):
         self.assertEqual(len(result[3]), 1)
         self.assertEqual(result[3][0], u'b')
 
+
+class StatementINSERTMultiple:
     def test_statement_INSERT_multiple_1(self):
         rowid = self.engine.test_statement_INSERT_multiple(key='a')
 
@@ -146,6 +153,55 @@ class TestAntiORM(TestCase):
         self.assertEqual(len(result[3]), 2)
         self.assertEqual(result[3][0], u'd')
         self.assertEqual(result[3][0], result[3][1])
+
+
+class OneStatement_value:
+    def test_one_statement_value(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('a')")
+
+        result = self.engine.test_one_statement_value()
+
+        self.assertEqual(result, u'a')
+
+
+class OneStatement_register:
+    def test_one_statement_register(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('a')")
+
+        result = self.engine.test_one_statement_register()
+
+        self.assertTupleEqual(result, (u'a',))
+
+
+class OneStatement_table:
+    def test_one_statement_table(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('a')")
+
+        result = self.engine.test_one_statement_table()
+
+        self.assertListEqual(result, [(u'a',)])
+
+
+class MultipleStatement:
+    def test_multiple_statement(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+
+        self.engine.test_multiple_statement(key='c')
+
+        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+
+        self.assertListEqual(result, [(u'c',)])
+
+
+class TestAntiORM(Test, Base, StatementINSERTSingle, StatementINSERTMultiple,
+                  OneStatement_value, OneStatement_register,
+                  OneStatement_table, MultipleStatement):
+    def setUp(self):
+        self.engine = AntiORM(self.connection, self.dir_path)
 
 
 if __name__ == "__main__":
