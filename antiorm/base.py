@@ -324,7 +324,6 @@ class AntiORM(object):
 
                 if result:
                     return result[0]
-#                    return result[column]
 
         return _wrapped_method
 
