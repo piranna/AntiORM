@@ -5,7 +5,7 @@ from unittest import main, TestCase
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.utils import DictObj_factory, TupleObj_factory, named2pyformat
+from antiorm.utils import TupleObj_factory, named2pyformat
 
 
 class FakeCursor:
@@ -17,19 +17,6 @@ class TestUtils(TestCase):
     "Test for the AntiORM utility functions"
 
     fakecursor = FakeCursor(('a', 'b', 'c'))
-
-    def test_DictObj_factory(self):
-        dictobj = DictObj_factory(self.fakecursor, ('x', 'y', 'z'))
-
-        self.assertEqual(dictobj, {'a': 'x', 'b': 'y', 'c': 'z'})
-
-        self.assertEqual(dictobj['a'], 'x')
-        self.assertEqual(dictobj['b'], 'y')
-        self.assertEqual(dictobj['c'], 'z')
-
-        self.assertEqual(dictobj.a, 'x')
-        self.assertEqual(dictobj.b, 'y')
-        self.assertEqual(dictobj.c, 'z')
 
     def test_TupleObj_factory(self):
         tupleobj = TupleObj_factory(self.fakecursor, ('x', 'y', 'z'))
