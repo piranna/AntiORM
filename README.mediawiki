@@ -5,7 +5,7 @@ While others ORM isolate the database creating internally SQL queries and DB tab
 Developed originally as part of the [https://github.com/piranna/PirannaFS PirannaFS] filesystem project and focused in SQLite, it have been modified to be for general purpose and usable with any other DB engine.
 
 = Dependencies =
-* Python   >= 2.5 (by sqlparse)
+* Python   >= 2.6 (by namedtuple, if installed 2.5 by sqlparse)
 * [http://code.google.com/p/python-sqlparse sqlparse] >= 0.1.3.20120123 (rev. 9aabd61fa2d8)
 
 = How to use it =
@@ -14,4 +14,11 @@ Developed originally as part of the [https://github.com/piranna/PirannaFS Pirann
 # Optionally, add (more) functions to the AntiORM at any time calling to parse_dir(), parse_file() or parse_string(), giving them a path to a folder with SQL files, a path to a SQL file or a SQL string respectively.
 # Finally, call the generated methods on the AntiORM instance using the name given (generally the SQL file name without the extension) and giving the arguments using a named params style or passing a dictionary. You can also pass a list of dictionaries if you need to exec the same generated method several times sequentially.
 
+== Indications ==
 One thing that you must to notice, is that '''AntiORM doesn't make any check about your code nor generate it'''. AntiORM assume that the SQL code that you give to it is correct and working, and also that the tables that you use on it really exists on the database, so be sure that you have created them by hand or called an AntiORM generated method that created them for you before trying to do any other operation.
+
+Also, being fully compatible with [http://www.python.org/dev/peps/pep-0249 Python DB-API 2.0], the rows are returned as a tuple by default. You can be able to return instead a custom object putting a function factory that use the actual cursor and row as parameters (currently only with Sqlite and APSW drivers), being the only restriction that they could be able also to be accessed to them as a tuple. You can find a example at antiorm/utils.py module.
+
+= Acknowledges =
+* [https://github.com/dansrocks Daniel Cabrera] for guidance on [https://github.com/piranna/PirannaFS PirannaFS], AntiORM parent project, and for recomendations about how to focus the development of AntiORM.
+* [https://github.com/niwibe Andrei Antoukh] for huge clean-up and improvement of style of the code, and also some guidances about how to speed-up it with other colleages from [http://www.python-madrid.es Python Madrid] group.

@@ -27,6 +27,14 @@ class APSW(AntiORM):
 
         AntiORM.__init__(self, db_conn, dir_path, lazy)
 
+    @property
+    def row_factory(self):
+        return self.connection.getrowtrace()
+
+    @row_factory.setter
+    def row_factory(self, value):
+        self.connection.setrowtrace(value)
+
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """Build a function from a string containing a SQL query
 

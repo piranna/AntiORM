@@ -13,6 +13,14 @@ from ..utils import named2pyformat
 class Sqlite(AntiORM):
     "SQLite driver for AntiORM"
 
+    @property
+    def row_factory(self):
+        return self.connection.row_factory
+
+    @row_factory.setter
+    def row_factory(self, value):
+        self.connection.row_factory = value
+
     @register
     def _multiple_statement(self, stream):
         """Execute the script optimized using SQLite non-standard method
