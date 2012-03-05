@@ -6,9 +6,8 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
-from ..base  import register
 from ..utils import named2pyformat
-from generic import Generic
+from generic import Generic, register
 
 
 class Sqlite(Generic):
