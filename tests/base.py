@@ -7,8 +7,6 @@ from unittest import main, TestCase
 import sys
 sys.path.insert(0, '..')
 
-from antiorm import AntiORM
-
 
 class Test(TestCase):
     "Test for the AntiORM base driver"
@@ -195,13 +193,6 @@ class MultipleStatement:
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
         self.assertListEqual(result, [(u'c',)])
-
-
-class TestAntiORM(Test, Base, StatementINSERTSingle, StatementINSERTMultiple,
-                  OneStatement_value, OneStatement_register,
-                  OneStatement_table, MultipleStatement):
-    def setUp(self):
-        self.engine = AntiORM(self.connection, self.dir_path)
 
 
 if __name__ == "__main__":
