@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .base import AntiORM
+from .backends.generic import Generic as AntiORM
 
 __all__ = ['AntiORM']

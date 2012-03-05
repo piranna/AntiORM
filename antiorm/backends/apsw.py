@@ -6,10 +6,10 @@ Created on 17/02/2012
 
 from logging import warning
 
-from .. import AntiORM
+from generic import Generic
 
 
-class APSW(AntiORM):
+class APSW(Generic):
     "APSW driver for AntiORM"
     _max_cachedmethods = 100
 
@@ -25,7 +25,7 @@ class APSW(AntiORM):
         """
         self._cachedmethods = 0
 
-        AntiORM.__init__(self, db_conn, dir_path, lazy)
+        Generic.__init__(self, db_conn, dir_path, lazy)
 
     @property
     def row_factory(self):
@@ -42,7 +42,7 @@ class APSW(AntiORM):
         cache it shows an alert because performance will decrease.
         """
         try:
-            result = AntiORM.parse_string(self, sql, method_name, include_path,
+            result = Generic.parse_string(self, sql, method_name, include_path,
                                           lazy)
         except:
             raise

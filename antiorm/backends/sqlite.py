@@ -6,11 +6,12 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
-from ..base  import AntiORM, register
+from ..base  import register
 from ..utils import named2pyformat
+from generic import Generic
 
 
-class Sqlite(AntiORM):
+class Sqlite(Generic):
     "SQLite driver for AntiORM"
 
     @property

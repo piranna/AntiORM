@@ -67,12 +67,12 @@ class _TransactionManager(object):
 #    return _wrapped
 
 
-class AntiORM(object):
-    """Base driver for AntiORM.
+class Base(object):
+    """Base functionality for AntiORM.
 
-    Using this should be enought for any project, but it's recomended to use a
-    specific driver for your type of database connection to be able to use some
-    optimizations.
+    This class has the basic functionality for AntiORM drivers and it's useless
+    for the final user. To use AntiORM, select a specialized driver or in case
+    of doubt select the Generic one.
     """
     # TODO: database independent layer with full transaction managment
 
@@ -357,20 +357,5 @@ class AntiORM(object):
                         return cursor.executemany(sql, _)
 
                 return cursor.execute(sql, kwargs).fetchall()
-
-        return _wrapped_method
-
-    @register
-    def _multiple_statement(self, stream):
-        """
-        `stream` SQL have several statements (script)
-        """
-        sql = map(unicode, split2(stream))
-
-        def _wrapped_method(self, **kwargs):
-            "Execute the statements sequentially"
-            with self.transaction() as cursor:
-                for sql_stmt in sql:
-                    cursor.execute(sql_stmt, kwargs)
 
         return _wrapped_method
