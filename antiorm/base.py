@@ -70,9 +70,9 @@ class _TransactionManager(object):
 class Base(object):
     """Base functionality for AntiORM.
 
-    This class has the basic functionality for AntiORM drivers and it's useless
-    for the final user. To use AntiORM, select a specialized driver or in case
-    of doubt select the Generic one.
+    This class has the basic administrative functionality for AntiORM drivers
+    and it's useless for the final user. To use AntiORM, select a specialized
+    driver or in case of doubt select the Generic one.
     """
     # TODO: database independent layer with full transaction managment
 
