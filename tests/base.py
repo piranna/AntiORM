@@ -1,44 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from os.path  import abspath, dirname, join
-from sqlite3  import connect
 from unittest import main, TestCase
 
 import sys
 sys.path.insert(0, '..')
 
 
-class Test(TestCase):
-    "Test for the AntiORM base driver"
-
-    def __init__(self, methodName='runTest'):
-        TestCase.__init__(self, methodName)
-
-        self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
-
-    @classmethod
-    def setUpClass(cls):
-        cls.connection = connect(":memory:")
-        cursor = cls.connection.cursor()
-        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
-        cursor.execute("""CREATE TABLE test_statement_INSERT_multiple
-        (
-            key   TEXT,
-            value TEXT NULL
-        );""")
-        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
-        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
-        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
-        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
-        cursor.close()
-        cls.connection.commit()
-
-    @classmethod
-    def tearDownClass(cls):
-        cls.connection.close()
-
-
-class Base:
+class Basic:
     def test_method_notparsed(self):
         with self.assertRaises(AttributeError):
             self.engine.notparsed()
@@ -49,6 +18,12 @@ class Base:
 
 
 class StatementINSERTSingle:
+    def setUp(self):
+        cursor = self.connection.cursor()
+        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
+        cursor.close()
+        self.connection.commit()
+
     def test_statement_INSERT_single_1(self):
         rowid = self.engine.test_statement_INSERT_single(key="hola")
 
@@ -98,6 +73,16 @@ class StatementINSERTSingle:
 
 
 class StatementINSERTMultiple:
+    def setUp(self):
+        cursor = self.connection.cursor()
+        cursor.execute("""CREATE TABLE test_statement_INSERT_multiple
+        (
+            key   TEXT,
+            value TEXT NULL
+        );""")
+        cursor.close()
+        self.connection.commit()
+
     def test_statement_INSERT_multiple_1(self):
         rowid = self.engine.test_statement_INSERT_multiple(key='a')
 
@@ -154,6 +139,12 @@ class StatementINSERTMultiple:
 
 
 class OneStatement_value:
+    def setUp(self):
+        cursor = self.connection.cursor()
+        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
+        cursor.close()
+        self.connection.commit()
+
     def test_one_statement_value(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('a')")
@@ -164,6 +155,12 @@ class OneStatement_value:
 
 
 class OneStatement_register:
+    def setUp(self):
+        cursor = self.connection.cursor()
+        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
+        cursor.close()
+        self.connection.commit()
+
     def test_one_statement_register(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('a')")
@@ -174,6 +171,13 @@ class OneStatement_register:
 
 
 class OneStatement_table:
+    def setUp(self):
+        cursor = self.connection.cursor()
+        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
+        cursor.close()
+        self.connection.commit()
+
+
     def test_one_statement_table(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('a')")
@@ -184,6 +188,13 @@ class OneStatement_table:
 
 
 class MultipleStatement:
+    def setUp(self):
+        cursor = self.connection.cursor()
+        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
+        cursor.close()
+        self.connection.commit()
+
+
     def test_multiple_statement(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
@@ -193,6 +204,21 @@ class MultipleStatement:
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
         self.assertListEqual(result, [(u'c',)])
+
+
+class Test(TestCase, Basic,
+           StatementINSERTSingle, StatementINSERTMultiple,
+           OneStatement_value, OneStatement_register, OneStatement_table,
+           MultipleStatement):
+    def __init__(self, methodName='runTest'):
+        TestCase.__init__(self, methodName)
+
+        self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
+
+    def setUp(self):
+        for base in self.__class__.__bases__:
+            if hasattr(base, 'setUp'):
+                base.setUp(self)
 
 
 if __name__ == "__main__":
