@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
 from os.path  import abspath, dirname, join
-from sqlite3  import connect
 from unittest import main, TestCase
+
+from apsw     import Connection
+from sqlite3  import connect
 
 import sys
 sys.path.insert(0, '..')
@@ -27,14 +29,13 @@ class TestAPSW(TestCase,
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
 
-        self.connection = connect(":memory:")
+        self.connection = Connection(":memory:")
+        self.engine = APSW(self.connection, self.dir_path)
+        self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
             if hasattr(base, 'setUp'):
                 base.setUp(self)
-
-        self.engine = APSW(self.connection, self.dir_path)
-        self.engine.row_factory = Namedtuple_factory
 
     def test_row_factory(self):
         pass
@@ -50,13 +51,11 @@ class TestGeneric(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
 
         self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path)
 
         for base in self.__class__.__bases__:
             if hasattr(base, 'setUp'):
-                print repr(base)
                 base.setUp(self)
-
-        self.engine = Generic(self.connection, self.dir_path)
 
     def tearDown(self):
         self.connection.close()
@@ -72,13 +71,12 @@ class TestSqlite(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
 
         self.connection = connect(":memory:")
+        self.engine = Sqlite(self.connection, self.dir_path)
+        self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
             if hasattr(base, 'setUp'):
                 base.setUp(self)
-
-        self.engine = Sqlite(self.connection, self.dir_path)
-        self.engine.row_factory = Namedtuple_factory
 
     def test_row_factory(self):
         pass

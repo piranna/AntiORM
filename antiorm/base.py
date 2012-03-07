@@ -104,6 +104,9 @@ class Base(object):
         result = parser(data, name, include_path)
         return result.__get__(self, self.__class__)
 
+    def commit(self):
+        self.connection.commit()
+
     def transaction(self):
         "Return the current transaction manager"
         return self.tx_manager

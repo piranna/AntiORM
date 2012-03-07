@@ -25,7 +25,15 @@ class APSW(Generic):
         """
         self._cachedmethods = 0
 
+        def commit(self):
+            self.cursor().execute("commit")
+#        db_conn.commit = commit
+        db_conn.__class__.__setattr__(db_conn.__class__, 'commit', commit)
+
         Generic.__init__(self, db_conn, dir_path, lazy)
+
+#    def commit(self):
+#        self.connection.cursor().execute('commit')
 
     @property
     def row_factory(self):
