@@ -6,7 +6,18 @@ Created on 17/02/2012
 
 from logging import warning
 
+from apsw import Connection, SQLError
+
 from generic import Generic
+
+
+class Connection(Connection):
+    """Python DB-API 2.0 compatibility wrapper for APSW Connection class"""
+    def commit(self):
+        try:
+            self.cursor().execute("commit")
+        except SQLError:
+            pass
 
 
 class APSW(Generic):
@@ -24,11 +35,6 @@ class APSW(Generic):
         @type lazy: boolean
         """
         self._cachedmethods = 0
-
-        def commit(self):
-            self.cursor().execute("commit")
-#        db_conn.commit = commit
-        db_conn.__class__.__setattr__(db_conn.__class__, 'commit', commit)
 
         Generic.__init__(self, db_conn, dir_path, lazy)
 

@@ -3,13 +3,13 @@
 from os.path  import abspath, dirname, join
 from unittest import main, TestCase
 
-from apsw     import Connection
-from sqlite3  import connect
+from antiorm.backends._apsw import Connection
+from sqlite3               import connect
 
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.backends.apsw    import APSW
+from antiorm.backends._apsw   import APSW
 from antiorm.backends.generic import Generic
 from antiorm.backends.sqlite  import Sqlite
 from antiorm.utils            import Namedtuple_factory
