@@ -7,8 +7,14 @@ from re          import sub
 def Namedtuple_factory(cursor, row):
     "Create a namedtuple from a DB-API 2.0 cursor description and its values"
 
-    return namedtuple('namedtuple',
-                      (col[0] for col in cursor.description))(*row)
+    try:
+        description = cursor.description
+
+    # APSW
+    except AttributeError:
+        description = cursor.getdescription()
+
+    return namedtuple('namedtuple', (col[0] for col in description))(*row)
 
 
 def named2pyformat(sql):

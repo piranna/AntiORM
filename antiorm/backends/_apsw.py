@@ -6,7 +6,35 @@ Created on 17/02/2012
 
 from logging import warning
 
+import apsw
+
 from generic import Generic
+
+
+class Cursor:
+    """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects"""
+    def __init__(self, cursor):
+        self.cursor = cursor
+        self.fetchone = cursor.next
+
+    def __getattr__(self, name):
+        return getattr(self.cursor, name)
+
+    @property
+    def lastrowid(self):
+        return self.connection.last_insert_rowid()
+
+
+class Connection(apsw.Connection):
+    """Python DB-API 2.0 compatibility wrapper for APSW Connection class"""
+    def commit(self):
+        try:
+            self.cursor().execute("commit")
+        except apsw.SQLError:
+            pass
+
+    def cursor(self):
+        return Cursor(apsw.Connection.cursor(self))
 
 
 class APSW(Generic):
@@ -24,11 +52,6 @@ class APSW(Generic):
         @type lazy: boolean
         """
         self._cachedmethods = 0
-
-        def commit(self):
-            self.cursor().execute("commit")
-#        db_conn.commit = commit
-        db_conn.__class__.__setattr__(db_conn.__class__, 'commit', commit)
 
         Generic.__init__(self, db_conn, dir_path, lazy)
 
