@@ -14,32 +14,41 @@ from generic import Generic, register
 
 
 class CursorWrapper(object):
-    """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects"""
+    """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects
+
+    This is done this way because since apsw.Cursor is a compiled extension
+    it doesn't allow to set attributes, and also it's called internally so i
+    can't be able to make a subclass"""
     def __init__(self, cursor):
+        """Constructor
+
+        @param cursor: the cursor to wrap
+        @type cursor: apsw.Cursor"""
+        # This protect of apply the wrapper over another one
         if isinstance(cursor, CursorWrapper):
             self._cursor = cursor._cursor
         else:
             self._cursor = cursor
 
     def __getattr__(self, name):
-        if name == 'lastrowid':  # Ugly hack since property don't want to work
-            return self._cursor.getconnection().last_insert_rowid()
         return getattr(self._cursor, name)
 
-    def execute(self, *args, **kwargs):
-        return self._cursor.execute(*args, **kwargs)
-
-#    def fetchone(self):
-#        return self._cursor.next()
-
-#    @property
-#    def lastrowid(self):
-#        return self._cursor.last_insert_rowid()
+    @property
+    def lastrowid(self):
+        return self._cursor.getconnection().last_insert_rowid()
 
 
 class ConnectionWrapper(object):
-    """Python DB-API 2.0 compatibility wrapper for APSW Connection objects"""
+    """Python DB-API 2.0 compatibility wrapper for APSW Connection objects
+
+    This is done this way because since apsw.Cursor is a compiled extension
+    it doesn't allow to set attributes"""
     def __init__(self, connection):
+        """Constructor
+
+        @param connection: the connection to wrap
+        @type connection: apsw.Connection"""
+        # This protect of apply the wrapper over another one
         if isinstance(connection, ConnectionWrapper):
             self._connection = connection._connection
         else:
