@@ -9,7 +9,7 @@ from sqlite3 import connect
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.backends._apsw   import APSW
+from antiorm.backends._apsw   import APSW, ConnectionWrapper
 from antiorm.backends.generic import Generic
 from antiorm.backends.sqlite  import Sqlite
 from antiorm.utils            import Namedtuple_factory
@@ -29,7 +29,7 @@ class TestAPSW(TestCase,
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
 
-        self.connection = Connection(":memory:")
+        self.connection = ConnectionWrapper(Connection(":memory:"))
         self.engine = APSW(self.connection, self.dir_path)
         self.engine.row_factory = Namedtuple_factory
 

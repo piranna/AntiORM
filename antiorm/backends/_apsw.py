@@ -6,49 +6,64 @@ Created on 17/02/2012
 
 from logging import warning
 
-import apsw
+from apsw import SQLError
 
-from generic import Generic
+from sqlparse.filters import Tokens2Unicode
+
+from generic import Generic, register
 
 
-class CursorWrapper:
+class CursorWrapper(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects"""
     def __init__(self, cursor):
-        self._cursor = cursor
-        self.fetchone = cursor.next
+        if isinstance(cursor, CursorWrapper):
+            self._cursor = cursor._cursor
+        else:
+            self._cursor = cursor
 
     def __getattr__(self, name):
+        if name == 'lastrowid':  # Ugly hack since property don't want to work
+            return self._cursor.getconnection().last_insert_rowid()
         return getattr(self._cursor, name)
 
-    @property
-    def lastrowid(self):
-        return self.connection.last_insert_rowid()
+    def execute(self, *args, **kwargs):
+        return self._cursor.execute(*args, **kwargs)
+
+#    def fetchone(self):
+#        return self._cursor.next()
+
+#    @property
+#    def lastrowid(self):
+#        return self._cursor.last_insert_rowid()
 
 
-class ConnectionWrapper:
+class ConnectionWrapper(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Connection objects"""
     def __init__(self, connection):
-        self._connection = connection
+        if isinstance(connection, ConnectionWrapper):
+            self._connection = connection._connection
+        else:
+            self._connection = connection
 
     def __getattr__(self, name):
         return getattr(self._connection, name)
 
     def commit(self):
         try:
-            self.cursor().execute("commit")
-        except apsw.SQLError:
+            self._connection.cursor().execute("commit")
+        except SQLError:
             pass
 
     def cursor(self):
-        return CursorWrapper(apsw.Connection.cursor(self))
+        return CursorWrapper(self._connection.cursor())
 
     @property
     def row_factory(self):
-        return self.connection.getrowtrace()
+        return self._connection.getrowtrace()
 
     @row_factory.setter
     def row_factory(self, value):
-        self.connection.setrowtrace(value)
+        self._connection.setrowtrace(value)
 
 
 class APSW(Generic):
@@ -87,3 +102,42 @@ class APSW(Generic):
                     (self._cachedmethods, self._max_cachedmethods))
 
         return result
+
+    @register
+    def _one_statement_value(self, stream):
+        """
+        `stream` SQL statement return a cell
+        """
+        sql = Tokens2Unicode(stream)
+
+        def _wrapped_method(self, **kwargs):
+            "Execute the statement and return its cell value"
+            with self.transaction() as cursor:
+                result = cursor.execute(sql, kwargs)
+                try:
+                    result = result.fetchall()[0]
+                except StopIteration:
+                    result = None
+
+                if result:
+                    return result[0]
+
+        return _wrapped_method
+
+    @register
+    def _one_statement_register(self, stream):
+        """
+        `stream` SQL statement return a row
+        """
+        sql = Tokens2Unicode(stream)
+
+        def _wrapped_method(self, **kwargs):
+            "Execute the statement and return a row"
+            with self.transaction() as cursor:
+                result = cursor.execute(sql, kwargs)
+                try:
+                    return result.fetchall()[0]
+                except StopIteration:
+                    pass
+
+        return _wrapped_method

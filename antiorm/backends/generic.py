@@ -47,6 +47,7 @@ class Generic(Base):
                 def _priv(kwargs):
                     "Exec the statement and return the inserted row id"
                     cursor.execute(sql, kwargs)
+                    print "cursor", cursor
                     return cursor.lastrowid
 
                 # Received un-named parameter, it would be a iterable
