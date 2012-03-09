@@ -124,9 +124,9 @@ class APSW(Generic):
             with self.transaction() as cursor:
                 result = cursor.execute(sql, kwargs)
                 try:
-                    result = result.fetchall()[0]
+                    result = result.next()
                 except StopIteration:
-                    result = None
+                    return
 
                 if result:
                     return result[0]
@@ -145,7 +145,7 @@ class APSW(Generic):
             with self.transaction() as cursor:
                 result = cursor.execute(sql, kwargs)
                 try:
-                    return result.fetchall()[0]
+                    return result.next()
                 except StopIteration:
                     pass
 
