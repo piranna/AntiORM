@@ -3,8 +3,8 @@
 from os.path  import abspath, dirname, join
 from unittest import main, TestCase
 
-from antiorm.backends._apsw import Connection
-from sqlite3               import connect
+from apsw    import Connection
+from sqlite3 import connect
 
 import sys
 sys.path.insert(0, '..')

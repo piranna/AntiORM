@@ -11,22 +11,28 @@ import apsw
 from generic import Generic
 
 
-class Cursor:
+class CursorWrapper:
     """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects"""
     def __init__(self, cursor):
-        self.cursor = cursor
+        self._cursor = cursor
         self.fetchone = cursor.next
 
     def __getattr__(self, name):
-        return getattr(self.cursor, name)
+        return getattr(self._cursor, name)
 
     @property
     def lastrowid(self):
         return self.connection.last_insert_rowid()
 
 
-class Connection(apsw.Connection):
-    """Python DB-API 2.0 compatibility wrapper for APSW Connection class"""
+class ConnectionWrapper:
+    """Python DB-API 2.0 compatibility wrapper for APSW Connection objects"""
+    def __init__(self, connection):
+        self._connection = connection
+
+    def __getattr__(self, name):
+        return getattr(self._connection, name)
+
     def commit(self):
         try:
             self.cursor().execute("commit")
@@ -34,7 +40,15 @@ class Connection(apsw.Connection):
             pass
 
     def cursor(self):
-        return Cursor(apsw.Connection.cursor(self))
+        return CursorWrapper(apsw.Connection.cursor(self))
+
+    @property
+    def row_factory(self):
+        return self.connection.getrowtrace()
+
+    @row_factory.setter
+    def row_factory(self, value):
+        self.connection.setrowtrace(value)
 
 
 class APSW(Generic):
@@ -53,18 +67,7 @@ class APSW(Generic):
         """
         self._cachedmethods = 0
 
-        Generic.__init__(self, db_conn, dir_path, lazy)
-
-#    def commit(self):
-#        self.connection.cursor().execute('commit')
-
-    @property
-    def row_factory(self):
-        return self.connection.getrowtrace()
-
-    @row_factory.setter
-    def row_factory(self, value):
-        self.connection.setrowtrace(value)
+        Generic.__init__(self, ConnectionWrapper(db_conn), dir_path, lazy)
 
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """Build a function from a string containing a SQL query
