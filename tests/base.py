@@ -155,7 +155,7 @@ class OneStatement_value:
 
         result = self.engine.test_one_statement_value([{'key': 'c'}])
 
-        self.assertEqual(result, [u'c'])
+        self.assertListEqual(result, [u'c'])
 
 
 class OneStatement_register:
@@ -187,7 +187,7 @@ class OneStatement_register:
 
         result = self.engine.test_one_statement_register([{'key': 'c'}])
 
-        self.assertTupleEqual(result, (u'c',))
+        self.assertListEqual(result, [(u'c',)])
 
 
 class OneStatement_table:

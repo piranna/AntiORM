@@ -119,17 +119,27 @@ class APSW(Generic):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, **kwargs):
+        def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return its cell value"
             with self.transaction() as cursor:
-                result = cursor.execute(sql, kwargs)
-                try:
-                    result = result.next()
-                except StopIteration:
-                    return
+                def _priv(kwargs):
+                    result = cursor.execute(sql, kwargs)
+                    try:
+                        result = result.next()
+                    except StopIteration:
+                        return
 
-                if result:
-                    return result[0]
+                    if result:
+                        return result[0]
+
+                # Received un-named parameter, it would be a iterable
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        return map(_priv, _)
+
+                return _priv(kwargs)
 
         return _wrapped_method
 
@@ -140,13 +150,23 @@ class APSW(Generic):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, **kwargs):
+        def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return a row"
             with self.transaction() as cursor:
-                result = cursor.execute(sql, kwargs)
-                try:
-                    return result.next()
-                except StopIteration:
-                    pass
+                def _priv(kwargs):
+                    result = cursor.execute(sql, kwargs)
+                    try:
+                        return result.next()
+                    except StopIteration:
+                        pass
+
+                # Received un-named parameter, it would be a iterable
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        return map(_priv, _)
+
+                return _priv(kwargs)
 
         return _wrapped_method
