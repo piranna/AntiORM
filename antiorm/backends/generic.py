@@ -124,9 +124,15 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, **kwargs):
+        def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return a row"
             with self.transaction() as cursor:
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        return cursor.executemany(sql, _)
+
                 return cursor.execute(sql, kwargs).fetchone()
 
         return _wrapped_method
