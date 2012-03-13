@@ -183,10 +183,19 @@ class Generic(Base):
         def _wrapped_method(self, _=None, **kwargs):
             "Execute the statements sequentially"
             with self.transaction() as cursor:
-                if isinstance(_, dict):
-                    kwargs = _
+                def _priv(kwargs):
+                    result = []
+                    for sql_stmt in sql:
+                        result.append(cursor.execute(sql_stmt, kwargs))
+                    return result
 
-                for sql_stmt in sql:
-                    cursor.execute(sql_stmt, kwargs)
+                # Received un-named parameter, it would be a iterable
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        return map(_priv, _)
+
+                return _priv(kwargs)
 
         return _wrapped_method
