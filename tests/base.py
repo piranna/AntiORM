@@ -137,9 +137,25 @@ class OneStatement_value:
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('a')")
 
-        result = self.engine.test_one_statement_value()
+        result = self.engine.test_one_statement_value(key='a')
 
         self.assertEqual(result, u'a')
+
+    def test_one_statement_value_dict(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('b')")
+
+        result = self.engine.test_one_statement_value({'key': 'b'})
+
+        self.assertEqual(result, u'b')
+
+    def test_one_statement_value_list(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('c')")
+
+        result = self.engine.test_one_statement_value([{'key': 'c'}])
+
+        self.assertEqual(result, u'c')
 
 
 class OneStatement_register:
@@ -153,9 +169,25 @@ class OneStatement_register:
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('a')")
 
-        result = self.engine.test_one_statement_register()
+        result = self.engine.test_one_statement_register(key='a')
 
         self.assertTupleEqual(result, (u'a',))
+
+    def test_one_statement_register_dict(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('b')")
+
+        result = self.engine.test_one_statement_register({'key': 'b'})
+
+        self.assertTupleEqual(result, (u'b',))
+
+    def test_one_statement_register_list(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('c')")
+
+        result = self.engine.test_one_statement_register([{'key': 'c'}])
+
+        self.assertTupleEqual(result, (u'c',))
 
 
 class OneStatement_table:
@@ -165,14 +197,29 @@ class OneStatement_table:
         cursor.close()
         self.connection.commit()
 
-
     def test_one_statement_table(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('a')")
 
-        result = self.engine.test_one_statement_table()
+        result = self.engine.test_one_statement_table(key='a')
 
         self.assertListEqual(result, [(u'a',)])
+
+    def test_one_statement_table_dict(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('b')")
+
+        result = self.engine.test_one_statement_table({'key': 'b'})
+
+        self.assertListEqual(result, [(u'b',)])
+
+    def test_one_statement_table_list(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('c')")
+
+        result = self.engine.test_one_statement_table([{'key': 'c'}])
+
+        self.assertListEqual(result, [(u'c',)])
 
 
 class MultipleStatement:
@@ -181,7 +228,6 @@ class MultipleStatement:
         cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
         cursor.close()
         self.connection.commit()
-
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()
@@ -192,3 +238,23 @@ class MultipleStatement:
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
         self.assertListEqual(result, [(u'c',)])
+
+    def test_multiple_statement_dict(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+
+        self.engine.test_multiple_statement({'key': 'd'})
+
+        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+
+        self.assertListEqual(result, [(u'd',)])
+
+    def test_multiple_statement_list(self):
+        cursor = self.connection.cursor()
+        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+
+        self.engine.test_multiple_statement([{'key': 'e'}])
+
+        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+
+        self.assertListEqual(result, [(u'e',)])

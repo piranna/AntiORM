@@ -1,1 +1,3 @@
-SELECT * FROM test_one_statement_register LIMIT 1
+SELECT * FROM test_one_statement_register
+WHERE key=:key
+LIMIT 1
