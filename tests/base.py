@@ -155,7 +155,7 @@ class OneStatement_value:
 
         result = self.engine.test_one_statement_value([{'key': 'c'}])
 
-        self.assertEqual(result, u'c')
+        self.assertEqual(result, [u'c'])
 
 
 class OneStatement_register:

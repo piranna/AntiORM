@@ -172,9 +172,12 @@ class Generic(Base):
         """
         sql = map(unicode, split2(stream))
 
-        def _wrapped_method(self, **kwargs):
+        def _wrapped_method(self, _=None, **kwargs):
             "Execute the statements sequentially"
             with self.transaction() as cursor:
+                if isinstance(_, dict):
+                    kwargs = _
+
                 for sql_stmt in sql:
                     cursor.execute(sql_stmt, kwargs)
 
