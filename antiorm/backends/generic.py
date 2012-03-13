@@ -159,13 +159,17 @@ class Generic(Base):
         def _wrapped_method(self, _=None, **kwargs):
             "Execute a statement. If a list is given, they are exec at once"
             with self.transaction() as cursor:
+                def _priv(kwargs):
+                    return cursor.execute(sql, kwargs).fetchall()
+
+                # Received un-named parameter, it would be a iterable
                 if _ != None:
                     if isinstance(_, dict):
                         kwargs = _
                     else:
-                        return cursor.executemany(sql, _)
+                        return map(_priv, _)
 
-                return cursor.execute(sql, kwargs).fetchall()
+                return _priv(kwargs)
 
         return _wrapped_method
 
