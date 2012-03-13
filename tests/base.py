@@ -217,7 +217,7 @@ class OneStatement_table:
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('c')")
 
-        result = self.engine.test_one_statement_table([{'key': 'c'}])
+        result = list(self.engine.test_one_statement_table([{'key': 'c'}]))
 
         self.assertListEqual(result, [(u'c',)])
 

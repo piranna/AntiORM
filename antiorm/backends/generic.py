@@ -106,14 +106,22 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, **kwargs):
+        def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return its cell value"
             with self.transaction() as cursor:
-                result = cursor.execute(sql, kwargs)
-                result = result.fetchone()
+                def _priv(kwargs):
+                    result = cursor.execute(sql, kwargs).fetchone()
+                    if result:
+                        return result[0]
 
-                if result:
-                    return result[0]
+                # Received un-named parameter, it would be a iterable
+                if _ != None:
+                    if isinstance(_, dict):
+                        kwargs = _
+                    else:
+                        return map(_priv, _)
+
+                return _priv(kwargs)
 
         return _wrapped_method
 
