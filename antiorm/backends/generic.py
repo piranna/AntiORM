@@ -135,13 +135,17 @@ class Generic(Base):
         def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return a row"
             with self.transaction() as cursor:
+                def _priv(kwargs):
+                    return cursor.execute(sql, kwargs).fetchone()
+
+                # Received un-named parameter, it would be a iterable
                 if _ != None:
                     if isinstance(_, dict):
                         kwargs = _
                     else:
-                        return cursor.executemany(sql, _)
+                        return map(_priv, _)
 
-                return cursor.execute(sql, kwargs).fetchone()
+                return _priv(kwargs)
 
         return _wrapped_method
 
