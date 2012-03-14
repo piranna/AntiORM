@@ -22,17 +22,17 @@ class Sqlite(Generic):
 
         def _wrapped_method(self, _=None, **kwargs):
             "Use executescript() instead of iterate over the statements"
-            with self.transaction() as cursor:
-                def _priv(kwargs):
+            def _priv(kwargs):
+                with self.transaction() as cursor:
                     return cursor.executescript(sql % kwargs)
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method

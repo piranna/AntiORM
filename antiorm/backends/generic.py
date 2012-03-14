@@ -43,21 +43,21 @@ class Generic(Base):
 
             @return: the inserted row id (or a list with them)
             """
-            with self.transaction() as cursor:
-                def _priv(kwargs):
-                    "Exec the statement and return the inserted row id"
+            def _priv(kwargs):
+                "Exec the statement and return the inserted row id"
+                with self.transaction() as cursor:
                     cursor.execute(sql, kwargs)
                     print "cursor", cursor
                     return cursor.lastrowid
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method
 
@@ -77,9 +77,9 @@ class Generic(Base):
 
             @return: the inserted row id from the first INSERT one
             """
-            with self.transaction() as cursor:
-                def _priv(kwargs):
-                    "Exec the statements and return the row id of the first"
+            def _priv(kwargs):
+                "Exec the statements and return the row id of the first"
+                with self.transaction() as cursor:
                     cursor.execute(sql[0], kwargs)
                     rowid = cursor.lastrowid
 
@@ -88,14 +88,14 @@ class Generic(Base):
 
                     return rowid
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method
 
@@ -108,20 +108,20 @@ class Generic(Base):
 
         def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return its cell value"
-            with self.transaction() as cursor:
-                def _priv(kwargs):
+            def _priv(kwargs):
+                with self.transaction() as cursor:
                     result = cursor.execute(sql, kwargs).fetchone()
                     if result:
                         return result[0]
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method
 
@@ -134,18 +134,18 @@ class Generic(Base):
 
         def _wrapped_method(self, _=None, **kwargs):
             "Execute the statement and return a row"
-            with self.transaction() as cursor:
-                def _priv(kwargs):
+            def _priv(kwargs):
+                with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchone()
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method
 
@@ -158,18 +158,18 @@ class Generic(Base):
 
         def _wrapped_method(self, _=None, **kwargs):
             "Execute a statement. If a list is given, they are exec at once"
-            with self.transaction() as cursor:
-                def _priv(kwargs):
+            def _priv(kwargs):
+                with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchall()
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method
 
@@ -182,20 +182,20 @@ class Generic(Base):
 
         def _wrapped_method(self, _=None, **kwargs):
             "Execute the statements sequentially"
-            with self.transaction() as cursor:
-                def _priv(kwargs):
+            def _priv(kwargs):
+                with self.transaction() as cursor:
                     result = []
                     for sql_stmt in sql:
                         result.append(cursor.execute(sql_stmt, kwargs))
                     return result
 
-                # Received un-named parameter, it would be a iterable
-                if _ != None:
-                    if isinstance(_, dict):
-                        kwargs = _
-                    else:
-                        return map(_priv, _)
+            # Received un-named parameter, it would be a iterable
+            if _ != None:
+                if isinstance(_, dict):
+                    kwargs = _
+                else:
+                    return map(_priv, _)
 
-                return _priv(kwargs)
+            return _priv(kwargs)
 
         return _wrapped_method
