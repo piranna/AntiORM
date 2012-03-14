@@ -150,23 +150,30 @@ class APSW(Generic):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return a row"
             def _priv(kwargs):
                 with self.transaction() as cursor:
-                    result = cursor.execute(sql, kwargs)
                     try:
-                        return result.next()
+                        return cursor.execute(sql, kwargs).next()
                     except StopIteration:
                         pass
 
-            # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
+            def _priv_list(list_kwargs):
+                result = []
+                with self.transaction() as cursor:
+                    for kwargs in list_kwargs:
+                        try:
+                            result.append(cursor.execute(sql, kwargs).next())
+                        except StopIteration:
+                            pass
+                return result
 
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return map(_priv, list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
