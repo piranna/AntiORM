@@ -38,7 +38,7 @@ class Generic(Base):
         """
         sql = unicode(stmts[0])
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Execute the INSERT statement
 
             @return: the inserted row id (or a list with them)
@@ -49,13 +49,22 @@ class Generic(Base):
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
-            # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
+            def _priv_list(list_kwargs):
+                "Exec the statement and return the inserted row id"
+                result = []
 
+                with self.transaction() as cursor:
+                    for kwargs in list_kwargs:
+                        cursor.execute(sql, kwargs)
+                        result.append(cursor.lastrowid)
+
+                return result
+
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
@@ -71,7 +80,7 @@ class Generic(Base):
         """
         sql = map(unicode, stmts)
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Execute the statements sequentially
 
             @return: the inserted row id from the first INSERT one
@@ -87,13 +96,25 @@ class Generic(Base):
 
                     return rowid
 
-            # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
+            def _priv_list(list_kwargs):
+                "Exec the statements and return the row id of the first"
+                result = []
 
+                with self.transaction() as cursor:
+                    for kwargs in list_kwargs:
+                        cursor.execute(sql[0], kwargs)
+                        result.append(cursor.lastrowid)
+
+                        for stmt in sql[1:]:
+                            cursor.execute(stmt, kwargs)
+
+                return result
+
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
@@ -105,7 +126,7 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return its cell value"
             def _priv(kwargs):
                 with self.transaction() as cursor:
@@ -113,13 +134,23 @@ class Generic(Base):
                     if result:
                         return result[0]
 
-            # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
+            def _priv_list(list_kwargs):
+                result = []
 
+                with self.transaction() as cursor:
+                    for kwargs in list_kwargs:
+                        value = cursor.execute(sql, kwargs).fetchone()
+                        if value:
+                            value = value[0]
+                        result.append(value)
+
+                return result
+
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
@@ -131,19 +162,26 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return a row"
             def _priv(kwargs):
                 with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchone()
 
-            # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
+            def _priv_list(list_kwargs):
+                with self.transaction() as cursor:
+                    result = []
 
+                    for kwargs in list_kwargs:
+                        result.append(cursor.execute(sql, kwargs).fetchone())
+
+                    return result
+
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
@@ -155,19 +193,26 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute a statement. If a list is given, they are exec at once"
             def _priv(kwargs):
                 with self.transaction() as cursor:
                     return cursor.execute(sql, kwargs).fetchall()
 
-            # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
+            def _priv_list(list_kwargs):
+                result = []
 
+                with self.transaction() as cursor:
+                    for kwargs in list_kwargs:
+                        result.append(cursor.execute(sql, kwargs).fetchall())
+
+                return result
+
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
@@ -179,22 +224,36 @@ class Generic(Base):
         """
         sql = map(unicode, split2(stream))
 
-        def _wrapped_method(self, _=None, **kwargs):
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statements sequentially"
             def _priv(kwargs):
+                result = []
+
                 with self.transaction() as cursor:
-                    result = []
                     for sql_stmt in sql:
                         result.append(cursor.execute(sql_stmt, kwargs))
-                    return result
+
+                return result
+
+            def _priv_list(list_kwargs):
+                result = []
+
+                with self.transaction() as cursor:
+                    for kwargs in list_kwargs:
+                        result2 = []
+
+                        for sql_stmt in sql:
+                            result2.append(cursor.execute(sql_stmt, kwargs))
+
+                        result.append(result2)
+
+                return result
 
             # Received un-named parameter, it would be a iterable
-            if _ != None:
-                if isinstance(_, dict):
-                    kwargs = _
-                else:
-                    return map(_priv, _)
-
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
             return _priv(kwargs)
 
         return _wrapped_method
