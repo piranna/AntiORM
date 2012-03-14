@@ -47,7 +47,6 @@ class Generic(Base):
                 "Exec the statement and return the inserted row id"
                 with self.transaction() as cursor:
                     cursor.execute(sql, kwargs)
-                    print "cursor", cursor
                     return cursor.lastrowid
 
             # Received un-named parameter, it would be a iterable
