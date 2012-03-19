@@ -31,14 +31,14 @@ class Generic(Base):
     """
 
     @register
-    def _statement_INSERT_single(self, stmts):
+    def _statement_INSERT_single(self, stmts, bypass_types=False):
         """Single INSERT statement query
 
         @return: the inserted row id
         """
         sql = unicode(stmts[0])
 
-        def _priv_dict(kwargs):
+        def _priv_dict(self, kwargs):
             "Exec the statement and return the inserted row id"
             with self.transaction() as cursor:
                 cursor.execute(sql, kwargs)
@@ -61,17 +61,24 @@ class Generic(Base):
             @return: the inserted row id (or a list with them)
             """
 #            # By-pass types proxy
-#            if self._bypass_types and list_or_dict != None:
-#                if isinstance(list_or_dict, dict):
-#                    bypass(_priv_dict)
-#                bypass(_priv_list)
+            def bypass(method_name, func):
+                    # Add the type specific function to the class
+                    setattr(self.__class__, method_name, func)
+
+                    # By-pass types checking
+
+            if bypass_types and list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    bypass('_statement_INSERT_single__dict', _priv_dict)
+                else:
+                    bypass('_statement_INSERT_single__list', _priv_list)
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv_dict(list_or_dict)
+                    return _priv_dict(self, list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv_dict(kwargs)
+            return _priv_dict(self, kwargs)
 
         return _wrapped_method
 
