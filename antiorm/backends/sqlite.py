@@ -20,6 +20,19 @@ class Sqlite(Generic):
         """
         sql = named2pyformat(Tokens2Unicode(stream))
 
+        def _priv(kwargs):
+            with self.transaction() as cursor:
+                return cursor.executescript(sql % kwargs)
+
+        def _priv_list(list_kwargs):
+            result = []
+
+            with self.transaction() as cursor:
+                for kwargs in list_kwargs:
+                    result.append(cursor.executescript(sql % kwargs))
+
+            return result
+
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Use executescript() instead of iterate over the statements
 
@@ -28,17 +41,6 @@ class Sqlite(Generic):
 
             @return: the procesed data from the SQL query
             """
-            def _priv(kwargs):
-                with self.transaction() as cursor:
-                    return cursor.executescript(sql % kwargs)
-
-            def _priv_list(list_kwargs):
-                result = []
-                with self.transaction() as cursor:
-                    for kwargs in list_kwargs:
-                        result.append(cursor.executescript(sql % kwargs))
-                return result
-
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
