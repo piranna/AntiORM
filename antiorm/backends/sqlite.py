@@ -20,7 +20,7 @@ class Sqlite(Generic):
         """
         sql = named2pyformat(Tokens2Unicode(stream))
 
-        def _priv(kwargs):
+        def _priv_dict(kwargs):
             with self.transaction() as cursor:
                 return cursor.executescript(sql % kwargs)
 
@@ -44,8 +44,8 @@ class Sqlite(Generic):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv(kwargs)
+            return _priv_dict(kwargs)
 
         return _wrapped_method

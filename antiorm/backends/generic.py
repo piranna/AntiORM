@@ -86,7 +86,7 @@ class Generic(Base):
         """
         sql = map(unicode, stmts)
 
-        def _priv(kwargs):
+        def _priv_dict(kwargs):
             "Exec the statements and return the row id of the first"
             with self.transaction() as cursor:
                 cursor.execute(sql[0], kwargs)
@@ -119,9 +119,9 @@ class Generic(Base):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv(kwargs)
+            return _priv_dict(kwargs)
 
         return _wrapped_method
 
@@ -132,7 +132,7 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _priv(kwargs):
+        def _priv_dict(kwargs):
             with self.transaction() as cursor:
                 result = cursor.execute(sql, kwargs).fetchone()
                 if result:
@@ -155,9 +155,9 @@ class Generic(Base):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv(kwargs)
+            return _priv_dict(kwargs)
 
         return _wrapped_method
 
@@ -168,7 +168,7 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _priv(kwargs):
+        def _priv_dict(kwargs):
             with self.transaction() as cursor:
                 return cursor.execute(sql, kwargs).fetchone()
 
@@ -186,9 +186,9 @@ class Generic(Base):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv(kwargs)
+            return _priv_dict(kwargs)
 
         return _wrapped_method
 
@@ -199,7 +199,7 @@ class Generic(Base):
         """
         sql = Tokens2Unicode(stream)
 
-        def _priv(kwargs):
+        def _priv_dict(kwargs):
             with self.transaction() as cursor:
                 return cursor.execute(sql, kwargs).fetchall()
 
@@ -217,9 +217,9 @@ class Generic(Base):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv(kwargs)
+            return _priv_dict(kwargs)
 
         return _wrapped_method
 
@@ -230,7 +230,7 @@ class Generic(Base):
         """
         sql = map(unicode, split2(stream))
 
-        def _priv(kwargs):
+        def _priv_dict(kwargs):
             result = []
 
             with self.transaction() as cursor:
@@ -258,8 +258,8 @@ class Generic(Base):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(list_or_dict)
                 return _priv_list(list_or_dict)
-            return _priv(kwargs)
+            return _priv_dict(kwargs)
 
         return _wrapped_method
