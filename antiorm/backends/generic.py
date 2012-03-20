@@ -31,7 +31,8 @@ class Generic(Base):
     """
 
     @register
-    def _statement_INSERT_single(self, stmts, bypass_types=False):
+    def _statement_INSERT_single(self, stmts, bypass_types=True):
+#    def _statement_INSERT_single(self, stmts, bypass_types=False):
         """Single INSERT statement query
 
         @return: the inserted row id
@@ -55,32 +56,38 @@ class Generic(Base):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
+        # Add the type specific function to the class
+        if bypass_types:
+            setattr(self.__class__, '_statement_INSERT_single__dict', _priv_dict)
+            setattr(self.__class__, '_statement_INSERT_single__list', _priv_list)
+
+        def _priv_proxy(self, list_or_dict=None, **kwargs):
             """Execute the INSERT statement
 
             @return: the inserted row id (or a list with them)
             """
-#            # By-pass types proxy
-            def bypass(method_name, func):
-                    # Add the type specific function to the class
-                    setattr(self.__class__, method_name, func)
-
-                    # By-pass types checking
-
-            if bypass_types and list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    bypass('_statement_INSERT_single__dict', _priv_dict)
-                else:
-                    bypass('_statement_INSERT_single__list', _priv_list)
-
-            # Received un-named parameter, it would be a iterable
+            # Received un-named parameter
             if list_or_dict != None:
+                # By-pass types proxy
+                def bypass(method_name):
+                    # By-pass types checking
+                    pass
+
+                # Check if un-named parameter is a dictionary
                 if isinstance(list_or_dict, dict):
+                    if bypass_types:
+                        bypass('_statement_INSERT_single__dict')
                     return _priv_dict(self, list_or_dict)
+
+                # Un-named parameter is a list
+                if bypass_types:
+                    bypass('_statement_INSERT_single__list')
                 return _priv_list(list_or_dict)
+
+            # No un-named parameters received, exec using keyworkd arguments
             return _priv_dict(self, kwargs)
 
-        return _wrapped_method
+        return _priv_proxy
 
     @register
     def _statement_INSERT_multiple(self, stmts):
