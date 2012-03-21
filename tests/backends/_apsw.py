@@ -34,8 +34,8 @@ class TestAPSW(TestCase,
             if hasattr(base, 'setUp'):
                 base.setUp(self)
 
-    def test_row_factory(self):
-        pass
+    def tearDown(self):
+        self.connection.close()
 
 
 if __name__ == "__main__":
