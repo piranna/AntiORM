@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, '..')
 
 from antiorm.backends.sqlite import Sqlite
-from antiorm.utils           import Namedtuple_factory
+from antiorm.utils           import Namedtuple_factory, driver_factory
 
 from base import Basic
 from base import StatementINSERTSingle, StatementINSERTMultiple
@@ -27,7 +27,8 @@ class TestSqlite(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
-        self.engine = Sqlite(self.connection, self.dir_path)
+        self.engine = driver_factory(self.connection, self.dir_path)
+#        self.engine = Sqlite(self.connection, self.dir_path)
         self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:

@@ -4,9 +4,11 @@ from collections import namedtuple
 from re          import sub
 
 # Factory classes
-from .backends._apsw   import APSW
-from .backends.generic import Generic
-from .backends.sqlite  import Sqlite
+import backends
+#from backends import *
+#from backends._apsw   import APSW
+#from backends.generic import Generic
+#from backends.sqlite  import Sqlite
 
 
 def Namedtuple_factory(cursor, row):
@@ -28,15 +30,14 @@ def named2pyformat(sql):
 
 
 def driver_factory(db_conn, *args, **kwargs):
-    type_conn = db_conn.__module__
+    type_conn = db_conn.__class__.__module__
 
     if type_conn == 'apsw':
         print 'apsw'
-        return APSW(db_conn, *args, **kwargs)
+        return backends._apsw.APSW(db_conn, *args, **kwargs)
 
     if type_conn == 'sqlite3':
-        print 'sqlite3'
-        return Sqlite(db_conn, *args, **kwargs)
+        return backends.sqlite.Sqlite(db_conn, *args, **kwargs)
 
     print 'generic'
-    return Generic(db_conn, *args, **kwargs)
+    return backends.generic.Generic(db_conn, *args, **kwargs)
