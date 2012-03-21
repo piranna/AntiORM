@@ -62,7 +62,8 @@ LIMIT 1"""
 
 class Test_Compact(Test_SQL):
     def test_compact1(self):
-        self.assertEqual(Tokens2Unicode(Compact(self.sql, 'samples_sql')),
+        self.assertEqual(Tokens2Unicode(Compact(self.sql,
+                                                'tests/samples_sql')),
             'INSERT INTO dir_entries(type) VALUES(:type);INSERT INTO '
             'directories(inode) VALUES(:inode) LIMIT 1')
 
