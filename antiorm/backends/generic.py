@@ -119,6 +119,38 @@ class Generic(Base):
 
         return _wrapped_method
 
+#    @register
+#    def _statement_UPDATE_single(self, stmts):
+#        """Single UPDATE statement query
+#
+#        @return: the number of updated rows
+#        """
+#        sql = unicode(stmts[0])
+#
+#        def _wrapped_method(self, list_or_dict=None, **kwargs):
+#            """Execute the UPDATE statement
+#
+#            @return: the inserted row id (or a list with them)
+#            """
+#            def _priv(kwargs):
+#                "Exec the statement and return the number of updated rows"
+#                with self.transaction() as cursor:
+#                    cursor.execute(sql, kwargs).rowcount
+#
+#            def _priv_list(list_kwargs):
+#                "Exec the statement and return the number of updated rows"
+#                with self.transaction() as cursor:
+#                    return cursor.executemany(sql, list_kwargs).rowcount
+#
+#            # Received un-named parameter, it would be a iterable
+#            if list_or_dict != None:
+#                if isinstance(list_or_dict, dict):
+#                    return _priv(list_or_dict)
+#                return _priv_list(list_or_dict)
+#            return _priv(kwargs)
+#
+#        return _wrapped_method
+
     @register
     def _one_statement_value(self, stream):
         """

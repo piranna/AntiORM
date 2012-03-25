@@ -223,6 +223,10 @@ class Base(object):
         """
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
+#            # Update statement (return affected row count)
+#            if IsType('UPDATE')(stream):
+#                return self._statement_UPDATE_single(method_name, stream)
+
             columns = GetColumns(stream)
 
             # Value function (one row, one field)
