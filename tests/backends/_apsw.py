@@ -8,8 +8,8 @@ from apsw    import Connection
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.backends._apsw import APSW, ConnectionWrapper
-from antiorm.utils          import Namedtuple_factory
+from antiorm.backends.apsw import APSW, ConnectionWrapper
+from antiorm.utils         import Namedtuple_factory
 
 from base import Basic
 from base import StatementINSERTSingle, StatementINSERTMultiple
