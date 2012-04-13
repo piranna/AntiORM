@@ -54,6 +54,14 @@ class ConnectionWrapper(object):
         else:
             self._connection = connection
 
+    # Context manager - this two should be get via __getattr__...
+    def __enter__(self):
+        self._connection.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self._connection.__exit__(exc_type, exc_value, traceback)
+
     def __getattr__(self, name):
         return getattr(self._connection, name)
 
