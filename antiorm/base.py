@@ -12,38 +12,6 @@ from sql import GetLimit
 from sql import IsType
 
 
-class InTransactionError(Exception):
-    pass
-
-
-class _TransactionManager(object):
-    """
-    Transaction manager.
-    TODO: correct handling of database exceptions.
-    """
-
-    _in_transaction = False
-    _cursor = None
-
-    def __init__(self, cls):
-        self.cls = cls
-
-    def __enter__(self):
-        if self._in_transaction:
-            raise InTransactionError("Already in a transaction")
-
-        self._in_transaction = True
-
-        if not self._cursor:
-            self._cursor = self.cls.connection.cursor()
-
-        return self._cursor
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        self.cls.connection.commit()
-        self._in_transaction = False
-
-
 #def _transaction(func):
 #    def _wrapped(self, *args, **kwargs):
 #        try:
@@ -81,7 +49,6 @@ class Base(object):
         @type lazy: boolean
         """
         self.connection = db_conn
-        self.tx_manager = _TransactionManager(self)
 
         self._lazy = {}
 
