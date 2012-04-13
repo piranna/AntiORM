@@ -32,26 +32,22 @@ class _TransactionManager(object):
     TODO: correct handling of database exceptions.
     """
 
-    _in_transaction = False
     _cursor = None
 
     def __init__(self, db_conn):
         self.connection = db_conn
 
     def __enter__(self):
-        if self._in_transaction:
+        if self._cursor:
             raise InTransactionError("Already in a transaction")
 
-        self._in_transaction = True
-
-        if not self._cursor:
-            self._cursor = self.connection.cursor()
+        self._cursor = self.connection.cursor()
 
         return self._cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.connection.commit()
-        self._in_transaction = False
+        self._cursor = None
 
 
 class Generic(Base):
