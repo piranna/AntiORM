@@ -45,11 +45,15 @@ class _TransactionManager(object):
         return self._cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
-        if exc_type == None:
-            self.connection.commit()
-        else:
+        # There was an exception on the context manager, rollback and raise
+        if exc_type:
             self.connection.rollback()
+            self._cursor = None
 
+            raise exc_type, exc_value, traceback
+
+        # There were no problems on the context manager, commit
+        self.connection.commit()
         self._cursor = None
 
 
