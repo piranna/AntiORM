@@ -6,8 +6,6 @@ Created on 17/02/2012
 
 from logging import warning
 
-from apsw import SQLError
-
 from sqlparse.filters import Tokens2Unicode
 
 from generic import Generic, register
@@ -54,6 +52,9 @@ class ConnectionWrapper(object):
         else:
             self._connection = connection
 
+    def cursor(self):
+        return CursorWrapper(self._connection.cursor())
+
     # Context manager - this two should be get via __getattr__...
     def __enter__(self):
         self._connection.__enter__()
@@ -61,24 +62,6 @@ class ConnectionWrapper(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         return self._connection.__exit__(exc_type, exc_value, traceback)
-
-    def __getattr__(self, name):
-        return getattr(self._connection, name)
-
-    def commit(self):
-        try:
-            self._connection.cursor().execute("commit")
-        except SQLError:
-            pass
-
-    def cursor(self):
-        return CursorWrapper(self._connection.cursor())
-
-    def rollback(self):
-        try:
-            self._connection.cursor().execute("rollback")
-        except SQLError:
-            pass
 
     @property
     def row_factory(self):
