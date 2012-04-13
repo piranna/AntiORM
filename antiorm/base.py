@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-import io
+from io      import open
 from os      import listdir
 from os.path import basename, join, splitext
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
 
-from sql import Compact
-from sql import GetColumns
-from sql import GetLimit
-from sql import IsType
+from sql import Compact, GetColumns, GetLimit, IsType
 
 
 def register(func):
@@ -139,7 +136,7 @@ class Base(object):
             self._lazy[method_name] = self.parse_file, file_path, include_path
             return
 
-        with io.open(file_path, 'rt') as file_sql:
+        with open(file_path, 'rt') as file_sql:
             return self.parse_string(file_sql.read(), method_name,
                                      include_path)
 

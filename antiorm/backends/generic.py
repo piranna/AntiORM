@@ -4,7 +4,7 @@ Created on 05/03/2012
 @author: piranna
 '''
 
-from ..base  import Base
+from ..base import Base
 
 
 class InTransactionError(Exception):

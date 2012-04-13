@@ -8,7 +8,7 @@ from logging import warning
 
 from sqlparse.filters import Tokens2Unicode
 
-from ..base  import Base, register
+from ..base import Base, register
 
 
 class CursorWrapper(object):
