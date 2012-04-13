@@ -28,8 +28,7 @@ class InTransactionError(Exception):
 
 class _TransactionManager(object):
     """
-    Transaction manager.
-    TODO: correct handling of database exceptions.
+    Transaction context manager for databases that doesn't has support for it
     """
 
     _cursor = None
@@ -46,7 +45,11 @@ class _TransactionManager(object):
         return self._cursor
 
     def __exit__(self, exc_type, exc_value, traceback):
-        self.connection.commit()
+        if exc_type == None:
+            self.connection.commit()
+        else:
+            self.connection.rollback()
+
         self._cursor = None
 
 
