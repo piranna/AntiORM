@@ -41,7 +41,7 @@ class CursorWrapper(object):
 class ConnectionWrapper(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Connection objects
 
-    This is done this way because since apsw.Cursor is a compiled extension
+    This is done this way because since apsw.Connection is a compiled extension
     it doesn't allow to set attributes"""
     def __init__(self, connection):
         """Constructor
@@ -65,6 +65,12 @@ class ConnectionWrapper(object):
 
     def cursor(self):
         return CursorWrapper(self._connection.cursor())
+
+    def rollback(self):
+        try:
+            self._connection.cursor().execute("rollback")
+        except SQLError:
+            pass
 
     @property
     def row_factory(self):
@@ -91,7 +97,11 @@ class APSW(Generic):
         """
         self._cachedmethods = 0
 
-        Generic.__init__(self, ConnectionWrapper(db_conn), dir_path, lazy)
+        db_conn = ConnectionWrapper(db_conn)
+
+        Generic.__init__(self, db_conn, dir_path, lazy)
+
+        self.tx_manager = db_conn
 
     def parse_string(self, sql, method_name, include_path='sql', lazy=False):
         """Build a function from a string containing a SQL query
