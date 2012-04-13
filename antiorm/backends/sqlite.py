@@ -13,6 +13,20 @@ from generic import Generic, register
 class Sqlite(Generic):
     "SQLite driver for AntiORM"
 
+    def __init__(self, db_conn, dir_path=None, lazy=False):
+        """Constructor
+
+        @param db_conn: connection of the database
+        @type db_conn: DB-API 2.0 database connection
+        @param dir_path: path of the dir with files from where to load SQL code
+        @type dir_path: string
+        @param lazy: set if SQL code at dir_path should be lazy loaded
+        @type lazy: boolean
+        """
+        Generic.__init__(self, db_conn, dir_path, lazy)
+
+        self.tx_manager = db_conn
+
     @register
     def _multiple_statement(self, stream):
         """Execute the script optimized using SQLite non-standard method
@@ -29,12 +43,16 @@ class Sqlite(Generic):
             @return: the procesed data from the SQL query
             """
             def _priv(kwargs):
-                with self.tx_manager as cursor:
+                with self.tx_manager as conn:
+                    cursor = conn.cursor()
+
                     return cursor.executescript(sql % kwargs)
 
             def _priv_list(list_kwargs):
                 result = []
-                with self.tx_manager as cursor:
+                with self.tx_manager as conn:
+                    cursor = conn.cursor()
+
                     for kwargs in list_kwargs:
                         result.append(cursor.executescript(sql % kwargs))
                 return result
