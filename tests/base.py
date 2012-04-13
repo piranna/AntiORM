@@ -16,7 +16,7 @@ class StatementINSERTSingle:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_statement_INSERT_single(self):
         rowid = self.engine.test_statement_INSERT_single(key="hola")
@@ -72,7 +72,7 @@ class StatementINSERTMultiple:
             value TEXT NULL
         );""")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_statement_INSERT_multiple(self):
         rowid = self.engine.test_statement_INSERT_multiple(key='a')
@@ -131,7 +131,7 @@ class OneStatement_value:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_one_statement_value(self):
         cursor = self.connection.cursor()
@@ -163,7 +163,7 @@ class OneStatement_register:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_one_statement_register(self):
         cursor = self.connection.cursor()
@@ -195,7 +195,7 @@ class OneStatement_table:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_one_statement_table(self):
         cursor = self.connection.cursor()
@@ -227,7 +227,7 @@ class MultipleStatement:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()

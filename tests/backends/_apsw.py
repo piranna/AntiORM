@@ -26,7 +26,7 @@ class TestAPSW(TestCase,
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
-        self.connection = ConnectionWrapper(Connection(":memory:"))
+        self.connection = Connection(":memory:")
         self.engine = APSW(self.connection, self.dir_path)
         self.engine.row_factory = Namedtuple_factory
 
