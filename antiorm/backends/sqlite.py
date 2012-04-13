@@ -29,12 +29,12 @@ class Sqlite(Generic):
             @return: the procesed data from the SQL query
             """
             def _priv(kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     return cursor.executescript(sql % kwargs)
 
             def _priv_list(list_kwargs):
                 result = []
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         result.append(cursor.executescript(sql % kwargs))
                 return result

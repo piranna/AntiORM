@@ -45,7 +45,7 @@ class Generic(Base):
             """
             def _priv(kwargs):
                 "Exec the statement and return the inserted row id"
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
@@ -53,7 +53,7 @@ class Generic(Base):
                 "Exec the statement and return the inserted row id"
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         cursor.execute(sql, kwargs)
                         result.append(cursor.lastrowid)
@@ -87,7 +87,7 @@ class Generic(Base):
             """
             def _priv(kwargs):
                 "Exec the statements and return the row id of the first"
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     cursor.execute(sql[0], kwargs)
                     rowid = cursor.lastrowid
 
@@ -100,7 +100,7 @@ class Generic(Base):
                 "Exec the statements and return the row id of the first"
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         cursor.execute(sql[0], kwargs)
                         result.append(cursor.lastrowid)
@@ -134,12 +134,12 @@ class Generic(Base):
 #            """
 #            def _priv(kwargs):
 #                "Exec the statement and return the number of updated rows"
-#                with self.transaction() as cursor:
+#                with self.tx_manager as cursor:
 #                    cursor.execute(sql, kwargs).rowcount
 #
 #            def _priv_list(list_kwargs):
 #                "Exec the statement and return the number of updated rows"
-#                with self.transaction() as cursor:
+#                with self.tx_manager as cursor:
 #                    return cursor.executemany(sql, list_kwargs).rowcount
 #
 #            # Received un-named parameter, it would be a iterable
@@ -161,7 +161,7 @@ class Generic(Base):
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return its cell value"
             def _priv(kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     result = cursor.execute(sql, kwargs).fetchone()
                     if result:
                         return result[0]
@@ -169,7 +169,7 @@ class Generic(Base):
             def _priv_list(list_kwargs):
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         value = cursor.execute(sql, kwargs).fetchone()
                         if value:
@@ -197,11 +197,11 @@ class Generic(Base):
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return a row"
             def _priv(kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     return cursor.execute(sql, kwargs).fetchone()
 
             def _priv_list(list_kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     result = []
 
                     for kwargs in list_kwargs:
@@ -228,13 +228,13 @@ class Generic(Base):
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute a statement. If a list is given, they are exec at once"
             def _priv(kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     return cursor.execute(sql, kwargs).fetchall()
 
             def _priv_list(list_kwargs):
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         result.append(cursor.execute(sql, kwargs).fetchall())
 
@@ -261,7 +261,7 @@ class Generic(Base):
             def _priv(kwargs):
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for sql_stmt in sql:
                         result.append(cursor.execute(sql_stmt, kwargs))
 
@@ -270,7 +270,7 @@ class Generic(Base):
             def _priv_list(list_kwargs):
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         result2 = []
 

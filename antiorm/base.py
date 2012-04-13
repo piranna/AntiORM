@@ -107,10 +107,6 @@ class Base(object):
     def commit(self):
         self.connection.commit()
 
-    def transaction(self):
-        "Return the current transaction manager"
-        return self.tx_manager
-
     def parse_dir(self, dir_path='sql', lazy=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`

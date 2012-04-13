@@ -122,7 +122,7 @@ class APSW(Generic):
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return its cell value"
             def _priv(kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     result = cursor.execute(sql, kwargs)
 
                     try:
@@ -136,7 +136,7 @@ class APSW(Generic):
             def _priv_list(list_kwargs):
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         row = cursor.execute(sql, kwargs)
 
@@ -170,7 +170,7 @@ class APSW(Generic):
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return a row"
             def _priv(kwargs):
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     row = cursor.execute(sql, kwargs)
 
                     try:
@@ -181,7 +181,7 @@ class APSW(Generic):
             def _priv_list(list_kwargs):
                 result = []
 
-                with self.transaction() as cursor:
+                with self.tx_manager as cursor:
                     for kwargs in list_kwargs:
                         row = cursor.execute(sql, kwargs)
 
