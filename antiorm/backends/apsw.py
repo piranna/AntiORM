@@ -8,7 +8,7 @@ from logging import warning
 
 from sqlparse.filters import Tokens2Unicode
 
-from generic import Generic, register
+from ..base  import Base, register
 
 
 class CursorWrapper(object):
@@ -72,7 +72,7 @@ class ConnectionWrapper(object):
         self._connection.setrowtrace(value)
 
 
-class APSW(Generic):
+class APSW(Base):
     "APSW driver for AntiORM"
     _max_cachedmethods = 100
 
@@ -90,7 +90,7 @@ class APSW(Generic):
 
         db_conn = ConnectionWrapper(db_conn)
 
-        Generic.__init__(self, db_conn, dir_path, lazy)
+        Base.__init__(self, db_conn, dir_path, lazy)
 
         self.tx_manager = db_conn
 
@@ -101,7 +101,7 @@ class APSW(Generic):
         cache it shows an alert because performance will decrease.
         """
         try:
-            result = Generic.parse_string(self, sql, method_name, include_path,
+            result = Base.parse_string(self, sql, method_name, include_path,
                                           lazy)
         except:
             raise

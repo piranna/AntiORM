@@ -6,11 +6,11 @@ Created on 20/01/2012
 
 from sqlparse.filters import Tokens2Unicode
 
+from ..base  import Base, register
 from ..utils import named2pyformat
-from generic import Generic, register
 
 
-class Sqlite(Generic):
+class Sqlite(Base):
     "SQLite driver for AntiORM"
 
     def __init__(self, db_conn, dir_path=None, lazy=False):
@@ -23,7 +23,7 @@ class Sqlite(Generic):
         @param lazy: set if SQL code at dir_path should be lazy loaded
         @type lazy: boolean
         """
-        Generic.__init__(self, db_conn, dir_path, lazy)
+        Base.__init__(self, db_conn, dir_path, lazy)
 
         self.tx_manager = db_conn
 
