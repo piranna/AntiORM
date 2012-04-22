@@ -2,6 +2,9 @@
 Created on 01/08/2011
 
 @author: piranna
+
+Several utility functions and custom filters for sqlparse to help on the parsing
+of the SQL sentences
 '''
 
 
