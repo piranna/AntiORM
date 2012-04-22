@@ -177,10 +177,11 @@ class Base(object):
         """
         `stream` SQL code only have one statement
         """
+        sql = Tokens2Unicode(stream)
+
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._one_statement_INSERT(method_name,
-                                              Tokens2Unicode(stream))
+            return self._one_statement_INSERT(method_name, sql)
 
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
@@ -192,28 +193,26 @@ class Base(object):
 
             # Value function (one row, one field)
             if len(columns) == 1 and columns[0] != '*':
-                return self._one_statement_value(method_name,
-                                                 Tokens2Unicode(stream))
+                return self._one_statement_value(method_name, sql)
 
             # Register function (one row, several fields)
-            return self._one_statement_register(method_name,
-                                                Tokens2Unicode(stream))
+            return self._one_statement_register(method_name, sql)
 
         # Table function (several rows)
-        return self._one_statement_table(method_name, Tokens2Unicode(stream))
+        return self._one_statement_table(method_name, sql)
 
     def _multiple_statement(self, method_name, stream):
         """
         `stream` SQL have several statements (script)
         """
+        stmts = map(unicode, split2(stream))
+
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._multiple_statement_INSERT(method_name,
-                                                   map(unicode, split2(stream)))
+            return self._multiple_statement_INSERT(method_name, stmts)
 
         # Standard multiple statement query
-        return self._multiple_statement_standard(method_name,
-                                                 map(unicode, split2(stream)))
+        return self._multiple_statement_standard(method_name, stmts)
 
     @register
     def _one_statement_INSERT(self, sql):
