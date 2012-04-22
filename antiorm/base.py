@@ -255,58 +255,6 @@ class Base(object):
 
         return _wrapped_method
 
-    @register
-    def _multiple_statement_INSERT(self, stmts):
-        """Multiple INSERT statement query
-
-        Function that execute several SQL statements sequentially, being the
-        first an INSERT one.
-
-        @return: the inserted row id of first one (or a list of first ones)
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            """Execute the statements sequentially
-
-            @return: the inserted row id from the first INSERT one
-            """
-            def _priv(kwargs):
-                "Exec the statements and return the row id of the first"
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    cursor.execute(stmts[0], kwargs)
-                    rowid = cursor.lastrowid
-
-                    for stmt in stmts[1:]:
-                        cursor.execute(stmt, kwargs)
-
-                    return rowid
-
-            def _priv_list(list_kwargs):
-                "Exec the statements and return the row id of the first"
-                result = []
-
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        cursor.execute(stmts[0], kwargs)
-                        result.append(cursor.lastrowid)
-
-                        for stmt in stmts[1:]:
-                            cursor.execute(stmt, kwargs)
-
-                return result
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
-        return _wrapped_method
-
 #    @register
 #    def _statement_UPDATE_single(self, stmts):
 #        """Single UPDATE statement query
@@ -435,6 +383,58 @@ class Base(object):
 
                     for kwargs in list_kwargs:
                         result.append(cursor.execute(sql, kwargs).fetchall())
+
+                return result
+
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv(list_or_dict)
+                return _priv_list(list_or_dict)
+            return _priv(kwargs)
+
+        return _wrapped_method
+
+    @register
+    def _multiple_statement_INSERT(self, stmts):
+        """Multiple INSERT statement query
+
+        Function that execute several SQL statements sequentially, being the
+        first an INSERT one.
+
+        @return: the inserted row id of first one (or a list of first ones)
+        """
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
+            """Execute the statements sequentially
+
+            @return: the inserted row id from the first INSERT one
+            """
+            def _priv(kwargs):
+                "Exec the statements and return the row id of the first"
+                with self.tx_manager as conn:
+                    cursor = conn.cursor()
+
+                    cursor.execute(stmts[0], kwargs)
+                    rowid = cursor.lastrowid
+
+                    for stmt in stmts[1:]:
+                        cursor.execute(stmt, kwargs)
+
+                    return rowid
+
+            def _priv_list(list_kwargs):
+                "Exec the statements and return the row id of the first"
+                result = []
+
+                with self.tx_manager as conn:
+                    cursor = conn.cursor()
+
+                    for kwargs in list_kwargs:
+                        cursor.execute(stmts[0], kwargs)
+                        result.append(cursor.lastrowid)
+
+                        for stmt in stmts[1:]:
+                            cursor.execute(stmt, kwargs)
 
                 return result
 
