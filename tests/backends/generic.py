@@ -3,7 +3,7 @@
 from os.path  import abspath, dirname, join
 from unittest import main, TestCase
 
-from sqlite3 import connect
+from sqlite3 import connect # Using sqlite3 as a DB-API 2.0 compliant database
 
 import sys
 sys.path.insert(0, '..')

@@ -34,6 +34,9 @@ class TestSqlite(TestCase,
             if hasattr(base, 'setUp'):
                 base.setUp(self)
 
+    def tearDown(self):
+        self.connection.close()
+
     def test_row_factory(self):
         pass
 
