@@ -13,7 +13,7 @@ from ..utils import named2pyformat
 class Sqlite(Base):
     "SQLite driver for AntiORM"
 
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, lazy=False, bypass_types=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -23,12 +23,12 @@ class Sqlite(Base):
         @param lazy: set if SQL code at dir_path should be lazy loaded
         @type lazy: boolean
         """
-        Base.__init__(self, db_conn, dir_path, lazy)
+        Base.__init__(self, db_conn, dir_path, lazy, bypass_types)
 
         self.tx_manager = db_conn
 
     @register
-    def _multiple_statement(self, stream):
+    def _multiple_statement(self, stream, bypass_types):
         """Execute the script optimized using SQLite non-standard method
         executescript() instead of exec the statements sequentially.
         """

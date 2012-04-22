@@ -48,7 +48,7 @@ class Base(object):
 
     _cursor = None
 
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, lazy=False, bypass_types=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -63,7 +63,7 @@ class Base(object):
         self._lazy = {}
 
         if dir_path:
-            self.parse_dir(dir_path, lazy)
+            self.parse_dir(dir_path, lazy, bypass_types)
 
     def __getattr__(self, name):
         """
@@ -71,20 +71,20 @@ class Base(object):
         """
         # Get the lazy loading stored data
         try:
-            parser, data, include_path = self._lazy.pop(name)
+            parser, data, include_path, bypass_types = self._lazy.pop(name)
 
         # method was not marked for lazy loading, raise exception
         except KeyError:
             raise AttributeError
 
         # Do the parsing right now and return the method
-        result = parser(data, name, include_path)
+        result = parser(data, name, include_path, bypass_types)
         return result.__get__(self, self.__class__)
 
     def commit(self):
         self.connection.commit()
 
-    def parse_dir(self, dir_path='sql', lazy=False):
+    def parse_dir(self, dir_path='sql', lazy=False, bypass_types=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`
 
@@ -106,10 +106,10 @@ class Base(object):
 
         for filename in listdir(dir_path):
             self.parse_file(join(dir_path, filename), include_path=dir_path,
-                            lazy=lazy)
+                            lazy=lazy, bypass_types=bypass_types)
 
     def parse_file(self, file_path, method_name=None, include_path='sql',
-                   lazy=False):
+                   lazy=False, bypass_types=False):
         """
         Build a function from a file containing a SQL query
 
@@ -133,14 +133,16 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = self.parse_file, file_path, include_path
+            self._lazy[method_name] = (self.parse_file, file_path, include_path,
+                                       bypass_types)
             return
 
         with open(file_path, 'rt') as file_sql:
             return self.parse_string(file_sql.read(), method_name,
-                                     include_path)
+                                     include_path, bypass_types)
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False):
+    def parse_string(self, sql, method_name, include_path='sql', lazy=False,
+                       bypass_types=False):
         """
         Build a function from a string containing a SQL query
 
@@ -161,19 +163,20 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = (self.parse_string, sql, include_path)
+            self._lazy[method_name] = (self.parse_string, sql, include_path,
+                                       bypass_types)
             return
 
         stream = Compact(sql.strip(), include_path)
 
         # One statement query
         if len(split2(stream)) == 1:
-            return self._one_statement(method_name, stream)
+            return self._one_statement(method_name, stream, bypass_types)
 
         # Multiple statement query
-        return self._multiple_statement(method_name, stream)
+        return self._multiple_statement(method_name, stream, bypass_types)
 
-    def _one_statement(self, method_name, stream):
+    def _one_statement(self, method_name, stream, bypass_types):
         """
         `stream` SQL code only have one statement
         """
@@ -181,7 +184,7 @@ class Base(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._one_statement_INSERT(method_name, sql)
+            return self._one_statement_INSERT(method_name, sql, bypass_types)
 
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
@@ -193,15 +196,15 @@ class Base(object):
 
             # Value function (one row, one field)
             if len(columns) == 1 and columns[0] != '*':
-                return self._one_statement_value(method_name, sql)
+                return self._one_statement_value(method_name, sql, bypass_types)
 
             # Register function (one row, several fields)
-            return self._one_statement_register(method_name, sql)
+            return self._one_statement_register(method_name, sql, bypass_types)
 
         # Table function (several rows)
-        return self._one_statement_table(method_name, sql)
+        return self._one_statement_table(method_name, sql, bypass_types)
 
-    def _multiple_statement(self, method_name, stream):
+    def _multiple_statement(self, method_name, stream, bypass_types):
         """
         `stream` SQL have several statements (script)
         """
@@ -209,13 +212,15 @@ class Base(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._multiple_statement_INSERT(method_name, stmts)
+            return self._multiple_statement_INSERT(method_name, stmts,
+                                                   bypass_types)
 
         # Standard multiple statement query
-        return self._multiple_statement_standard(method_name, stmts)
+        return self._multiple_statement_standard(method_name, stmts,
+                                                 bypass_types)
 
     @register
-    def _one_statement_INSERT(self, sql):
+    def _one_statement_INSERT(self, sql, bypass_types):
         """Single INSERT statement query
 
         @return: the inserted row id
@@ -250,7 +255,15 @@ class Base(object):
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
                     return _priv(list_or_dict)
+
+                if bypass_types:
+                    pass
+
                 return _priv_list(list_or_dict)
+
+            if bypass_types:
+                pass
+
             return _priv(kwargs)
 
         return _wrapped_method
@@ -292,7 +305,7 @@ class Base(object):
 #        return _wrapped_method
 
     @register
-    def _one_statement_value(self, sql):
+    def _one_statement_value(self, sql, bypass_types):
         """
         `stream` SQL statement return a cell
         """
@@ -330,7 +343,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _one_statement_register(self, sql):
+    def _one_statement_register(self, sql, bypass_types):
         """
         `stream` SQL statement return a row
         """
@@ -363,7 +376,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _one_statement_table(self, sql):
+    def _one_statement_table(self, sql, bypass_types):
         """
         `stream` SQL statement return several values (a table)
         """
@@ -396,7 +409,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _multiple_statement_INSERT(self, stmts):
+    def _multiple_statement_INSERT(self, stmts, bypass_types):
         """Multiple INSERT statement query
 
         Function that execute several SQL statements sequentially, being the
@@ -448,7 +461,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _multiple_statement_standard(self, stmts):
+    def _multiple_statement_standard(self, stmts, bypass_types):
         """
         `stream` SQL have several statements (script)
         """

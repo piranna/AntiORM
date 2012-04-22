@@ -94,7 +94,8 @@ class APSW(Base):
 
         self.tx_manager = db_conn
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False):
+    def parse_string(self, sql, method_name, include_path='sql', lazy=False,
+                     bypass_types=False):
         """Build a function from a string containing a SQL query
 
         If the number of parsed methods is bigger of the APSW SQLite bytecode
@@ -102,7 +103,7 @@ class APSW(Base):
         """
         try:
             result = Base.parse_string(self, sql, method_name, include_path,
-                                       lazy)
+                                       lazy, bypass_types)
         except:
             raise
 
@@ -114,7 +115,7 @@ class APSW(Base):
         return result
 
     @register
-    def _one_statement_value(self, sql):
+    def _one_statement_value(self, sql, bypass_types):
         """
         `stream` SQL statement return a cell
         """
@@ -164,7 +165,7 @@ class APSW(Base):
         return _wrapped_method
 
     @register
-    def _one_statement_register(self, sql):
+    def _one_statement_register(self, sql, bypass_types):
         """
         `stream` SQL statement return a row
         """
