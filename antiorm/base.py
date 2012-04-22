@@ -81,8 +81,8 @@ class Base(object):
         result = parser(data, name, include_path, bypass_types)
         return result.__get__(self, self.__class__)
 
-    def commit(self):
-        self.connection.commit()
+    def _bypass(self, func):
+        pass
 
     def parse_dir(self, dir_path='sql', lazy=False, bypass_types=False):
         """
@@ -133,8 +133,8 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = (self.parse_file, file_path, include_path,
-                                       bypass_types)
+            self._lazy[method_name] = (self.parse_file, file_path,
+                                       include_path, bypass_types)
             return
 
         with open(file_path, 'rt') as file_sql:
@@ -186,12 +186,12 @@ class Base(object):
         if IsType('INSERT')(stream):
             return self._one_statement_INSERT(method_name, sql, bypass_types)
 
+#        # Update statement (return affected row count)
+#        if IsType('UPDATE')(stream):
+#            return self._one_statement_UPDATE(method_name, sql, bypass_types)
+
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
-#            # Update statement (return affected row count)
-#            if IsType('UPDATE')(stream):
-#                return self._statement_UPDATE_single(method_name, stream)
-
             columns = GetColumns(stream)
 
             # Value function (one row, one field)
@@ -257,13 +257,11 @@ class Base(object):
                     return _priv(list_or_dict)
 
                 if bypass_types:
-                    pass
-
+                    self._bypass(_priv_list)
                 return _priv_list(list_or_dict)
 
             if bypass_types:
-                pass
-
+                self._bypass(_priv)
             return _priv(kwargs)
 
         return _wrapped_method
