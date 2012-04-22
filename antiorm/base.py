@@ -179,7 +179,8 @@ class Base(object):
         """
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._one_statement_INSERT(method_name, stream)
+            return self._one_statement_INSERT(method_name,
+                                              Tokens2Unicode(stream))
 
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
@@ -191,13 +192,15 @@ class Base(object):
 
             # Value function (one row, one field)
             if len(columns) == 1 and columns[0] != '*':
-                return self._one_statement_value(method_name, stream)
+                return self._one_statement_value(method_name,
+                                                 Tokens2Unicode(stream))
 
             # Register function (one row, several fields)
-            return self._one_statement_register(method_name, stream)
+            return self._one_statement_register(method_name,
+                                                Tokens2Unicode(stream))
 
         # Table function (several rows)
-        return self._one_statement_table(method_name, stream)
+        return self._one_statement_table(method_name, Tokens2Unicode(stream))
 
     def _multiple_statement(self, method_name, stream):
         """
@@ -205,19 +208,19 @@ class Base(object):
         """
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._multiple_statement_INSERT(method_name, stream)
+            return self._multiple_statement_INSERT(method_name,
+                                                   map(unicode, split2(stream)))
 
         # Standard multiple statement query
-        return self._multiple_statement_standard(method_name, stream)
+        return self._multiple_statement_standard(method_name,
+                                                 map(unicode, split2(stream)))
 
     @register
-    def _one_statement_INSERT(self, stmts):
+    def _one_statement_INSERT(self, sql):
         """Single INSERT statement query
 
         @return: the inserted row id
         """
-        sql = Tokens2Unicode(stmts)
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Execute the INSERT statement
 
@@ -254,7 +257,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _multiple_statement_INSERT(self, stream):
+    def _multiple_statement_INSERT(self, stmts):
         """Multiple INSERT statement query
 
         Function that execute several SQL statements sequentially, being the
@@ -262,8 +265,6 @@ class Base(object):
 
         @return: the inserted row id of first one (or a list of first ones)
         """
-        sql = map(unicode, split2(stream))
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Execute the statements sequentially
 
@@ -274,10 +275,10 @@ class Base(object):
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
-                    cursor.execute(sql[0], kwargs)
+                    cursor.execute(stmts[0], kwargs)
                     rowid = cursor.lastrowid
 
-                    for stmt in sql[1:]:
+                    for stmt in stmts[1:]:
                         cursor.execute(stmt, kwargs)
 
                     return rowid
@@ -290,10 +291,10 @@ class Base(object):
                     cursor = conn.cursor()
 
                     for kwargs in list_kwargs:
-                        cursor.execute(sql[0], kwargs)
+                        cursor.execute(stmts[0], kwargs)
                         result.append(cursor.lastrowid)
 
-                        for stmt in sql[1:]:
+                        for stmt in stmts[1:]:
                             cursor.execute(stmt, kwargs)
 
                 return result
@@ -344,12 +345,10 @@ class Base(object):
 #        return _wrapped_method
 
     @register
-    def _one_statement_value(self, stream):
+    def _one_statement_value(self, sql):
         """
         `stream` SQL statement return a cell
         """
-        sql = Tokens2Unicode(stream)
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return its cell value"
             def _priv(kwargs):
@@ -384,12 +383,10 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _one_statement_register(self, stream):
+    def _one_statement_register(self, sql):
         """
         `stream` SQL statement return a row
         """
-        sql = Tokens2Unicode(stream)
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return a row"
             def _priv(kwargs):
@@ -419,12 +416,10 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _one_statement_table(self, stream):
+    def _one_statement_table(self, sql):
         """
         `stream` SQL statement return several values (a table)
         """
-        sql = Tokens2Unicode(stream)
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute a statement. If a list is given, they are exec at once"
             def _priv(kwargs):
@@ -454,12 +449,10 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _multiple_statement_standard(self, stream):
+    def _multiple_statement_standard(self, stmts):
         """
         `stream` SQL have several statements (script)
         """
-        sql = map(unicode, split2(stream))
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statements sequentially"
             def _priv(kwargs):
@@ -468,8 +461,8 @@ class Base(object):
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
-                    for sql_stmt in sql:
-                        result.append(cursor.execute(sql_stmt, kwargs))
+                    for stmt in stmts:
+                        result.append(cursor.execute(stmt, kwargs))
 
                 return result
 
@@ -482,8 +475,8 @@ class Base(object):
                     for kwargs in list_kwargs:
                         result2 = []
 
-                        for sql_stmt in sql:
-                            result2.append(cursor.execute(sql_stmt, kwargs))
+                        for stmt in stmts:
+                            result2.append(cursor.execute(stmt, kwargs))
 
                         result.append(result2)
 

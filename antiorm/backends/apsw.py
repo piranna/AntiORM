@@ -102,7 +102,7 @@ class APSW(Base):
         """
         try:
             result = Base.parse_string(self, sql, method_name, include_path,
-                                          lazy)
+                                       lazy)
         except:
             raise
 
@@ -114,12 +114,10 @@ class APSW(Base):
         return result
 
     @register
-    def _one_statement_value(self, stream):
+    def _one_statement_value(self, sql):
         """
         `stream` SQL statement return a cell
         """
-        sql = Tokens2Unicode(stream)
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return its cell value"
             def _priv(kwargs):
@@ -166,12 +164,10 @@ class APSW(Base):
         return _wrapped_method
 
     @register
-    def _one_statement_register(self, stream):
+    def _one_statement_register(self, sql):
         """
         `stream` SQL statement return a row
         """
-        sql = Tokens2Unicode(stream)
-
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statement and return a row"
             def _priv(kwargs):
