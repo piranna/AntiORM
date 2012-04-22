@@ -155,8 +155,8 @@ class Base(object):
         @param lazy: set if parsing should be postpone until required
         @type lazy: boolean
 
-        @return: the parsed function (except if lazy is True)
-        @rtype: function
+        @return: the parsed function or None if `lazy` is True
+        @rtype: function or None
         """
 
         # Lazy processing, store data & only do the parse if later is required
@@ -166,10 +166,6 @@ class Base(object):
 
         stream = Compact(sql.strip(), include_path)
 
-        # Insert statement (return last row id)
-        if IsType('INSERT')(stream):
-            return self._statement_INSERT(method_name, stream)
-
         # One statement query
         if len(split2(stream)) == 1:
             return self._one_statement(method_name, stream)
@@ -177,23 +173,14 @@ class Base(object):
         # Multiple statement query
         return self._multiple_statement(method_name, stream)
 
-    def _statement_INSERT(self, method_name, stream):
-        """
-        Special case because we are interested on inserted row id
-        """
-        stmts = split2(stream)
-
-        # One statement query
-        if len(stmts) == 1:
-            return self._statement_INSERT_single(method_name, stmts)
-
-        # Multiple statement query (return last row id of first one)
-        return self._statement_INSERT_multiple(method_name, stmts)
-
     def _one_statement(self, method_name, stream):
         """
         `stream` SQL code only have one statement
         """
+        # Insert statement (return last row id)
+        if IsType('INSERT')(stream):
+            return self._one_statement_INSERT(method_name, stream)
+
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
 #            # Update statement (return affected row count)
@@ -212,13 +199,24 @@ class Base(object):
         # Table function (several rows)
         return self._one_statement_table(method_name, stream)
 
+    def _multiple_statement(self, method_name, stream):
+        """
+        `stream` SQL have several statements (script)
+        """
+        # Insert statement (return last row id)
+        if IsType('INSERT')(stream):
+            return self._multiple_statement_INSERT(method_name, stream)
+
+        # Standard multiple statement query
+        return self._multiple_statement_standard(method_name, stream)
+
     @register
-    def _statement_INSERT_single(self, stmts):
+    def _one_statement_INSERT(self, stmts):
         """Single INSERT statement query
 
         @return: the inserted row id
         """
-        sql = unicode(stmts[0])
+        sql = Tokens2Unicode(stmts)
 
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Execute the INSERT statement
@@ -256,7 +254,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _statement_INSERT_multiple(self, stmts):
+    def _multiple_statement_INSERT(self, stream):
         """Multiple INSERT statement query
 
         Function that execute several SQL statements sequentially, being the
@@ -264,7 +262,7 @@ class Base(object):
 
         @return: the inserted row id of first one (or a list of first ones)
         """
-        sql = map(unicode, stmts)
+        sql = map(unicode, split2(stream))
 
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Execute the statements sequentially
@@ -401,15 +399,15 @@ class Base(object):
                     return cursor.execute(sql, kwargs).fetchone()
 
             def _priv_list(list_kwargs):
+                result = []
+
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
-
-                    result = []
 
                     for kwargs in list_kwargs:
                         result.append(cursor.execute(sql, kwargs).fetchone())
 
-                    return result
+                return result
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -456,7 +454,7 @@ class Base(object):
         return _wrapped_method
 
     @register
-    def _multiple_statement(self, stream):
+    def _multiple_statement_standard(self, stream):
         """
         `stream` SQL have several statements (script)
         """
