@@ -233,7 +233,6 @@ class Base(object):
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
-                    print sql, kwargs
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
