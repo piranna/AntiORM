@@ -28,11 +28,11 @@ class Sqlite(Base):
         self.tx_manager = db_conn
 
     @register
-    def _multiple_statement(self, stream, bypass_types):
+    def _multiple_statement_standard(self, stmts, bypass_types):
         """Execute the script optimized using SQLite non-standard method
         executescript() instead of exec the statements sequentially.
         """
-        sql = named2pyformat(Tokens2Unicode(stream))
+        sql = named2pyformat(''.join(stmts))
 
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Use executescript() instead of iterate over the statements
