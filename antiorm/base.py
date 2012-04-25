@@ -46,8 +46,6 @@ class Base(object):
     """
     # TODO: database independent layer with full transaction management
 
-    _cursor = None
-
     def __init__(self, db_conn, dir_path=None, lazy=False, bypass_types=False):
         """Constructor
 
@@ -235,6 +233,7 @@ class Base(object):
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
+                    print sql, kwargs
                     cursor.execute(sql, kwargs)
                     return cursor.lastrowid
 
