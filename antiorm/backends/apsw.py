@@ -135,8 +135,6 @@ class APSW(Base):
                         return result[0]
 
             def _priv_list(list_kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
@@ -150,9 +148,7 @@ class APSW(Base):
 
                         else:
                             if row:
-                                result.append(row[0])
-
-                return result
+                                yield row[0]
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -182,8 +178,6 @@ class APSW(Base):
                         pass
 
             def _priv_list(list_kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
@@ -191,11 +185,12 @@ class APSW(Base):
                         row = cursor.execute(sql, kwargs)
 
                         try:
-                            result.append(row.next())
+                            row = row.next()
                         except StopIteration:
                             pass
-
-                return result
+                        else:
+                            if row:
+                                yield row
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:

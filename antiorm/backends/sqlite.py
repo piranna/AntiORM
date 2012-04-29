@@ -49,13 +49,11 @@ class Sqlite(Base):
                     return cursor.executescript(sql % kwargs)
 
             def _priv_list(list_kwargs):
-                result = []
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
                     for kwargs in list_kwargs:
-                        result.append(cursor.executescript(sql % kwargs))
-                return result
+                        yield cursor.executescript(sql % kwargs)
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:

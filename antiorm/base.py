@@ -235,16 +235,12 @@ class Base(object):
 
             def _priv_list(list_kwargs):
                 "Exec the statement and return the inserted row id"
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
                     for kwargs in list_kwargs:
                         cursor.execute(sql, kwargs)
-                        result.append(cursor.lastrowid)
-
-                return result
+                        yield cursor.lastrowid
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -307,8 +303,6 @@ class Base(object):
                         return result[0]
 
             def _priv_list(list_kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
@@ -316,9 +310,7 @@ class Base(object):
                         value = cursor.execute(sql, kwargs).fetchone()
                         if value:
                             value = value[0]
-                        result.append(value)
-
-                return result
+                        yield value
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -343,15 +335,11 @@ class Base(object):
                     return cursor.execute(sql, kwargs).fetchone()
 
             def _priv_list(list_kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
                     for kwargs in list_kwargs:
-                        result.append(cursor.execute(sql, kwargs).fetchone())
-
-                return result
+                        yield cursor.execute(sql, kwargs).fetchone()
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -376,15 +364,11 @@ class Base(object):
                     return cursor.execute(sql, kwargs).fetchall()
 
             def _priv_list(list_kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
                     for kwargs in list_kwargs:
-                        result.append(cursor.execute(sql, kwargs).fetchall())
-
-                return result
+                        yield cursor.execute(sql, kwargs).fetchall()
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -424,19 +408,15 @@ class Base(object):
 
             def _priv_list(list_kwargs):
                 "Exec the statements and return the row id of the first"
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
                     for kwargs in list_kwargs:
                         cursor.execute(stmts[0], kwargs)
-                        result.append(cursor.lastrowid)
+                        yield cursor.lastrowid
 
                         for stmt in stmts[1:]:
                             cursor.execute(stmt, kwargs)
-
-                return result
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
@@ -455,19 +435,13 @@ class Base(object):
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             "Execute the statements sequentially"
             def _priv(kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
                     for stmt in stmts:
-                        result.append(cursor.execute(stmt, kwargs))
-
-                return result
+                        yield cursor.execute(stmt, kwargs)
 
             def _priv_list(list_kwargs):
-                result = []
-
                 with self.tx_manager as conn:
                     cursor = conn.cursor()
 
@@ -477,9 +451,7 @@ class Base(object):
                         for stmt in stmts:
                             result2.append(cursor.execute(stmt, kwargs))
 
-                        result.append(result2)
-
-                return result
+                        yield result2
 
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:

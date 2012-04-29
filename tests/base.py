@@ -45,12 +45,12 @@ class StatementINSERTSingle:
         self.assertEqual(result[0][0], u'adios')
 
     def test_statement_INSERT_single_list(self):
-        rowid = self.engine.test_statement_INSERT_single([{'key': 'a'},
-                                                          {'key': 'b'}])
+        rowids = list(self.engine.test_statement_INSERT_single([{'key': 'a'},
+                                                                {'key': 'b'}]))
 
-        self.assertIsNotNone(rowid)
-        self.assertIsNotNone(rowid[0])
-        self.assertIsNotNone(rowid[1])
+        self.assertIsNotNone(rowids)
+        self.assertIsNotNone(rowids[0])
+        self.assertIsNotNone(rowids[1])
 
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
@@ -104,8 +104,8 @@ class StatementINSERTMultiple:
         self.assertEqual(result[0][0], result[0][1])
 
     def test_multiple_statement_INSERT_list(self):
-        rowid = self.engine.test_multiple_statement_INSERT([{'key': 'c'},
-                                                            {'key': 'd'}])
+        rowid = list(self.engine.test_multiple_statement_INSERT([{'key': 'c'},
+                                                                 {'key': 'd'}]))
 
         self.assertIsNotNone(rowid)
         self.assertIsNotNone(rowid[0])
@@ -153,7 +153,7 @@ class OneStatement_value:
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('c')")
 
-        result = self.engine.test_one_statement_value([{'key': 'c'}])
+        result = list(self.engine.test_one_statement_value([{'key': 'c'}]))
 
         self.assertListEqual(result, [u'c'])
 
@@ -185,7 +185,7 @@ class OneStatement_register:
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('c')")
 
-        result = self.engine.test_one_statement_register([{'key': 'c'}])
+        result = list(self.engine.test_one_statement_register([{'key': 'c'}]))
 
         self.assertListEqual(result, [(u'c',)])
 
@@ -217,7 +217,7 @@ class OneStatement_table:
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('c')")
 
-        result = self.engine.test_one_statement_table([{'key': 'c'}])
+        result = list(self.engine.test_one_statement_table([{'key': 'c'}]))
 
         self.assertListEqual(result, [[(u'c',)]])
 
