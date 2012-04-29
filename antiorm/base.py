@@ -217,8 +217,9 @@ class Base(object):
         return self._multiple_statement_standard(method_name, stmts,
                                                  bypass_types)
 
-    @register
-    def _one_statement_INSERT(self, sql, bypass_types):
+#    @register
+#    def _one_statement_INSERT(self, sql, bypass_types):
+    def _one_statement_INSERT(self, method_name, sql, bypass_types):
         """Single INSERT statement query
 
         @return: the inserted row id
@@ -270,6 +271,7 @@ class Base(object):
             # Do the by-pass on the caller function
             self._bypass(_priv, _priv_list)
 
+        setattr(self.__class__, method_name, _proxy_types)
         return _proxy_types
 
 #    @register
