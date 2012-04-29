@@ -79,7 +79,7 @@ class Base(object):
         result = parser(data, name, include_path, bypass_types)
         return result.__get__(self, self.__class__)
 
-    def _bypass(self, func):
+    def _bypass(self, func, func_list):
         pass
 
     def parse_dir(self, dir_path='sql', lazy=False, bypass_types=False):
@@ -223,7 +223,7 @@ class Base(object):
 
         @return: the inserted row id
         """
-        def _priv(kwargs):
+        def _priv(_, **kwargs):
             "Exec the statement and return the inserted row id"
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -231,7 +231,15 @@ class Base(object):
                 cursor.execute(sql, kwargs)
                 return cursor.lastrowid
 
-        def _priv_list(list_kwargs):
+        def _priv_dict(_, kwargs):
+            "Exec the statement and return the inserted row id"
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                cursor.execute(sql, kwargs)
+                return cursor.lastrowid
+
+        def _priv_list(_, list_kwargs):
             "Exec the statement and return the inserted row id"
             result = []
 
@@ -244,7 +252,7 @@ class Base(object):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
+        def _proxy_types(_, list_or_dict=None, **kwargs):
             """Execute the INSERT statement
 
             @return: the inserted row id (or a list with them)
@@ -252,17 +260,17 @@ class Base(object):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
+                    return _priv_dict(_, list_or_dict)
+                return _priv_list(_, list_or_dict)
+            return _priv(_, **kwargs)
 
-                if bypass_types:
-                    self._bypass(_priv_list)
-                return _priv_list(list_or_dict)
+        if bypass_types:
+            # Register the functions at class level
 
-            if bypass_types:
-                self._bypass(_priv)
-            return _priv(kwargs)
+            # Do the by-pass on the caller function
+            self._bypass(_priv, _priv_list)
 
-        return _wrapped_method
+        return _proxy_types
 
 #    @register
 #    def _statement_UPDATE_single(self, stmts):
