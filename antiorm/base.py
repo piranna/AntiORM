@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from io      import open
-from os      import listdir
-from os.path import basename, join, splitext
+from io       import open
+from os       import listdir
+from os.path  import basename, join, splitext
+from platform import python_implementation
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
@@ -161,6 +162,10 @@ class Base(object):
             self._lazy[method_name] = (self.parse_string, sql, dir_path,
                                        bypass_types)
             return
+
+        # Disable by-pass of types if not using CPython compatible bytecode
+        if python_implementation() not in ('CPython', 'PyMite'):
+            bypass_types = False
 
         stream = Compact(sql.strip(), dir_path)
 
