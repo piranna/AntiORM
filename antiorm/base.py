@@ -221,10 +221,6 @@ class Base(object):
 
         @return: the inserted row id
         """
-        def _priv_keyw(_, **kwargs):
-            "Exec the statement and return the inserted row id"
-            return _priv_dict(_, kwargs)
-
         def _priv_dict(_, kwargs):
             "Exec the statement and return the inserted row id"
             with self.tx_manager as conn:
@@ -245,6 +241,10 @@ class Base(object):
                     result.append(cursor.lastrowid)
 
             return result
+
+        def _priv_keyw(_, **kwargs):
+            "Exec the statement and return the inserted row id"
+            return _priv_dict(_, kwargs)
 
         def _proxy_types(_, list_or_dict=None, **kwargs):
             """Execute the INSERT statement
@@ -278,12 +278,14 @@ class Base(object):
             bypass(_priv_keyw)
             return _priv_keyw(_, **kwargs)
 
-        # Return specific type function
+        # Use type specific functions
         if bypass_types:
+            # Register type specific optimized functions as class methods
             setattr(self.__class__, method_name + '_keyw', _priv_keyw)
             setattr(self.__class__, method_name + '_dict', _priv_dict)
             setattr(self.__class__, method_name + '_list', _priv_list)
 
+            # Register and return by-pass
             setattr(self.__class__, method_name, _bypass_types)
             return _bypass_types
 
