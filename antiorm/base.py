@@ -4,6 +4,7 @@ from io       import open
 from os       import listdir
 from os.path  import basename, join, splitext
 from platform import python_implementation
+from warnings import warn
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
@@ -164,8 +165,12 @@ class Base(object):
             return
 
         # Disable by-pass of types if not using CPython compatible bytecode
-        if python_implementation() not in ('CPython', 'PyMite'):
-            bypass_types = False
+        if bypass_types:
+            vm = python_implementation()
+            if vm not in ('CPython', 'PyMite'):
+                warn(RuntimeWarning("%s don't have a compatible bytecode. "
+                                    "Disabling by-pass of types" % vm))
+                bypass_types = False
 
         stream = Compact(sql.strip(), dir_path)
 
