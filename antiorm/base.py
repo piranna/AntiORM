@@ -46,7 +46,7 @@ class Base(object):
     """
     # TODO: database independent layer with full transaction management
 
-    def __init__(self, db_conn, dir_path=None, lazy=False, bypass_types=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -61,25 +61,25 @@ class Base(object):
         self._lazy = {}
 
         if dir_path:
-            self.parse_dir(dir_path, lazy, bypass_types)
+            self.parse_dir(dir_path, bypass_types, lazy)
 
-    def __getattr__(self, name):
+    def __getattr__(self, method_name):
         """
         Parse and return the methods marked previously for lazy loading
         """
         # Get the lazy loading stored data
         try:
-            parser, data, include_path, bypass_types = self._lazy.pop(name)
+            parser, data, dir_path, bypass_types = self._lazy.pop(method_name)
 
         # method was not marked for lazy loading, raise exception
         except KeyError:
             raise AttributeError
 
         # Do the parsing right now and return the method
-        result = parser(data, name, include_path, bypass_types)
+        result = parser(data, method_name, dir_path, bypass_types)
         return result.__get__(self, self.__class__)
 
-    def parse_dir(self, dir_path='sql', lazy=False, bypass_types=False):
+    def parse_dir(self, dir_path='sql', bypass_types=False, lazy=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`
 
@@ -100,11 +100,11 @@ class Base(object):
 #            return
 
         for filename in listdir(dir_path):
-            self.parse_file(join(dir_path, filename), include_path=dir_path,
-                            lazy=lazy, bypass_types=bypass_types)
+            self.parse_file(join(dir_path, filename), None, dir_path,
+                            bypass_types, lazy)
 
-    def parse_file(self, file_path, method_name=None, include_path='sql',
-                   lazy=False, bypass_types=False):
+    def parse_file(self, file_path, method_name=None, dir_path='sql',
+                    bypass_types=False, lazy=False):
         """
         Build a function from a file containing a SQL query
 
@@ -114,8 +114,8 @@ class Base(object):
         @type file_path: string
         @param method_name: the name of the method
         @type method_name: string
-        @param include_path: path to the dir with the SQL files (for INCLUDE)
-        @type include_path: string
+        @param dir_path: path to the dir with the SQL files (for INCLUDE)
+        @type dir_path: string
         @param lazy: set if parsing should be postpone until required
         @type lazy: boolean
 
@@ -128,16 +128,16 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = (self.parse_file, file_path,
-                                       include_path, bypass_types)
+            self._lazy[method_name] = (self.parse_file, file_path, dir_path,
+                                       bypass_types)
             return
 
         with open(file_path, 'rt') as file_sql:
-            return self.parse_string(file_sql.read(), method_name,
-                                     include_path, bypass_types)
+            return self.parse_string(file_sql.read(), method_name, dir_path,
+                                     bypass_types)
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False,
-                       bypass_types=False):
+    def parse_string(self, sql, method_name, dir_path='sql',
+                       bypass_types=False, lazy=False):
         """
         Build a function from a string containing a SQL query
 
@@ -147,8 +147,8 @@ class Base(object):
         @type sql: string
         @param method_name: the name of the method
         @type method_name: string
-        @param include_path: path to the dir with the SQL files (for INCLUDE)
-        @type include_path: string
+        @param dir_path: path to the dir with the SQL files (for INCLUDE)
+        @type dir_path: string
         @param lazy: set if parsing should be postpone until required
         @type lazy: boolean
 
@@ -158,11 +158,11 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = (self.parse_string, sql, include_path,
+            self._lazy[method_name] = (self.parse_string, sql, dir_path,
                                        bypass_types)
             return
 
-        stream = Compact(sql.strip(), include_path)
+        stream = Compact(sql.strip(), dir_path)
 
         # One statement query
         if len(split2(stream)) == 1:
@@ -264,7 +264,7 @@ class Base(object):
             @return: the inserted row id (or a list with them)
             """
             def bypass(func):
-                pass
+                print "bypass", func
 
             # Do the by-pass on the caller function
             if list_or_dict != None:
