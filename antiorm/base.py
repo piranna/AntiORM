@@ -79,9 +79,6 @@ class Base(object):
         result = parser(data, name, include_path, bypass_types)
         return result.__get__(self, self.__class__)
 
-    def _bypass(self, func, func_list):
-        pass
-
     def parse_dir(self, dir_path='sql', lazy=False, bypass_types=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`
@@ -224,13 +221,9 @@ class Base(object):
 
         @return: the inserted row id
         """
-        def _priv(_, **kwargs):
+        def _priv_keyw(_, **kwargs):
             "Exec the statement and return the inserted row id"
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                cursor.execute(sql, kwargs)
-                return cursor.lastrowid
+            return _priv_dict(_, kwargs)
 
         def _priv_dict(_, kwargs):
             "Exec the statement and return the inserted row id"
@@ -263,14 +256,38 @@ class Base(object):
                 if isinstance(list_or_dict, dict):
                     return _priv_dict(_, list_or_dict)
                 return _priv_list(_, list_or_dict)
-            return _priv(_, **kwargs)
+            return _priv_keyw(_, **kwargs)
 
-        if bypass_types:
-            # Register the functions at class level
+        def _bypass_types(_, list_or_dict=None, **kwargs):
+            """Execute the INSERT statement
+
+            @return: the inserted row id (or a list with them)
+            """
+            def bypass(func):
+                pass
 
             # Do the by-pass on the caller function
-            self._bypass(_priv, _priv_list)
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    bypass(_priv_dict)
+                    return _priv_dict(_, list_or_dict)
 
+                bypass(_priv_list)
+                return _priv_list(_, list_or_dict)
+
+            bypass(_priv_keyw)
+            return _priv_keyw(_, **kwargs)
+
+        # Return specific type function
+        if bypass_types:
+            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
+            setattr(self.__class__, method_name + '_dict', _priv_dict)
+            setattr(self.__class__, method_name + '_list', _priv_list)
+
+            setattr(self.__class__, method_name, _bypass_types)
+            return _bypass_types
+
+        # Register and return types proxy
         setattr(self.__class__, method_name, _proxy_types)
         return _proxy_types
 
