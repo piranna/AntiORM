@@ -34,6 +34,21 @@ class Sqlite(Base):
         """
         sql = named2pyformat(''.join(stmts))
 
+        def _priv(kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                return cursor.executescript(sql % kwargs)
+
+        def _priv_list(list_kwargs):
+            result = []
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    result.append(cursor.executescript(sql % kwargs))
+            return result
+
         def _wrapped_method(self, list_or_dict=None, **kwargs):
             """Use executescript() instead of iterate over the statements
 
@@ -42,21 +57,6 @@ class Sqlite(Base):
 
             @return: the procesed data from the SQL query
             """
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    return cursor.executescript(sql % kwargs)
-
-            def _priv_list(list_kwargs):
-                result = []
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        result.append(cursor.executescript(sql % kwargs))
-                return result
-
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):

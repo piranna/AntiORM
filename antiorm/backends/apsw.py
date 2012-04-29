@@ -119,42 +119,42 @@ class APSW(Base):
         """
         `stream` SQL statement return a cell
         """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return its cell value"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+        def _priv(kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-                    result = cursor.execute(sql, kwargs)
+                result = cursor.execute(sql, kwargs)
+
+                try:
+                    result = result.next()
+                except StopIteration:
+                    return
+
+                if result:
+                    return result[0]
+
+        def _priv_list(list_kwargs):
+            result = []
+
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    row = cursor.execute(sql, kwargs)
 
                     try:
-                        result = result.next()
+                        row = row.next()
                     except StopIteration:
-                        return
+                        pass
 
-                    if result:
-                        return result[0]
+                    else:
+                        if row:
+                            result.append(row[0])
 
-            def _priv_list(list_kwargs):
-                result = []
+            return result
 
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        row = cursor.execute(sql, kwargs)
-
-                        try:
-                            row = row.next()
-                        except StopIteration:
-                            pass
-
-                        else:
-                            if row:
-                                result.append(row[0])
-
-                return result
-
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
+            "Execute the statement and return its cell value"
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
@@ -169,35 +169,35 @@ class APSW(Base):
         """
         `stream` SQL statement return a row
         """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return a row"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+        def _priv(kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
+                row = cursor.execute(sql, kwargs)
+
+                try:
+                    return row.next()
+                except StopIteration:
+                    pass
+
+        def _priv_list(list_kwargs):
+            result = []
+
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
                     row = cursor.execute(sql, kwargs)
 
                     try:
-                        return row.next()
+                        result.append(row.next())
                     except StopIteration:
                         pass
 
-            def _priv_list(list_kwargs):
-                result = []
+            return result
 
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        row = cursor.execute(sql, kwargs)
-
-                        try:
-                            result.append(row.next())
-                        except StopIteration:
-                            pass
-
-                return result
-
+        def _wrapped_method(self, list_or_dict=None, **kwargs):
+            "Execute the statement and return a row"
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
