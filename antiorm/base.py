@@ -451,16 +451,8 @@ class Base(object):
     _one_statement_table = proxy_factory(_one_statement_table__dict,
                                          _one_statement_table__list)
 
-    @register
-    def _multiple_statement_INSERT(self, stmts, bypass_types):
-        """Multiple INSERT statement query
-
-        Function that execute several SQL statements sequentially, being the
-        first an INSERT one.
-
-        @return: the inserted row id of first one (or a list of first ones)
-        """
-        def _priv(kwargs):
+    def _multiple_statement_INSERT__dict(self, stmts):
+        def _wrapped_method(_, kwargs):
             "Exec the statements and return the row id of the first"
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -473,7 +465,10 @@ class Base(object):
 
                 return rowid
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _multiple_statement_INSERT__list(self, stmts):
+        def _wrapped_method(_, list_kwargs):
             "Exec the statements and return the row id of the first"
             result = []
 
@@ -489,19 +484,10 @@ class Base(object):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            """Execute the statements sequentially
-
-            @return: the inserted row id from the first INSERT one
-            """
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _multiple_statement_INSERT = proxy_factory(_multiple_statement_INSERT__dict,
+                                               _multiple_statement_INSERT__list)
 
     @register
     def _multiple_statement_standard(self, stmts, bypass_types):
