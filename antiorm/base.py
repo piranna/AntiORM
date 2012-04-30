@@ -298,7 +298,9 @@ class Base(object):
         return self._multiple_statement_standard(method_name, stmts,
                                                  bypass_types)
 
+    #
     # Optimized functions
+    #
 
     def _one_statement_INSERT__dict(self, sql):
         def _wrapped_method(_, kwargs):
@@ -397,18 +399,17 @@ class Base(object):
     _one_statement_value = proxy_factory(_one_statement_value__dict,
                                          _one_statement_value__list)
 
-    @register
-    def _one_statement_register(self, sql, bypass_types):
-        """
-        `stream` SQL statement return a row
-        """
-        def _priv(kwargs):
+    def _one_statement_register__dict(self, sql):
+        def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 return cursor.execute(sql, kwargs).fetchone()
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _one_statement_register__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -419,16 +420,10 @@ class Base(object):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return a row"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _one_statement_register = proxy_factory(_one_statement_register__dict,
+                                            _one_statement_register__list)
 
     @register
     def _one_statement_table(self, sql, bypass_types):
