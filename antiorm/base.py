@@ -231,7 +231,7 @@ class Base(object):
 
         @return: the inserted row id
         """
-        def _priv_dict(_, kwargs):
+        def _priv_dict(self, kwargs):
             "Exec the statement and return the inserted row id"
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -239,7 +239,7 @@ class Base(object):
                 cursor.execute(sql, kwargs)
                 return cursor.lastrowid
 
-        def _priv_list(_, list_kwargs):
+        def _priv_list(self, list_kwargs):
             "Exec the statement and return the inserted row id"
             result = []
 
@@ -252,17 +252,17 @@ class Base(object):
 
             return result
 
-        def _priv_l_kw(_, *args):
+        def _priv_l_kw(self, *args):
             "Exec the statement and return the inserted row id"
-            return _priv_dict(_, args)
+            return _priv_dict(self, args)
 
-        def _priv_keyw(_, **kwargs):
+        def _priv_keyw(self, **kwargs):
             "Exec the statement and return the inserted row id"
-            return _priv_dict(_, kwargs)
+            return _priv_dict(self, kwargs)
 
         # Use type specific functions
         if bypass_types:
-            def _bypass_types(_, list_or_dict=None, *args, **kwargs):
+            def _bypass_types(self, list_or_dict=None, *args, **kwargs):
                 """Execute the INSERT statement
 
                 @return: the inserted row id (or a list with them)
@@ -274,28 +274,29 @@ class Base(object):
                 if list_or_dict != None:
                     if isinstance(list_or_dict, dict):
                         bypass(_priv_dict)
-                        return _priv_dict(_, list_or_dict)
+                        return _priv_dict(self, list_or_dict)
 
                     bypass(_priv_list)
-                    return _priv_list(_, list_or_dict)
+                    return _priv_list(self, list_or_dict)
 
                 if args:
                     bypass(_priv_l_kw)
-                    return _priv_l_kw(_, *args)
+                    return _priv_l_kw(self, *args)
 
                 bypass(_priv_keyw)
-                return _priv_keyw(_, **kwargs)
+                return _priv_keyw(self, **kwargs)
 
             # Register type specific optimized functions as class methods
-            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
             setattr(self.__class__, method_name + '_dict', _priv_dict)
             setattr(self.__class__, method_name + '_list', _priv_list)
+            setattr(self.__class__, method_name + '_l_kw', _priv_l_kw)
+            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
 
             # Register and return by-pass
             setattr(self.__class__, method_name, _bypass_types)
             return _bypass_types
 
-        def _proxy_types(_, list_or_dict=None, *args, **kwargs):
+        def _proxy_types(self, list_or_dict=None, *args, **kwargs):
             """Execute the INSERT statement
 
             @return: the inserted row id (or a list with them)
@@ -303,11 +304,11 @@ class Base(object):
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
-                    return _priv_dict(_, list_or_dict)
-                return _priv_list(_, list_or_dict)
+                    return _priv_dict(self, list_or_dict)
+                return _priv_list(self, list_or_dict)
             if args:
-                return _priv_l_kw(_, *args)
-            return _priv_keyw(_, **kwargs)
+                return _priv_l_kw(self, *args)
+            return _priv_keyw(self, **kwargs)
 
         # Register and return types proxy
         setattr(self.__class__, method_name, _proxy_types)
