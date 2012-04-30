@@ -425,18 +425,17 @@ class Base(object):
     _one_statement_register = proxy_factory(_one_statement_register__dict,
                                             _one_statement_register__list)
 
-    @register
-    def _one_statement_table(self, sql, bypass_types):
-        """
-        `stream` SQL statement return several values (a table)
-        """
-        def _priv(kwargs):
+    def _one_statement_table__dict(self, sql):
+        def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 return cursor.execute(sql, kwargs).fetchall()
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _one_statement_table__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -447,16 +446,10 @@ class Base(object):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute a statement. If a list is given, they are exec at once"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _one_statement_table = proxy_factory(_one_statement_table__dict,
+                                         _one_statement_table__list)
 
     @register
     def _multiple_statement_INSERT(self, stmts, bypass_types):
