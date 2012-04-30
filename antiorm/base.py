@@ -24,32 +24,14 @@ def register(func):
     return wrapper
 
 
-def proxy_factory():
+def proxy_factory(priv_dict, priv_list):
     def _wrapped_method(self, method_name, sql, bypass_types):
         """Single INSERT statement query
 
         @return: the inserted row id
         """
-        def _priv_dict(self, kwargs):
-            "Exec the statement and return the inserted row id"
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                cursor.execute(sql, kwargs)
-                return cursor.lastrowid
-
-        def _priv_list(self, list_kwargs):
-            "Exec the statement and return the inserted row id"
-            result = []
-
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                for kwargs in list_kwargs:
-                    cursor.execute(sql, kwargs)
-                    result.append(cursor.lastrowid)
-
-            return result
+        _priv_dict = priv_dict(self, sql)
+        _priv_list = priv_list(self, sql)
 
         def _priv_l_kw(self, *args):
             "Exec the statement and return the inserted row id"
@@ -316,7 +298,35 @@ class Base(object):
         return self._multiple_statement_standard(method_name, stmts,
                                                  bypass_types)
 
-    _one_statement_INSERT = proxy_factory()
+    def _one_statement_INSERT_dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            "Exec the statement and return the inserted row id"
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                cursor.execute(sql, kwargs)
+                return cursor.lastrowid
+
+        return _wrapped_method
+
+    def _one_statement_INSERT_list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            "Exec the statement and return the inserted row id"
+            result = []
+
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    cursor.execute(sql, kwargs)
+                    result.append(cursor.lastrowid)
+
+            return result
+
+        return _wrapped_method
+
+    _one_statement_INSERT = proxy_factory(_one_statement_INSERT_dict,
+                                          _one_statement_INSERT_list)
 
 #    @register
 #    def _statement_UPDATE_single(self, stmts):
