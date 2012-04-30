@@ -489,12 +489,8 @@ class Base(object):
     _multiple_statement_INSERT = proxy_factory(_multiple_statement_INSERT__dict,
                                                _multiple_statement_INSERT__list)
 
-    @register
-    def _multiple_statement_standard(self, stmts, bypass_types):
-        """
-        `stream` SQL have several statements (script)
-        """
-        def _priv(kwargs):
+    def _multiple_statement_standard__dict(self, stmts):
+        def _wrapped_method(_, kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -505,7 +501,10 @@ class Base(object):
 
             return result
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _multiple_statement_standard__list(self, stmts):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -521,13 +520,7 @@ class Base(object):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statements sequentially"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _multiple_statement_standard = proxy_factory(_multiple_statement_standard__dict,
+                                                 _multiple_statement_standard__list)
