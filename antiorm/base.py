@@ -252,11 +252,15 @@ class Base(object):
 
             return result
 
+        def _priv_l_kw(_, *args):
+            "Exec the statement and return the inserted row id"
+            return _priv_dict(_, args)
+
         def _priv_keyw(_, **kwargs):
             "Exec the statement and return the inserted row id"
             return _priv_dict(_, kwargs)
 
-        def _proxy_types(_, list_or_dict=None, **kwargs):
+        def _proxy_types(_, list_or_dict=None, *args, **kwargs):
             """Execute the INSERT statement
 
             @return: the inserted row id (or a list with them)
@@ -266,9 +270,11 @@ class Base(object):
                 if isinstance(list_or_dict, dict):
                     return _priv_dict(_, list_or_dict)
                 return _priv_list(_, list_or_dict)
+            if args:
+                return _priv_l_kw(_, *args)
             return _priv_keyw(_, **kwargs)
 
-        def _bypass_types(_, list_or_dict=None, **kwargs):
+        def _bypass_types(_, list_or_dict=None, *args, **kwargs):
             """Execute the INSERT statement
 
             @return: the inserted row id (or a list with them)
@@ -284,6 +290,10 @@ class Base(object):
 
                 bypass(_priv_list)
                 return _priv_list(_, list_or_dict)
+
+            if args:
+                bypass(_priv_l_kw)
+                return _priv_l_kw(_, *args)
 
             bypass(_priv_keyw)
             return _priv_keyw(_, **kwargs)
