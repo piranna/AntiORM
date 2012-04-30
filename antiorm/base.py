@@ -298,7 +298,9 @@ class Base(object):
         return self._multiple_statement_standard(method_name, stmts,
                                                  bypass_types)
 
-    def _one_statement_INSERT_dict(self, sql):
+    # Optimized functions
+
+    def _one_statement_INSERT__dict(self, sql):
         def _wrapped_method(_, kwargs):
             "Exec the statement and return the inserted row id"
             with self.tx_manager as conn:
@@ -309,7 +311,7 @@ class Base(object):
 
         return _wrapped_method
 
-    def _one_statement_INSERT_list(self, sql):
+    def _one_statement_INSERT__list(self, sql):
         def _wrapped_method(_, list_kwargs):
             "Exec the statement and return the inserted row id"
             result = []
@@ -325,8 +327,8 @@ class Base(object):
 
         return _wrapped_method
 
-    _one_statement_INSERT = proxy_factory(_one_statement_INSERT_dict,
-                                          _one_statement_INSERT_list)
+    _one_statement_INSERT = proxy_factory(_one_statement_INSERT__dict,
+                                          _one_statement_INSERT__list)
 
 #    @register
 #    def _statement_UPDATE_single(self, stmts):
@@ -364,12 +366,8 @@ class Base(object):
 #
 #        return _wrapped_method
 
-    @register
-    def _one_statement_value(self, sql, bypass_types):
-        """
-        `stream` SQL statement return a cell
-        """
-        def _priv(kwargs):
+    def _one_statement_value__dict(self, sql):
+        def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -377,7 +375,10 @@ class Base(object):
                 if result:
                     return result[0]
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _one_statement_value__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -391,16 +392,10 @@ class Base(object):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return its cell value"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _one_statement_value = proxy_factory(_one_statement_value__dict,
+                                         _one_statement_value__list)
 
     @register
     def _one_statement_register(self, sql, bypass_types):
