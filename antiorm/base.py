@@ -260,6 +260,41 @@ class Base(object):
             "Exec the statement and return the inserted row id"
             return _priv_dict(_, kwargs)
 
+        # Use type specific functions
+        if bypass_types:
+            def _bypass_types(_, list_or_dict=None, *args, **kwargs):
+                """Execute the INSERT statement
+
+                @return: the inserted row id (or a list with them)
+                """
+                def bypass(func):
+                    print "bypass", func
+
+                # Do the by-pass on the caller function
+                if list_or_dict != None:
+                    if isinstance(list_or_dict, dict):
+                        bypass(_priv_dict)
+                        return _priv_dict(_, list_or_dict)
+
+                    bypass(_priv_list)
+                    return _priv_list(_, list_or_dict)
+
+                if args:
+                    bypass(_priv_l_kw)
+                    return _priv_l_kw(_, *args)
+
+                bypass(_priv_keyw)
+                return _priv_keyw(_, **kwargs)
+
+            # Register type specific optimized functions as class methods
+            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
+            setattr(self.__class__, method_name + '_dict', _priv_dict)
+            setattr(self.__class__, method_name + '_list', _priv_list)
+
+            # Register and return by-pass
+            setattr(self.__class__, method_name, _bypass_types)
+            return _bypass_types
+
         def _proxy_types(_, list_or_dict=None, *args, **kwargs):
             """Execute the INSERT statement
 
@@ -273,41 +308,6 @@ class Base(object):
             if args:
                 return _priv_l_kw(_, *args)
             return _priv_keyw(_, **kwargs)
-
-        def _bypass_types(_, list_or_dict=None, *args, **kwargs):
-            """Execute the INSERT statement
-
-            @return: the inserted row id (or a list with them)
-            """
-            def bypass(func):
-                print "bypass", func
-
-            # Do the by-pass on the caller function
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    bypass(_priv_dict)
-                    return _priv_dict(_, list_or_dict)
-
-                bypass(_priv_list)
-                return _priv_list(_, list_or_dict)
-
-            if args:
-                bypass(_priv_l_kw)
-                return _priv_l_kw(_, *args)
-
-            bypass(_priv_keyw)
-            return _priv_keyw(_, **kwargs)
-
-        # Use type specific functions
-        if bypass_types:
-            # Register type specific optimized functions as class methods
-            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
-            setattr(self.__class__, method_name + '_dict', _priv_dict)
-            setattr(self.__class__, method_name + '_list', _priv_list)
-
-            # Register and return by-pass
-            setattr(self.__class__, method_name, _bypass_types)
-            return _bypass_types
 
         # Register and return types proxy
         setattr(self.__class__, method_name, _proxy_types)
