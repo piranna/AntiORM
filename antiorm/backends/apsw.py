@@ -6,9 +6,7 @@ Created on 17/02/2012
 
 from logging import warning
 
-from sqlparse.filters import Tokens2Unicode
-
-from ..base import Base, register
+from ..base import Base, proxy_factory, register
 
 
 class CursorWrapper(object):
@@ -101,11 +99,8 @@ class APSW(Base):
         If the number of parsed methods is bigger of the APSW SQLite bytecode
         cache it shows an alert because performance will decrease.
         """
-        try:
-            result = Base.parse_string(self, sql, method_name, include_path,
-                                       lazy, bypass_types)
-        except:
-            raise
+        result = Base.parse_string(self, sql, method_name, include_path, lazy,
+                                   bypass_types)
 
         self._cachedmethods += 1
         if self._cachedmethods > self._max_cachedmethods:
@@ -114,12 +109,8 @@ class APSW(Base):
 
         return result
 
-    @register
-    def _one_statement_value(self, sql, bypass_types):
-        """
-        `stream` SQL statement return a cell
-        """
-        def _priv(kwargs):
+    def _one_statement_value__dict(self, sql):
+        def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -133,7 +124,10 @@ class APSW(Base):
                 if result:
                     return result[0]
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _one_statement_value__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -153,16 +147,10 @@ class APSW(Base):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return its cell value"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _one_statement_value = proxy_factory(_one_statement_value__dict,
+                                         _one_statement_value__list)
 
     @register
     def _one_statement_register(self, sql, bypass_types):
