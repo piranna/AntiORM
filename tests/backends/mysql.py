@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path  import abspath, dirname, join
-from unittest import skipIf, main, TestCase
+from unittest import skip, skipIf, main, TestCase
 
 from MySQLdb import connect
 
@@ -17,7 +17,8 @@ from base import OneStatement_value, OneStatement_register, OneStatement_table
 from base import MultipleStatement
 
 
-@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
 class TestMySQL(TestCase,
                 Basic,
                 StatementINSERTSingle, StatementINSERTMultiple,

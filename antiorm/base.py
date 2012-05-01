@@ -458,21 +458,32 @@ class Base(object):
 
     def _multiple_statement_standard__dict(self, stmts):
         def _wrapped_method(_, kwargs):
+            result = []
+
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 for stmt in stmts:
-                    yield cursor.execute(stmt, kwargs)
+#                    yield cursor.execute(stmt, kwargs)
+                    result.append(cursor.execute(stmt, kwargs))
+
+            return result
 
         return _wrapped_method
 
     def _multiple_statement_standard__list(self, stmts):
         def _wrapped_method(_, list_kwargs):
+            result = []
+
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    yield (cursor.execute(stmt, kwargs) for stmt in stmts)
+#                    yield (cursor.execute(stmt, kwargs) for stmt in stmts)
+#                    yield [cursor.execute(stmt, kwargs) for stmt in stmts]
+                    result.append([cursor.execute(stmt, kwargs) for stmt in stmts])
+
+            return result
 
         return _wrapped_method
 

@@ -40,11 +40,16 @@ class Sqlite(Base):
         sql = named2pyformat(''.join(stmts))
 
         def _wrapped_method(_, list_kwargs):
+            result = []
+
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    yield cursor.executescript(sql % kwargs)
+#                    yield cursor.executescript(sql % kwargs)
+                    result.append(cursor.executescript(sql % kwargs))
+
+            return result
 
         return _wrapped_method
 
