@@ -12,18 +12,6 @@ from sqlparse.filters import Tokens2Unicode
 from sql import Compact, GetColumns, GetLimit, IsType
 
 
-def register(func):
-    "Decorator to register a wrapped method inside AntiORM class"
-    def wrapper(self, method_name, *args, **kwargs):
-        "Get method name for registration and give the other args to the func"
-        _wrapped_method = func(self, *args, **kwargs)
-
-        setattr(self.__class__, method_name, _wrapped_method)
-        return _wrapped_method
-
-    return wrapper
-
-
 def proxy_factory(priv_dict, priv_list):
     def _wrapped_method(self, method_name, sql, bypass_types):
         """Single INSERT statement query
