@@ -4,9 +4,7 @@ Created on 20/01/2012
 @author: piranna
 '''
 
-from sqlparse.filters import Tokens2Unicode
-
-from ..base  import Base, register
+from ..base  import Base, proxy_factory
 from ..utils import named2pyformat
 
 
@@ -27,20 +25,21 @@ class Sqlite(Base):
 
         self.tx_manager = db_conn
 
-    @register
-    def _multiple_statement_standard(self, stmts, bypass_types):
-        """Execute the script optimized using SQLite non-standard method
-        executescript() instead of exec the statements sequentially.
-        """
+    def _multiple_statement_standard__dict(self, stmts):
         sql = named2pyformat(''.join(stmts))
 
-        def _priv(kwargs):
+        def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 return cursor.executescript(sql % kwargs)
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _multiple_statement_standard__list(self, stmts):
+        sql = named2pyformat(''.join(stmts))
+
+        def _wrapped_method(_, list_kwargs):
             result = []
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -49,19 +48,7 @@ class Sqlite(Base):
                     result.append(cursor.executescript(sql % kwargs))
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            """Use executescript() instead of iterate over the statements
-
-            @param list_or_dict: a (dict | list of dicts) with the parameters
-            @type list_or_dict: dict or list of dicts
-
-            @return: the procesed data from the SQL query
-            """
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _multiple_statement_standard = proxy_factory(_multiple_statement_standard__dict,
+                                                 _multiple_statement_standard__list)
