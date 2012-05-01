@@ -6,9 +6,7 @@ Created on 17/02/2012
 
 from logging import warning
 
-from sqlparse.filters import Tokens2Unicode
-
-from ..base import Base, register
+from antiorm.base import Base, proxy_factory
 
 
 class CursorWrapper(object):
@@ -94,17 +92,15 @@ class APSW(Base):
 
         self.tx_manager = db_conn
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False):
+    def parse_string(self, sql, method_name, include_path='sql', lazy=False,
+                     bypass_types=False):
         """Build a function from a string containing a SQL query
 
         If the number of parsed methods is bigger of the APSW SQLite bytecode
         cache it shows an alert because performance will decrease.
         """
-        try:
-            result = Base.parse_string(self, sql, method_name, include_path,
-                                       lazy)
-        except:
-            raise
+        result = Base.parse_string(self, sql, method_name, include_path, lazy,
+                                   bypass_types)
 
         self._cachedmethods += 1
         if self._cachedmethods > self._max_cachedmethods:
@@ -113,90 +109,72 @@ class APSW(Base):
 
         return result
 
-    @register
-    def _one_statement_value(self, sql):
-        """
-        `stream` SQL statement return a cell
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return its cell value"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    def _one_statement_value__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-                    result = cursor.execute(sql, kwargs)
+                result = cursor.execute(sql, kwargs)
 
-                    try:
-                        result = result.next()
-                    except StopIteration:
-                        return
+                try:
+                    result = result.next()
+                except StopIteration:
+                    return
 
-                    if result:
-                        return result[0]
-
-            def _priv_list(list_kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        row = cursor.execute(sql, kwargs)
-
-                        try:
-                            row = row.next()
-                        except StopIteration:
-                            pass
-
-                        else:
-                            if row:
-                                yield row[0]
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                if result:
+                    return result[0]
 
         return _wrapped_method
 
-    @register
-    def _one_statement_register(self, sql):
-        """
-        `stream` SQL statement return a row
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return a row"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    def _one_statement_value__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
+                for kwargs in list_kwargs:
                     row = cursor.execute(sql, kwargs)
 
                     try:
-                        return row.next()
+                        row = row.next()
+                    except StopIteration:
+                        pass
+                    else:
+                        if row:
+                            yield row[0]
+
+        return _wrapped_method
+
+    _one_statement_value = proxy_factory(_one_statement_value__dict,
+                                         _one_statement_value__list)
+
+    def _one_statement_register__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                row = cursor.execute(sql, kwargs)
+
+                try:
+                    return row.next()
+                except StopIteration:
+                    pass
+
+        return _wrapped_method
+
+    def _one_statement_register__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    row = cursor.execute(sql, kwargs)
+
+                    try:
+                        yield row.next()
                     except StopIteration:
                         pass
 
-            def _priv_list(list_kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        row = cursor.execute(sql, kwargs)
-
-                        try:
-                            row = row.next()
-                        except StopIteration:
-                            pass
-                        else:
-                            if row:
-                                yield row
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
-
         return _wrapped_method
+
+    _one_statement_register = proxy_factory(_one_statement_register__dict,
+                                            _one_statement_register__list)

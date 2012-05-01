@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-from io      import open
-from os      import listdir
-from os.path import basename, join, splitext
+from io       import open
+from os       import listdir
+from os.path  import basename, join, splitext
+from platform import python_implementation
+from warnings import warn
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
@@ -10,16 +12,78 @@ from sqlparse.filters import Tokens2Unicode
 from sql import Compact, GetColumns, GetLimit, IsType
 
 
-def register(func):
-    "Decorator to register a wrapped method inside AntiORM class"
-    def wrapper(self, method_name, *args, **kwargs):
-        "Get method name for registration and give the other args to the func"
-        _wrapped_method = func(self, *args, **kwargs)
+def proxy_factory(priv_dict, priv_list):
+    def _wrapped_method(self, method_name, sql, bypass_types):
+        """Single INSERT statement query
 
-        setattr(self.__class__, method_name, _wrapped_method)
-        return _wrapped_method
+        @return: the inserted row id
+        """
+        _priv_dict = priv_dict(self, sql)
+        _priv_list = priv_list(self, sql)
 
-    return wrapper
+        def _priv_l_kw(self, *args):
+            "Exec the statement and return the inserted row id"
+            return _priv_dict(self, args)
+
+        def _priv_keyw(self, **kwargs):
+            "Exec the statement and return the inserted row id"
+            return _priv_dict(self, kwargs)
+
+        # Use type specific functions
+        if bypass_types:
+            def _bypass_types(self, list_or_dict=None, *args, **kwargs):
+                """Execute the INSERT statement
+
+                @return: the inserted row id (or a list with them)
+                """
+                def bypass(func):
+                    print "bypass", func
+
+                # Do the by-pass on the caller function
+                if list_or_dict != None:
+                    if isinstance(list_or_dict, dict):
+                        bypass(_priv_dict)
+                        return _priv_dict(self, list_or_dict)
+
+                    bypass(_priv_list)
+                    return _priv_list(self, list_or_dict)
+
+                if args:
+                    bypass(_priv_l_kw)
+                    return _priv_l_kw(self, *args)
+
+                bypass(_priv_keyw)
+                return _priv_keyw(self, **kwargs)
+
+            # Register type specific optimized functions as class methods
+            setattr(self.__class__, method_name + '_dict', _priv_dict)
+            setattr(self.__class__, method_name + '_list', _priv_list)
+            setattr(self.__class__, method_name + '_l_kw', _priv_l_kw)
+            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
+
+            # Register and return by-pass
+            setattr(self.__class__, method_name, _bypass_types)
+            return _bypass_types
+
+        def _proxy_types(self, list_or_dict=None, *args, **kwargs):
+            """Execute the INSERT statement
+
+            @return: the inserted row id (or a list with them)
+            """
+            # Received un-named parameter, it would be a iterable
+            if list_or_dict != None:
+                if isinstance(list_or_dict, dict):
+                    return _priv_dict(self, list_or_dict)
+                return _priv_list(self, list_or_dict)
+            if args:
+                return _priv_l_kw(self, *args)
+            return _priv_keyw(self, **kwargs)
+
+        # Register and return types proxy
+        setattr(self.__class__, method_name, _proxy_types)
+        return _proxy_types
+
+    return _wrapped_method
 
 
 #def _transaction(func):
@@ -46,9 +110,7 @@ class Base(object):
     """
     # TODO: database independent layer with full transaction management
 
-    _cursor = None
-
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -63,28 +125,25 @@ class Base(object):
         self._lazy = {}
 
         if dir_path:
-            self.parse_dir(dir_path, lazy)
+            self.parse_dir(dir_path, bypass_types, lazy)
 
-    def __getattr__(self, name):
+    def __getattr__(self, method_name):
         """
         Parse and return the methods marked previously for lazy loading
         """
         # Get the lazy loading stored data
         try:
-            parser, data, include_path = self._lazy.pop(name)
+            parser, data, dir_path, bypass_types = self._lazy.pop(method_name)
 
         # method was not marked for lazy loading, raise exception
         except KeyError:
             raise AttributeError
 
         # Do the parsing right now and return the method
-        result = parser(data, name, include_path)
+        result = parser(data, method_name, dir_path, bypass_types)
         return result.__get__(self, self.__class__)
 
-    def commit(self):
-        self.connection.commit()
-
-    def parse_dir(self, dir_path='sql', lazy=False):
+    def parse_dir(self, dir_path='sql', bypass_types=False, lazy=False):
         """
         Build functions from the SQL queries inside the files at `dir_path`
 
@@ -105,11 +164,11 @@ class Base(object):
 #            return
 
         for filename in listdir(dir_path):
-            self.parse_file(join(dir_path, filename), include_path=dir_path,
-                            lazy=lazy)
+            self.parse_file(join(dir_path, filename), None, dir_path,
+                            bypass_types, lazy)
 
-    def parse_file(self, file_path, method_name=None, include_path='sql',
-                   lazy=False):
+    def parse_file(self, file_path, method_name=None, dir_path='sql',
+                    bypass_types=False, lazy=False):
         """
         Build a function from a file containing a SQL query
 
@@ -119,8 +178,8 @@ class Base(object):
         @type file_path: string
         @param method_name: the name of the method
         @type method_name: string
-        @param include_path: path to the dir with the SQL files (for INCLUDE)
-        @type include_path: string
+        @param dir_path: path to the dir with the SQL files (for INCLUDE)
+        @type dir_path: string
         @param lazy: set if parsing should be postpone until required
         @type lazy: boolean
 
@@ -133,14 +192,16 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = self.parse_file, file_path, include_path
+            self._lazy[method_name] = (self.parse_file, file_path, dir_path,
+                                       bypass_types)
             return
 
         with open(file_path, 'rt') as file_sql:
-            return self.parse_string(file_sql.read(), method_name,
-                                     include_path)
+            return self.parse_string(file_sql.read(), method_name, dir_path,
+                                     bypass_types)
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False):
+    def parse_string(self, sql, method_name, dir_path='sql',
+                       bypass_types=False, lazy=False):
         """
         Build a function from a string containing a SQL query
 
@@ -150,8 +211,8 @@ class Base(object):
         @type sql: string
         @param method_name: the name of the method
         @type method_name: string
-        @param include_path: path to the dir with the SQL files (for INCLUDE)
-        @type include_path: string
+        @param dir_path: path to the dir with the SQL files (for INCLUDE)
+        @type dir_path: string
         @param lazy: set if parsing should be postpone until required
         @type lazy: boolean
 
@@ -161,19 +222,28 @@ class Base(object):
 
         # Lazy processing, store data & only do the parse if later is required
         if lazy:
-            self._lazy[method_name] = (self.parse_string, sql, include_path)
+            self._lazy[method_name] = (self.parse_string, sql, dir_path,
+                                       bypass_types)
             return
 
-        stream = Compact(sql.strip(), include_path)
+        # Disable by-pass of types if not using CPython compatible bytecode
+        if bypass_types:
+            vm = python_implementation()
+            if vm not in ('CPython', 'PyMite'):
+                warn(RuntimeWarning("%s don't have a compatible bytecode. "
+                                    "Disabling by-pass of types" % vm))
+                bypass_types = False
+
+        stream = Compact(sql.strip(), dir_path)
 
         # One statement query
         if len(split2(stream)) == 1:
-            return self._one_statement(method_name, stream)
+            return self._one_statement(method_name, stream, bypass_types)
 
         # Multiple statement query
-        return self._multiple_statement(method_name, stream)
+        return self._multiple_statement(method_name, stream, bypass_types)
 
-    def _one_statement(self, method_name, stream):
+    def _one_statement(self, method_name, stream, bypass_types):
         """
         `stream` SQL code only have one statement
         """
@@ -181,27 +251,27 @@ class Base(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._one_statement_INSERT(method_name, sql)
+            return self._one_statement_INSERT(method_name, sql, bypass_types)
+
+#        # Update statement (return affected row count)
+#        if IsType('UPDATE')(stream):
+#            return self._one_statement_UPDATE(method_name, sql, bypass_types)
 
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
-#            # Update statement (return affected row count)
-#            if IsType('UPDATE')(stream):
-#                return self._statement_UPDATE_single(method_name, stream)
-
             columns = GetColumns(stream)
 
             # Value function (one row, one field)
             if len(columns) == 1 and columns[0] != '*':
-                return self._one_statement_value(method_name, sql)
+                return self._one_statement_value(method_name, sql, bypass_types)
 
             # Register function (one row, several fields)
-            return self._one_statement_register(method_name, sql)
+            return self._one_statement_register(method_name, sql, bypass_types)
 
         # Table function (several rows)
-        return self._one_statement_table(method_name, sql)
+        return self._one_statement_table(method_name, sql, bypass_types)
 
-    def _multiple_statement(self, method_name, stream):
+    def _multiple_statement(self, method_name, stream, bypass_types):
         """
         `stream` SQL have several statements (script)
         """
@@ -209,47 +279,42 @@ class Base(object):
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
-            return self._multiple_statement_INSERT(method_name, stmts)
+            return self._multiple_statement_INSERT(method_name, stmts,
+                                                   bypass_types)
 
         # Standard multiple statement query
-        return self._multiple_statement_standard(method_name, stmts)
+        return self._multiple_statement_standard(method_name, stmts,
+                                                 bypass_types)
 
-    @register
-    def _one_statement_INSERT(self, sql):
-        """Single INSERT statement query
+    #
+    # Optimized functions
+    #
 
-        @return: the inserted row id
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            """Execute the INSERT statement
+    def _one_statement_INSERT__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            "Exec the statement and return the inserted row id"
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-            @return: the inserted row id (or a list with them)
-            """
-            def _priv(kwargs):
-                "Exec the statement and return the inserted row id"
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    cursor.execute(sql, kwargs)
-                    return cursor.lastrowid
-
-            def _priv_list(list_kwargs):
-                "Exec the statement and return the inserted row id"
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        cursor.execute(sql, kwargs)
-                        yield cursor.lastrowid
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                cursor.execute(sql, kwargs)
+                return cursor.lastrowid
 
         return _wrapped_method
+
+    def _one_statement_INSERT__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            "Exec the statement and return the inserted row id"
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    cursor.execute(sql, kwargs)
+                    yield cursor.lastrowid
+
+        return _wrapped_method
+
+    _one_statement_INSERT = proxy_factory(_one_statement_INSERT__dict,
+                                          _one_statement_INSERT__list)
 
 #    @register
 #    def _statement_UPDATE_single(self, stmts):
@@ -287,177 +352,129 @@ class Base(object):
 #
 #        return _wrapped_method
 
-    @register
-    def _one_statement_value(self, sql):
-        """
-        `stream` SQL statement return a cell
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return its cell value"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    def _one_statement_value__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-                    result = cursor.execute(sql, kwargs).fetchone()
-                    if result:
-                        return result[0]
-
-            def _priv_list(list_kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        value = cursor.execute(sql, kwargs).fetchone()
-                        if value:
-                            value = value[0]
-                        yield value
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                result = cursor.execute(sql, kwargs).fetchone()
+                if result:
+                    return result[0]
 
         return _wrapped_method
 
-    @register
-    def _one_statement_register(self, sql):
-        """
-        `stream` SQL statement return a row
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return a row"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    def _one_statement_value__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-                    return cursor.execute(sql, kwargs).fetchone()
-
-            def _priv_list(list_kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        yield cursor.execute(sql, kwargs).fetchone()
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                for kwargs in list_kwargs:
+                    value = cursor.execute(sql, kwargs).fetchone()
+                    if value:
+                        yield value[0]
 
         return _wrapped_method
 
-    @register
-    def _one_statement_table(self, sql):
-        """
-        `stream` SQL statement return several values (a table)
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute a statement. If a list is given, they are exec at once"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    _one_statement_value = proxy_factory(_one_statement_value__dict,
+                                         _one_statement_value__list)
 
-                    return cursor.execute(sql, kwargs).fetchall()
+    def _one_statement_register__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-            def _priv_list(list_kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        yield cursor.execute(sql, kwargs).fetchall()
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                yield cursor.execute(sql, kwargs).fetchone()
 
         return _wrapped_method
 
-    @register
-    def _multiple_statement_INSERT(self, stmts):
-        """Multiple INSERT statement query
+    def _one_statement_register__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-        Function that execute several SQL statements sequentially, being the
-        first an INSERT one.
+                for kwargs in list_kwargs:
+                    yield cursor.execute(sql, kwargs).fetchone()
 
-        @return: the inserted row id of first one (or a list of first ones)
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            """Execute the statements sequentially
+        return _wrapped_method
 
-            @return: the inserted row id from the first INSERT one
-            """
-            def _priv(kwargs):
-                "Exec the statements and return the row id of the first"
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    _one_statement_register = proxy_factory(_one_statement_register__dict,
+                                            _one_statement_register__list)
 
+    def _one_statement_table__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                return cursor.execute(sql, kwargs).fetchall()
+
+        return _wrapped_method
+
+    def _one_statement_table__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    yield cursor.execute(sql, kwargs).fetchall()
+
+        return _wrapped_method
+
+    _one_statement_table = proxy_factory(_one_statement_table__dict,
+                                         _one_statement_table__list)
+
+    def _multiple_statement_INSERT__dict(self, stmts):
+        def _wrapped_method(_, kwargs):
+            "Exec the statements and return the row id of the first"
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                cursor.execute(stmts[0], kwargs)
+                rowid = cursor.lastrowid
+
+                for stmt in stmts[1:]:
+                    cursor.execute(stmt, kwargs)
+
+                return rowid
+
+        return _wrapped_method
+
+    def _multiple_statement_INSERT__list(self, stmts):
+        def _wrapped_method(_, list_kwargs):
+            "Exec the statements and return the row id of the first"
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
                     cursor.execute(stmts[0], kwargs)
-                    rowid = cursor.lastrowid
+                    yield cursor.lastrowid
 
                     for stmt in stmts[1:]:
                         cursor.execute(stmt, kwargs)
 
-                    return rowid
+        return _wrapped_method
 
-            def _priv_list(list_kwargs):
-                "Exec the statements and return the row id of the first"
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    _multiple_statement_INSERT = proxy_factory(_multiple_statement_INSERT__dict,
+                                               _multiple_statement_INSERT__list)
 
-                    for kwargs in list_kwargs:
-                        cursor.execute(stmts[0], kwargs)
-                        yield cursor.lastrowid
+    def _multiple_statement_standard__dict(self, stmts):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-                        for stmt in stmts[1:]:
-                            cursor.execute(stmt, kwargs)
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                for stmt in stmts:
+                    yield cursor.execute(stmt, kwargs)
 
         return _wrapped_method
 
-    @register
-    def _multiple_statement_standard(self, stmts):
-        """
-        `stream` SQL have several statements (script)
-        """
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statements sequentially"
-            def _priv(kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
+    def _multiple_statement_standard__list(self, stmts):
+        def _wrapped_method(_, list_kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-                    for stmt in stmts:
-                        yield cursor.execute(stmt, kwargs)
-
-            def _priv_list(list_kwargs):
-                with self.tx_manager as conn:
-                    cursor = conn.cursor()
-
-                    for kwargs in list_kwargs:
-                        result2 = []
-
-                        for stmt in stmts:
-                            result2.append(cursor.execute(stmt, kwargs))
-
-                        yield result2
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                for kwargs in list_kwargs:
+                    yield (cursor.execute(stmt, kwargs) for stmt in stmts)
 
         return _wrapped_method
+
+    _multiple_statement_standard = proxy_factory(_multiple_statement_standard__dict,
+                                                 _multiple_statement_standard__list)
