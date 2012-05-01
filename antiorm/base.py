@@ -383,7 +383,7 @@ class Base(object):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
-                yield cursor.execute(sql, kwargs).fetchone()
+                return cursor.execute(sql, kwargs).fetchone()
 
         return _wrapped_method
 
