@@ -11,7 +11,7 @@ from ..utils import named2pyformat
 class Sqlite(Base):
     "SQLite driver for AntiORM"
 
-    def __init__(self, db_conn, dir_path=None, lazy=False, bypass_types=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -21,7 +21,7 @@ class Sqlite(Base):
         @param lazy: set if SQL code at dir_path should be lazy loaded
         @type lazy: boolean
         """
-        Base.__init__(self, db_conn, dir_path, lazy, bypass_types)
+        Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
         self.tx_manager = db_conn
 
