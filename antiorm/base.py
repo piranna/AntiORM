@@ -3,8 +3,12 @@
 from io       import open
 from os       import listdir
 from os.path  import basename, join, splitext
-from platform import python_implementation
 from warnings import warn
+
+try:
+    from sys import _getframe
+except ImportError:
+    pass
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
@@ -38,6 +42,20 @@ def proxy_factory(priv_dict, priv_list):
                 """
                 def bypass(func):
                     print "bypass", func
+                    frame = _getframe(2)
+#                    print frame.f_back.f_code
+#                    print 'locals', repr(frame.f_back.f_locals[frame.f_code.co_name])
+#                    print 'locals', repr(frame.f_back.f_locals)
+#                    print 'locals', dir(frame.f_back.f_locals['self'])
+#                    print 'locals', repr(frame.f_code.co_name)
+                    func_code = getattr(frame.f_back.f_locals['self'],
+                                        frame.f_code.co_name).func_code
+                    print 'locals', func_code
+                    print
+                    ff = frame.f_code
+                    print '\t', ff
+#                    print '\t', repr(ff.co_code)
+                    print
 
                 # Do the by-pass on the caller function
                 if list_or_dict != None:
@@ -227,12 +245,10 @@ class Base(object):
             return
 
         # Disable by-pass of types if not using CPython compatible bytecode
-        if bypass_types:
-            vm = python_implementation()
-            if vm not in ('CPython', 'PyMite'):
-                warn(RuntimeWarning("%s don't have a compatible bytecode. "
-                                    "Disabling by-pass of types" % vm))
-                bypass_types = False
+        if bypass_types and '_getframe' not in globals():
+            warn(RuntimeWarning("Can't acces to stack. "
+                                "Disabling by-pass of types."))
+            bypass_types = False
 
         stream = Compact(sql.strip(), dir_path)
 
