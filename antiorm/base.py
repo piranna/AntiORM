@@ -10,6 +10,8 @@ try:
 except ImportError:
     pass
 
+from byteplay import Code
+
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
 
@@ -40,17 +42,32 @@ def proxy_factory(priv_dict, priv_list):
 
                 @return: the inserted row id (or a list with them)
                 """
-                def bypass(func):
-                    print "bypass", func
+                def bypass(func_name):
+                    print "bypass", func_name
+                    print '\t', _getframe(1).f_code.co_name
+                    print '\t', _getframe(2).f_code.co_name
                     frame = _getframe(2)
 #                    print frame.f_back.f_code
 #                    print 'locals', repr(frame.f_back.f_locals[frame.f_code.co_name])
 #                    print 'locals', repr(frame.f_back.f_locals)
 #                    print 'locals', dir(frame.f_back.f_locals['self'])
 #                    print 'locals', repr(frame.f_code.co_name)
-                    func_code = getattr(frame.f_back.f_locals['self'],
-                                        frame.f_code.co_name).func_code
-                    print 'locals', func_code
+
+                    # http://bytes.com/topic/python/answers/43957-how-get-function-object-frame-object#post167698
+                    func = getattr(frame.f_back.f_locals['self'],
+                                   frame.f_code.co_name)
+#                    print 'func', dir(func)
+#                    print 'func', func
+#                    print 'func', func.__func__
+                    func_code = func.func_code
+
+                    code = Code.from_code(func_code)
+#                    print code == Code.from_code(func.__func__.func_code)
+
+                    print 'before', func_code
+#                    func.func_code = code.to_code()
+                    func.__func__.func_code = code.to_code()
+                    print 'after', func.func_code
                     print
                     ff = frame.f_code
                     print '\t', ff
@@ -60,24 +77,24 @@ def proxy_factory(priv_dict, priv_list):
                 # Do the by-pass on the caller function
                 if list_or_dict != None:
                     if isinstance(list_or_dict, dict):
-                        bypass(_priv_dict)
+                        bypass(method_name + '__dict')
                         return _priv_dict(self, list_or_dict)
 
-                    bypass(_priv_list)
+                    bypass(method_name + '__list')
                     return _priv_list(self, list_or_dict)
 
                 if args:
-                    bypass(_priv_l_kw)
+                    bypass(method_name + '__l_kw')
                     return _priv_l_kw(self, *args)
 
-                bypass(_priv_keyw)
+                bypass(method_name + '__keyw')
                 return _priv_keyw(self, **kwargs)
 
             # Register type specific optimized functions as class methods
-            setattr(self.__class__, method_name + '_dict', _priv_dict)
-            setattr(self.__class__, method_name + '_list', _priv_list)
-            setattr(self.__class__, method_name + '_l_kw', _priv_l_kw)
-            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
+            setattr(self.__class__, method_name + '__dict', _priv_dict)
+            setattr(self.__class__, method_name + '__list', _priv_list)
+            setattr(self.__class__, method_name + '__l_kw', _priv_l_kw)
+            setattr(self.__class__, method_name + '__keyw', _priv_keyw)
 
             # Register and return by-pass
             setattr(self.__class__, method_name, _bypass_types)
