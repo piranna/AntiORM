@@ -48,38 +48,39 @@ def proxy_factory(priv_dict, priv_list):
                 """
                 def bypass(suffix):
                     print "bypass", suffix
-                    print '\t', _getframe(1).f_code.co_name
-                    frame = _getframe(2)
-                    func_name = frame.f_code.co_name
-                    print '\t', func_name
-#                    print frame.f_back.f_code
-#                    print 'locals', repr(frame.f_back.f_locals[frame.f_code.co_name])
-#                    print 'locals', repr(frame.f_back.f_locals)
-#                    print 'locals', dir(frame.f_back.f_locals['self'])
-#                    print 'locals', repr(frame.f_code.co_name)
 
+                    # Get the caller stack frame
+                    frame = _getframe(2)
+
+                    # Get the real method func from the stack frame
                     # http://bytes.com/topic/python/answers/43957-how-get-function-object-frame-object#post167698
-                    func = getattr(frame.f_back.f_locals['self'], func_name)
-#                    print 'func', dir(func)
-#                    print 'func', func
-#                    print 'func', func.__func__
+                    func = getattr(frame.f_back.f_locals['self'],
+                                   frame.f_code.co_name)
+
+                    # Get the code object of the function to work with it
                     func_code = func.func_code
 
+                    # Convert the code object in a list of instructions
                     code = Code.from_code(func_code)
+
+                    # Loop over the instructions looking for the load of the
+                    # method attribute and change it for the type specific one
                     lineno = frame.f_lineno
                     mode = 0
                     for index, (opcode, arg) in enumerate(code.code):
                         if mode:
-                            # We haven't found the method attribute
+                            # We haven't found the method attribute, exit loop
                             if opcode == SetLineno:
                                 break
 
-                            # We have found the method attribute
+                            # We have found the method attribute, change it
                             if opcode == LOAD_ATTR and arg == method_name:
                                 print opcode, arg
+                                code.code[index] = opcode, arg + suffix
                                 mode = 2
                                 break
 
+                        # We've found the source code line of the calling func
                         elif opcode == SetLineno and arg == lineno:
                             mode = 1
 
