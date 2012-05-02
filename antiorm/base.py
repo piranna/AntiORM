@@ -47,8 +47,6 @@ def proxy_factory(priv_dict, priv_list):
                 @return: the inserted row id (or a list with them)
                 """
                 def bypass(suffix):
-                    print "bypass", suffix
-
                     # Get the caller stack frame
                     frame = _getframe(2)
 
@@ -79,11 +77,10 @@ def proxy_factory(priv_dict, priv_list):
 
                     # We have found the last load of the method, change it
                     if method_index != None:
-                        print opcode, arg
                         code.code[method_index] = (LOAD_ATTR,
                                                    method_name + suffix)
 
-    #                    func.func_code = code.to_code()
+#                        func.func_code = code.to_code()
                         func.__func__.func_code = code.to_code()
 
                 # Do the by-pass on the caller function
