@@ -16,7 +16,7 @@ class Generic(Base):
     optimizations.
     """
 
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -26,6 +26,6 @@ class Generic(Base):
         @param lazy: set if SQL code at dir_path should be lazy loaded
         @type lazy: boolean
         """
-        Base.__init__(self, db_conn, dir_path, lazy)
+        Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
         self.tx_manager = _TransactionManager(db_conn)

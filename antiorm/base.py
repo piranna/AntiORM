@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
 
 from io       import open
+from opcode   import opmap
 from os       import listdir
 from os.path  import basename, join, splitext
-from platform import python_implementation
 from warnings import warn
+
+try:
+    from sys import _getframe
+except ImportError:
+    pass
+
+from byteplay import Code, SetLineno
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
 
 from sql import Compact, GetColumns, GetLimit, IsType
+
+
+LOAD_ATTR = opmap['LOAD_ATTR']
 
 
 def proxy_factory(priv_dict, priv_list):
@@ -36,30 +46,64 @@ def proxy_factory(priv_dict, priv_list):
 
                 @return: the inserted row id (or a list with them)
                 """
-                def bypass(func):
-                    print "bypass", func
+                def bypass(suffix):
+                    # Get the caller stack frame
+                    frame = _getframe(2)
+
+                    # Get the real method func from the stack frame
+                    # http://bytes.com/topic/python/answers/43957-how-get-function-object-frame-object#post167698
+                    func = getattr(frame.f_back.f_locals['self'],
+                                   frame.f_code.co_name)
+
+                    # Get the code object of the function and convert it in a
+                    # list of instructions to work with them
+                    code = Code.from_code(func.func_code)
+
+                    # Loop over the instructions looking for the last load of
+                    # the method attribute before (or on) the current source
+                    # code line and change it for the type specific one
+                    method_index = None
+
+                    lineno = frame.f_lineno
+                    for index, (opcode, arg) in enumerate(code.code):
+                        # We have reached the current source code line
+                        if opcode == SetLineno and arg > lineno:
+                            break
+
+                        # We have found a load of the method attribute, store
+                        # its index on the instructions list
+                        if opcode == LOAD_ATTR and arg == method_name:
+                            method_index = index
+
+                    # We have found the last load of the method, change it
+                    if method_index != None:
+                        code.code[method_index] = (LOAD_ATTR,
+                                                   method_name + suffix)
+
+#                        func.func_code = code.to_code()
+                        func.__func__.func_code = code.to_code()
 
                 # Do the by-pass on the caller function
                 if list_or_dict != None:
                     if isinstance(list_or_dict, dict):
-                        bypass(_priv_dict)
+                        bypass('__dict')
                         return _priv_dict(self, list_or_dict)
 
-                    bypass(_priv_list)
+                    bypass('__list')
                     return _priv_list(self, list_or_dict)
 
                 if args:
-                    bypass(_priv_l_kw)
+                    bypass('__l_kw')
                     return _priv_l_kw(self, *args)
 
-                bypass(_priv_keyw)
+                bypass('__keyw')
                 return _priv_keyw(self, **kwargs)
 
             # Register type specific optimized functions as class methods
-            setattr(self.__class__, method_name + '_dict', _priv_dict)
-            setattr(self.__class__, method_name + '_list', _priv_list)
-            setattr(self.__class__, method_name + '_l_kw', _priv_l_kw)
-            setattr(self.__class__, method_name + '_keyw', _priv_keyw)
+            setattr(self.__class__, method_name + '__dict', _priv_dict)
+            setattr(self.__class__, method_name + '__list', _priv_list)
+            setattr(self.__class__, method_name + '__l_kw', _priv_l_kw)
+            setattr(self.__class__, method_name + '__keyw', _priv_keyw)
 
             # Register and return by-pass
             setattr(self.__class__, method_name, _bypass_types)
@@ -227,12 +271,10 @@ class Base(object):
             return
 
         # Disable by-pass of types if not using CPython compatible bytecode
-        if bypass_types:
-            vm = python_implementation()
-            if vm not in ('CPython', 'PyMite'):
-                warn(RuntimeWarning("%s don't have a compatible bytecode. "
-                                    "Disabling by-pass of types" % vm))
-                bypass_types = False
+        if bypass_types and '_getframe' not in globals():
+            warn(RuntimeWarning("Can't acces to stack. "
+                                "Disabling by-pass of types."))
+            bypass_types = False
 
         stream = Compact(sql.strip(), dir_path)
 

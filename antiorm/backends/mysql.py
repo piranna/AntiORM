@@ -11,7 +11,7 @@ from antiorm.utils import _TransactionManager
 class MySQL(Base):
     "MySQL driver for AntiORM"
 
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -21,6 +21,6 @@ class MySQL(Base):
         @param lazy: set if SQL code at dir_path should be lazy loaded
         @type lazy: boolean
         """
-        Base.__init__(self, db_conn, dir_path, lazy)
+        Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
         self.tx_manager = _TransactionManager(db_conn)

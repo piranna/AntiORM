@@ -74,7 +74,7 @@ class APSW(Base):
     "APSW driver for AntiORM"
     _max_cachedmethods = 100
 
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -88,7 +88,7 @@ class APSW(Base):
 
         db_conn = ConnectionWrapper(db_conn)
 
-        Base.__init__(self, db_conn, dir_path, lazy)
+        Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
         self.tx_manager = db_conn
 
