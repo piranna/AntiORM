@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from io       import open
+from opcode   import opmap
 from os       import listdir
 from os.path  import basename, join, splitext
 from warnings import warn
@@ -10,12 +11,15 @@ try:
 except ImportError:
     pass
 
-from byteplay import Code
+from byteplay import Code, SetLineno
 
 from sqlparse         import split2
 from sqlparse.filters import Tokens2Unicode
 
 from sql import Compact, GetColumns, GetLimit, IsType
+
+
+LOAD_ATTR = opmap['LOAD_ATTR']
 
 
 def proxy_factory(priv_dict, priv_list):
@@ -42,11 +46,12 @@ def proxy_factory(priv_dict, priv_list):
 
                 @return: the inserted row id (or a list with them)
                 """
-                def bypass(func_name):
-                    print "bypass", func_name
+                def bypass(suffix):
+                    print "bypass", suffix
                     print '\t', _getframe(1).f_code.co_name
-                    print '\t', _getframe(2).f_code.co_name
                     frame = _getframe(2)
+                    func_name = frame.f_code.co_name
+                    print '\t', func_name
 #                    print frame.f_back.f_code
 #                    print 'locals', repr(frame.f_back.f_locals[frame.f_code.co_name])
 #                    print 'locals', repr(frame.f_back.f_locals)
@@ -54,16 +59,31 @@ def proxy_factory(priv_dict, priv_list):
 #                    print 'locals', repr(frame.f_code.co_name)
 
                     # http://bytes.com/topic/python/answers/43957-how-get-function-object-frame-object#post167698
-                    func = getattr(frame.f_back.f_locals['self'],
-                                   frame.f_code.co_name)
+                    func = getattr(frame.f_back.f_locals['self'], func_name)
 #                    print 'func', dir(func)
 #                    print 'func', func
 #                    print 'func', func.__func__
                     func_code = func.func_code
 
                     code = Code.from_code(func_code)
-#                    print code == Code.from_code(func.__func__.func_code)
+                    lineno = frame.f_lineno
+                    mode = 0
+                    for index, (opcode, arg) in enumerate(code.code):
+                        if mode:
+                            # We haven't found the method attribute
+                            if opcode == SetLineno:
+                                break
 
+                            # We have found the method attribute
+                            if opcode == LOAD_ATTR and arg == method_name:
+                                print opcode, arg
+                                mode = 2
+                                break
+
+                        elif opcode == SetLineno and arg == lineno:
+                            mode = 1
+
+                    print
                     print 'before', func_code
 #                    func.func_code = code.to_code()
                     func.__func__.func_code = code.to_code()
@@ -77,17 +97,17 @@ def proxy_factory(priv_dict, priv_list):
                 # Do the by-pass on the caller function
                 if list_or_dict != None:
                     if isinstance(list_or_dict, dict):
-                        bypass(method_name + '__dict')
+                        bypass('__dict')
                         return _priv_dict(self, list_or_dict)
 
-                    bypass(method_name + '__list')
+                    bypass('__list')
                     return _priv_list(self, list_or_dict)
 
                 if args:
-                    bypass(method_name + '__l_kw')
+                    bypass('__l_kw')
                     return _priv_l_kw(self, *args)
 
-                bypass(method_name + '__keyw')
+                bypass('__keyw')
                 return _priv_keyw(self, **kwargs)
 
             # Register type specific optimized functions as class methods
