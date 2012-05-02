@@ -57,43 +57,34 @@ def proxy_factory(priv_dict, priv_list):
                     func = getattr(frame.f_back.f_locals['self'],
                                    frame.f_code.co_name)
 
-                    # Get the code object of the function to work with it
-                    func_code = func.func_code
+                    # Get the code object of the function and convert it in a
+                    # list of instructions to work with them
+                    code = Code.from_code(func.func_code)
 
-                    # Convert the code object in a list of instructions
-                    code = Code.from_code(func_code)
+                    # Loop over the instructions looking for the last load of
+                    # the method attribute before (or on) the current source
+                    # code line and change it for the type specific one
+                    method_index = None
 
-                    # Loop over the instructions looking for the load of the
-                    # method attribute and change it for the type specific one
                     lineno = frame.f_lineno
-                    mode = 0
                     for index, (opcode, arg) in enumerate(code.code):
-                        if mode:
-                            # We haven't found the method attribute, exit loop
-                            if opcode == SetLineno:
-                                break
+                        # We have reached the current source code line
+                        if opcode == SetLineno and arg > lineno:
+                            break
 
-                            # We have found the method attribute, change it
-                            if opcode == LOAD_ATTR and arg == method_name:
-                                print opcode, arg
-                                code.code[index] = opcode, arg + suffix
-                                mode = 2
-                                break
+                        # We have found a load of the method attribute, store
+                        # its index on the instructions list
+                        if opcode == LOAD_ATTR and arg == method_name:
+                            method_index = index
 
-                        # We've found the source code line of the calling func
-                        elif opcode == SetLineno and arg == lineno:
-                            mode = 1
+                    # We have found the last load of the method, change it
+                    if method_index != None:
+                        print opcode, arg
+                        code.code[method_index] = (LOAD_ATTR,
+                                                   method_name + suffix)
 
-                    print
-                    print 'before', func_code
-#                    func.func_code = code.to_code()
-                    func.__func__.func_code = code.to_code()
-                    print 'after', func.func_code
-                    print
-                    ff = frame.f_code
-                    print '\t', ff
-#                    print '\t', repr(ff.co_code)
-                    print
+    #                    func.func_code = code.to_code()
+                        func.__func__.func_code = code.to_code()
 
                 # Do the by-pass on the caller function
                 if list_or_dict != None:
