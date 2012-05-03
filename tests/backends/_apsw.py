@@ -18,11 +18,11 @@ from base import MultipleStatement
 
 
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
-class TestAPSW(TestCase,
-               Basic,
-               StatementINSERTSingle, StatementINSERTMultiple,
-               OneStatement_value, OneStatement_register, OneStatement_table,
-               MultipleStatement):
+class Driver(TestCase,
+              Basic,
+              StatementINSERTSingle, StatementINSERTMultiple,
+              OneStatement_value, OneStatement_register, OneStatement_table,
+              MultipleStatement):
     "Test for the AntiORM APSW driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')

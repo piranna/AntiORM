@@ -19,11 +19,11 @@ from base import MultipleStatement
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
-class TestMySQL(TestCase,
-                Basic,
-                StatementINSERTSingle, StatementINSERTMultiple,
-                OneStatement_value, OneStatement_register, OneStatement_table,
-                MultipleStatement):
+class Driver(TestCase,
+              Basic,
+              StatementINSERTSingle, StatementINSERTMultiple,
+              OneStatement_value, OneStatement_register, OneStatement_table,
+              MultipleStatement):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
