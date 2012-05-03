@@ -3,7 +3,7 @@
 	<name>AntiORM</name>
 	<comment></comment>
 	<projects>
-		<project>python-sqlparse</project>
+		<project>sqlparse</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
