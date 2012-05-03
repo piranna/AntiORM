@@ -6,7 +6,8 @@ Developed originally as part of the [https://github.com/piranna/PirannaFS Pirann
 
 = Dependencies =
 * Python   >= 2.6 (by namedtuple, if installed 2.5 by sqlparse)
-* [http://code.google.com/p/python-sqlparse sqlparse] >= 0.1.3.20120123 (rev. 9aabd61fa2d8)
+* [https://github.com/piranna/sqlparse sqlparse] >= 0.1.4
+* [http://code.google.com/p/byteplay byteplay] > 0.2 (only needed to by-pass types)
 
 = How to use it =
 # Create a connection to your database as usual

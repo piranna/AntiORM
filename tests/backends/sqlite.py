@@ -27,12 +27,15 @@ class TestSqlite(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
-        self.engine = Sqlite(self.connection, self.dir_path)
+        self.engine = Sqlite(self.connection, self.dir_path, True)
         self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
             if hasattr(base, 'setUp'):
                 base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
 
     def test_row_factory(self):
         pass

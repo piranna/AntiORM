@@ -16,7 +16,7 @@ class StatementINSERTSingle:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_statement_INSERT_single(self):
         rowid = self.engine.test_statement_INSERT_single(key="hola")
@@ -66,21 +66,21 @@ class StatementINSERTSingle:
 class StatementINSERTMultiple:
     def setUp(self):
         cursor = self.connection.cursor()
-        cursor.execute("""CREATE TABLE test_statement_INSERT_multiple
+        cursor.execute("""CREATE TABLE test_multiple_statement_INSERT
         (
             key   TEXT,
             value TEXT NULL
         );""")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
-    def test_statement_INSERT_multiple(self):
-        rowid = self.engine.test_statement_INSERT_multiple(key='a')
+    def test_multiple_statement_INSERT(self):
+        rowid = self.engine.test_multiple_statement_INSERT(key='a')
 
         self.assertIsNotNone(rowid)
 
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM test_statement_INSERT_multiple")
+        cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
         self.assertEqual(len(result), 1)
@@ -88,13 +88,13 @@ class StatementINSERTMultiple:
         self.assertEqual(result[0][0], u'a')
         self.assertEqual(result[0][0], result[0][1])
 
-    def test_statement_INSERT_multiple_dict(self):
-        rowid = self.engine.test_statement_INSERT_multiple({'key': 'b'})
+    def test_multiple_statement_INSERT_dict(self):
+        rowid = self.engine.test_multiple_statement_INSERT({'key': 'b'})
 
         self.assertIsNotNone(rowid)
 
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM test_statement_INSERT_multiple")
+        cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
         self.assertEqual(len(result), 1)
@@ -103,8 +103,8 @@ class StatementINSERTMultiple:
         self.assertEqual(result[0][0], u'b')
         self.assertEqual(result[0][0], result[0][1])
 
-    def test_statement_INSERT_multiple_list(self):
-        rowid = self.engine.test_statement_INSERT_multiple([{'key': 'c'},
+    def test_multiple_statement_INSERT_list(self):
+        rowid = self.engine.test_multiple_statement_INSERT([{'key': 'c'},
                                                             {'key': 'd'}])
 
         self.assertIsNotNone(rowid)
@@ -112,7 +112,7 @@ class StatementINSERTMultiple:
         self.assertIsNotNone(rowid[1])
 
         cursor = self.connection.cursor()
-        cursor.execute("SELECT * FROM test_statement_INSERT_multiple")
+        cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
         self.assertEqual(len(result), 2)
@@ -131,7 +131,7 @@ class OneStatement_value:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_one_statement_value(self):
         cursor = self.connection.cursor()
@@ -163,7 +163,7 @@ class OneStatement_register:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_one_statement_register(self):
         cursor = self.connection.cursor()
@@ -195,7 +195,7 @@ class OneStatement_table:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_one_statement_table(self):
         cursor = self.connection.cursor()
@@ -227,7 +227,7 @@ class MultipleStatement:
         cursor = self.connection.cursor()
         cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
         cursor.close()
-        self.connection.commit()
+#        self.connection.commit()
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()

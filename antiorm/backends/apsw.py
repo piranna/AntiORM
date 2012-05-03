@@ -6,11 +6,7 @@ Created on 17/02/2012
 
 from logging import warning
 
-from apsw import SQLError
-
-from sqlparse.filters import Tokens2Unicode
-
-from generic import Generic, register
+from antiorm.base import Base, proxy_factory
 
 
 class CursorWrapper(object):
@@ -41,30 +37,30 @@ class CursorWrapper(object):
 class ConnectionWrapper(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Connection objects
 
-    This is done this way because since apsw.Cursor is a compiled extension
+    This is done this way because since apsw.Connection is a compiled extension
     it doesn't allow to set attributes"""
     def __init__(self, connection):
         """Constructor
 
         @param connection: the connection to wrap
-        @type connection: apsw.Connection"""
+        @type connection: apsw.Connection
+        """
         # This protect of apply the wrapper over another one
         if isinstance(connection, ConnectionWrapper):
             self._connection = connection._connection
         else:
             self._connection = connection
 
-    def __getattr__(self, name):
-        return getattr(self._connection, name)
-
-    def commit(self):
-        try:
-            self._connection.cursor().execute("commit")
-        except SQLError:
-            pass
-
     def cursor(self):
         return CursorWrapper(self._connection.cursor())
+
+    # Context manager - this two should be get via __getattr__...
+    def __enter__(self):
+        self._connection.__enter__()
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        return self._connection.__exit__(exc_type, exc_value, traceback)
 
     @property
     def row_factory(self):
@@ -75,11 +71,11 @@ class ConnectionWrapper(object):
         self._connection.setrowtrace(value)
 
 
-class APSW(Generic):
+class APSW(Base):
     "APSW driver for AntiORM"
     _max_cachedmethods = 100
 
-    def __init__(self, db_conn, dir_path=None, lazy=False):
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor
 
         @param db_conn: connection of the database
@@ -91,19 +87,21 @@ class APSW(Generic):
         """
         self._cachedmethods = 0
 
-        Generic.__init__(self, ConnectionWrapper(db_conn), dir_path, lazy)
+        db_conn = ConnectionWrapper(db_conn)
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False):
+        Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
+
+        self.tx_manager = db_conn
+
+    def parse_string(self, sql, method_name, include_path='sql',
+                     bypass_types=False, lazy=False):
         """Build a function from a string containing a SQL query
 
         If the number of parsed methods is bigger of the APSW SQLite bytecode
         cache it shows an alert because performance will decrease.
         """
-        try:
-            result = Generic.parse_string(self, sql, method_name, include_path,
-                                          lazy)
-        except:
-            raise
+        result = Base.parse_string(self, sql, method_name, include_path,
+                                   bypass_types, lazy)
 
         self._cachedmethods += 1
         if self._cachedmethods > self._max_cachedmethods:
@@ -112,15 +110,11 @@ class APSW(Generic):
 
         return result
 
-    @register
-    def _one_statement_value(self, stream):
-        """
-        `stream` SQL statement return a cell
-        """
-        sql = Tokens2Unicode(stream)
+    def _one_statement_value__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-        def _priv_dict(kwargs):
-            with self.transaction() as cursor:
                 result = cursor.execute(sql, kwargs)
 
                 try:
@@ -131,10 +125,15 @@ class APSW(Generic):
                 if result:
                     return result[0]
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _one_statement_value__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
-            with self.transaction() as cursor:
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
                 for kwargs in list_kwargs:
                     row = cursor.execute(sql, kwargs)
 
@@ -149,26 +148,16 @@ class APSW(Generic):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return its cell value"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv_dict(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv_dict(kwargs)
-
         return _wrapped_method
 
-    @register
-    def _one_statement_register(self, stream):
-        """
-        `stream` SQL statement return a row
-        """
-        sql = Tokens2Unicode(stream)
+    _one_statement_value = proxy_factory(_one_statement_value__dict,
+                                         _one_statement_value__list)
 
-        def _priv_dict(kwargs):
-            with self.transaction() as cursor:
+    def _one_statement_register__dict(self, sql):
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
                 row = cursor.execute(sql, kwargs)
 
                 try:
@@ -176,10 +165,15 @@ class APSW(Generic):
                 except StopIteration:
                     pass
 
-        def _priv_list(list_kwargs):
+        return _wrapped_method
+
+    def _one_statement_register__list(self, sql):
+        def _wrapped_method(_, list_kwargs):
             result = []
 
-            with self.transaction() as cursor:
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
                 for kwargs in list_kwargs:
                     row = cursor.execute(sql, kwargs)
 
@@ -190,13 +184,7 @@ class APSW(Generic):
 
             return result
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            "Execute the statement and return a row"
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv_dict(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv_dict(kwargs)
-
         return _wrapped_method
+
+    _one_statement_register = proxy_factory(_one_statement_register__dict,
+                                            _one_statement_register__list)
