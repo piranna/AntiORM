@@ -41,11 +41,7 @@ class Driver(TestCase,
         pass
 
 
-class Factory(TestCase,
-               Basic,
-               StatementINSERTSingle, StatementINSERTMultiple,
-               OneStatement_value, OneStatement_register, OneStatement_table,
-               MultipleStatement):
+class Factory(TestCase):
     "Test for drivers factory using the AntiORM SQLite driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
@@ -61,8 +57,8 @@ class Factory(TestCase,
     def tearDown(self):
         self.connection.close()
 
-    def test_row_factory(self):
-        pass
+    def test_driver_factory(self):
+        self.assertIsInstance(self.engine, Sqlite)
 
 
 if __name__ == "__main__":

@@ -33,18 +33,14 @@ def driver_factory(db_conn, *args, **kwargs):
     type_conn = db_conn.__class__.__module__
 
     if type_conn == 'apsw':
-        print 'apsw'
         return backends.apsw.APSW(db_conn, *args, **kwargs)
 
 #    if type_conn == 'mysqldb':
-#        print 'mysql'
 #        return backends.mysql.MySQL(db_conn, *args, **kwargs)
 
     if type_conn == 'sqlite3':
-        print 'sqlite'
         return backends.sqlite.Sqlite(db_conn, *args, **kwargs)
 
-    print 'generic'
     return backends.generic.Generic(db_conn, *args, **kwargs)
 
 
