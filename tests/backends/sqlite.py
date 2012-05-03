@@ -17,18 +17,41 @@ from base import OneStatement_value, OneStatement_register, OneStatement_table
 from base import MultipleStatement
 
 
-class TestSqlite(TestCase,
-                 Basic,
-                 StatementINSERTSingle, StatementINSERTMultiple,
-                 OneStatement_value, OneStatement_register, OneStatement_table,
-                 MultipleStatement):
+class Driver(TestCase,
+              Basic,
+              StatementINSERTSingle, StatementINSERTMultiple,
+              OneStatement_value, OneStatement_register, OneStatement_table,
+              MultipleStatement):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
+        self.engine = Sqlite(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        for base in self.__class__.__bases__:
+            if hasattr(base, 'setUp'):
+                base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+    def test_row_factory(self):
+        pass
+
+
+class Factory(TestCase,
+               Basic,
+               StatementINSERTSingle, StatementINSERTMultiple,
+               OneStatement_value, OneStatement_register, OneStatement_table,
+               MultipleStatement):
+    "Test for drivers factory using the AntiORM SQLite driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True)
-#        self.engine = Sqlite(self.connection, self.dir_path, True)
         self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
