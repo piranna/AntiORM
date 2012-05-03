@@ -1,5 +1,5 @@
 '''
-Created on 05/03/2012
+Created on 22/04/2012
 
 @author: piranna
 '''
@@ -8,13 +8,8 @@ from antiorm.base  import Base
 from antiorm.utils import _TransactionManager
 
 
-class Generic(Base):
-    """Generic driver for AntiORM.
-
-    Using this should be enought for any project, but it's recomended to use a
-    specific driver for your type of database connection to be able to use some
-    optimizations.
-    """
+class MySQL(Base):
+    "MySQL driver for AntiORM"
 
     def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """Constructor

@@ -4,46 +4,51 @@ Created on 20/01/2012
 @author: piranna
 '''
 
-from sqlparse.filters import Tokens2Unicode
-
-from ..utils import named2pyformat
-from generic import Generic, register
+from antiorm.base  import Base, proxy_factory
+from antiorm.utils import named2pyformat
 
 
-class Sqlite(Generic):
+class Sqlite(Base):
     "SQLite driver for AntiORM"
 
-    @register
-    def _multiple_statement(self, stream):
-        """Execute the script optimized using SQLite non-standard method
-        executescript() instead of exec the statements sequentially.
+    def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
+        """Constructor
+
+        @param db_conn: connection of the database
+        @type db_conn: DB-API 2.0 database connection
+        @param dir_path: path of the dir with files from where to load SQL code
+        @type dir_path: string
+        @param lazy: set if SQL code at dir_path should be lazy loaded
+        @type lazy: boolean
         """
-        sql = named2pyformat(Tokens2Unicode(stream))
+        Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
-        def _wrapped_method(self, list_or_dict=None, **kwargs):
-            """Use executescript() instead of iterate over the statements
+        self.tx_manager = db_conn
 
-            @param list_or_dict: a (dict | list of dicts) with the parameters
-            @type list_or_dict: dict or list of dicts
+    def _multiple_statement_standard__dict(self, stmts):
+        sql = named2pyformat(''.join(stmts))
 
-            @return: the procesed data from the SQL query
-            """
-            def _priv(kwargs):
-                with self.transaction() as cursor:
-                    return cursor.executescript(sql % kwargs)
+        def _wrapped_method(_, kwargs):
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
 
-            def _priv_list(list_kwargs):
-                result = []
-                with self.transaction() as cursor:
-                    for kwargs in list_kwargs:
-                        result.append(cursor.executescript(sql % kwargs))
-                return result
-
-            # Received un-named parameter, it would be a iterable
-            if list_or_dict != None:
-                if isinstance(list_or_dict, dict):
-                    return _priv(list_or_dict)
-                return _priv_list(list_or_dict)
-            return _priv(kwargs)
+                return cursor.executescript(sql % kwargs)
 
         return _wrapped_method
+
+    def _multiple_statement_standard__list(self, stmts):
+        sql = named2pyformat(''.join(stmts))
+
+        def _wrapped_method(_, list_kwargs):
+            result = []
+            with self.tx_manager as conn:
+                cursor = conn.cursor()
+
+                for kwargs in list_kwargs:
+                    result.append(cursor.executescript(sql % kwargs))
+            return result
+
+        return _wrapped_method
+
+    _multiple_statement_standard = proxy_factory(_multiple_statement_standard__dict,
+                                                 _multiple_statement_standard__list)
