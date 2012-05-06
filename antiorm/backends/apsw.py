@@ -6,7 +6,7 @@ Created on 17/02/2012
 
 from logging import warning
 
-from antiorm.base import Base, proxy_factory
+from antiorm.base import Base
 
 
 class CursorWrapper(object):
@@ -116,82 +116,3 @@ class APSW(Base):
                     (self._cachedmethods, self._max_cachedmethods))
 
         return result
-
-#    def _one_statement_value__dict(self, sql):
-#        def _wrapped_method(_, kwargs):
-#            with self.tx_manager as conn:
-#                cursor = conn.cursor()
-#
-#                result = cursor.execute(sql, kwargs)
-#
-#                try:
-#                    result = result.next()
-#                except StopIteration:
-#                    return
-#
-#                if result:
-#                    return result[0]
-#
-#        return _wrapped_method
-#
-#    def _one_statement_value__list(self, sql):
-#        def _wrapped_method(_, list_kwargs):
-#            result = []
-#
-#            with self.tx_manager as conn:
-#                cursor = conn.cursor()
-#
-#                for kwargs in list_kwargs:
-#                    row = cursor.execute(sql, kwargs)
-#
-#                    try:
-#                        row = row.next()
-#                    except StopIteration:
-#                        pass
-#
-#                    else:
-#                        if row:
-#                            result.append(row[0])
-#
-#            return result
-#
-#        return _wrapped_method
-#
-#    _one_statement_value = proxy_factory(_one_statement_value__dict,
-#                                         _one_statement_value__list)
-
-#    def _one_statement_register__dict(self, sql):
-#        def _wrapped_method(_, kwargs):
-#            with self.tx_manager as conn:
-#                cursor = conn.cursor()
-#
-#                row = cursor.execute(sql, kwargs)
-#
-#                try:
-#                    return row.next()
-#                except StopIteration:
-#                    pass
-#
-#        return _wrapped_method
-#
-#    def _one_statement_register__list(self, sql):
-#        def _wrapped_method(_, list_kwargs):
-#            result = []
-#
-#            with self.tx_manager as conn:
-#                cursor = conn.cursor()
-#
-#                for kwargs in list_kwargs:
-#                    row = cursor.execute(sql, kwargs)
-#
-#                    try:
-#                        result.append(row.next())
-#                    except StopIteration:
-#                        pass
-#
-#            return result
-#
-#        return _wrapped_method
-#
-#    _one_statement_register = proxy_factory(_one_statement_register__dict,
-#                                            _one_statement_register__list)
