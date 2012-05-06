@@ -28,7 +28,7 @@ class TestAPSW(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = Connection(":memory:")
-        self.engine = APSW(self.connection, self.dir_path)
+        self.engine = APSW(self.connection, self.dir_path, True)
         self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
