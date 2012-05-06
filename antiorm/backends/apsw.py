@@ -39,6 +39,10 @@ class CursorWrapper(object):
         except StopIteration:
             pass
 
+#    @property
+#    def description(self):
+#        return self._cursor.getdescription()
+
     @property
     def lastrowid(self):
         return self._cursor.getconnection().last_insert_rowid()
