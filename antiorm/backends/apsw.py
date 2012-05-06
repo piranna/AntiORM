@@ -6,7 +6,7 @@ Created on 17/02/2012
 
 from logging import warning
 
-from antiorm.base import Base, proxy_factory
+from antiorm.base import Base
 
 
 class CursorWrapper(object):
@@ -43,15 +43,22 @@ class ConnectionWrapper(object):
         """Constructor
 
         @param connection: the connection to wrap
-        @type connection: apsw.Connection"""
+        @type connection: apsw.Connection
+        """
         # This protect of apply the wrapper over another one
         if isinstance(connection, ConnectionWrapper):
             self._connection = connection._connection
         else:
             self._connection = connection
 
+        self._activecursor = None
+
+    def close(self):
+        self._connection.close()
+
     def cursor(self):
-        return CursorWrapper(self._connection.cursor())
+        self._activecursor = CursorWrapper(self._connection.cursor())
+        return self._activecursor
 
     # Context manager - this two should be get via __getattr__...
     def __enter__(self):
@@ -59,6 +66,7 @@ class ConnectionWrapper(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        self._activecursor.close()
         return self._connection.__exit__(exc_type, exc_value, traceback)
 
     @property
@@ -92,15 +100,15 @@ class APSW(Base):
 
         self.tx_manager = db_conn
 
-    def parse_string(self, sql, method_name, include_path='sql', lazy=False,
-                     bypass_types=False):
+    def parse_string(self, sql, method_name, include_path='sql',
+                     bypass_types=False, lazy=False):
         """Build a function from a string containing a SQL query
 
         If the number of parsed methods is bigger of the APSW SQLite bytecode
         cache it shows an alert because performance will decrease.
         """
-        result = Base.parse_string(self, sql, method_name, include_path, lazy,
-                                   bypass_types)
+        result = Base.parse_string(self, sql, method_name, include_path,
+                                   bypass_types, lazy)
 
         self._cachedmethods += 1
         if self._cachedmethods > self._max_cachedmethods:
@@ -108,73 +116,3 @@ class APSW(Base):
                     (self._cachedmethods, self._max_cachedmethods))
 
         return result
-
-    def _one_statement_value__dict(self, sql):
-        def _wrapped_method(_, kwargs):
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                result = cursor.execute(sql, kwargs)
-
-                try:
-                    result = result.next()
-                except StopIteration:
-                    return
-
-                if result:
-                    return result[0]
-
-        return _wrapped_method
-
-    def _one_statement_value__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                for kwargs in list_kwargs:
-                    row = cursor.execute(sql, kwargs)
-
-                    try:
-                        row = row.next()
-                    except StopIteration:
-                        pass
-                    else:
-                        if row:
-                            yield row[0]
-
-        return _wrapped_method
-
-    _one_statement_value = proxy_factory(_one_statement_value__dict,
-                                         _one_statement_value__list)
-
-    def _one_statement_register__dict(self, sql):
-        def _wrapped_method(_, kwargs):
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                row = cursor.execute(sql, kwargs)
-
-                try:
-                    return row.next()
-                except StopIteration:
-                    pass
-
-        return _wrapped_method
-
-    def _one_statement_register__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                for kwargs in list_kwargs:
-                    row = cursor.execute(sql, kwargs)
-
-                    try:
-                        yield row.next()
-                    except StopIteration:
-                        pass
-
-        return _wrapped_method
-
-    _one_statement_register = proxy_factory(_one_statement_register__dict,
-                                            _one_statement_register__list)

@@ -398,10 +398,15 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                result = cursor.execute(sql, kwargs).fetchone()
-                if result:
-                    return result[0]
+                try:
+                    row = cursor.fetchone()
+                except AttributeError:  # APSW
+                    row = cursor.next()
+
+                if row:
+                    return row[0]
 
         return _wrapped_method
 
@@ -411,9 +416,15 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    value = cursor.execute(sql, kwargs).fetchone()
-                    if value:
-                        yield value[0]
+                    cursor = cursor.execute(sql, kwargs)
+
+                    try:
+                        row = cursor.fetchone()
+                    except AttributeError:  # APSW
+                        row = cursor.next()
+
+                    if row:
+                        yield row[0]
 
         return _wrapped_method
 
@@ -424,8 +435,12 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                return cursor.execute(sql, kwargs).fetchone()
+                try:
+                    return cursor.fetchone()
+                except AttributeError:  # APSW
+                    return cursor.next()
 
         return _wrapped_method
 
@@ -435,7 +450,12 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    yield cursor.execute(sql, kwargs).fetchone()
+                    cursor = cursor.execute(sql, kwargs)
+
+                    try:
+                        yield cursor.fetchone()
+                    except AttributeError:  # APSW
+                        yield cursor.next()
 
         return _wrapped_method
 
