@@ -42,11 +42,11 @@ class Driver(TestCase,
         pass
 
 
-class Generic(TestCase,
-               Basic,
-               StatementINSERTSingle, StatementINSERTMultiple,
-               OneStatement_value, OneStatement_register, OneStatement_table,
-               MultipleStatement):
+class GenericDriver(TestCase,
+                      Basic,
+                      StatementINSERTSingle, StatementINSERTMultiple,
+                      OneStatement_value, OneStatement_register, OneStatement_table,
+                      MultipleStatement):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
