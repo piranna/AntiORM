@@ -51,8 +51,14 @@ class ConnectionWrapper(object):
         else:
             self._connection = connection
 
+        self._activecursor = None
+
+    def close(self):
+        self._connection.close()
+
     def cursor(self):
-        return CursorWrapper(self._connection.cursor())
+        self._activecursor = CursorWrapper(self._connection.cursor())
+        return self._activecursor
 
     # Context manager - this two should be get via __getattr__...
     def __enter__(self):
@@ -60,6 +66,7 @@ class ConnectionWrapper(object):
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        self._activecursor.close()
         return self._connection.__exit__(exc_type, exc_value, traceback)
 
     @property
@@ -110,81 +117,81 @@ class APSW(Base):
 
         return result
 
-    def _one_statement_value__dict(self, sql):
-        def _wrapped_method(_, kwargs):
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
+#    def _one_statement_value__dict(self, sql):
+#        def _wrapped_method(_, kwargs):
+#            with self.tx_manager as conn:
+#                cursor = conn.cursor()
+#
+#                result = cursor.execute(sql, kwargs)
+#
+#                try:
+#                    result = result.next()
+#                except StopIteration:
+#                    return
+#
+#                if result:
+#                    return result[0]
+#
+#        return _wrapped_method
+#
+#    def _one_statement_value__list(self, sql):
+#        def _wrapped_method(_, list_kwargs):
+#            result = []
+#
+#            with self.tx_manager as conn:
+#                cursor = conn.cursor()
+#
+#                for kwargs in list_kwargs:
+#                    row = cursor.execute(sql, kwargs)
+#
+#                    try:
+#                        row = row.next()
+#                    except StopIteration:
+#                        pass
+#
+#                    else:
+#                        if row:
+#                            result.append(row[0])
+#
+#            return result
+#
+#        return _wrapped_method
+#
+#    _one_statement_value = proxy_factory(_one_statement_value__dict,
+#                                         _one_statement_value__list)
 
-                result = cursor.execute(sql, kwargs)
-
-                try:
-                    result = result.next()
-                except StopIteration:
-                    return
-
-                if result:
-                    return result[0]
-
-        return _wrapped_method
-
-    def _one_statement_value__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
-            result = []
-
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                for kwargs in list_kwargs:
-                    row = cursor.execute(sql, kwargs)
-
-                    try:
-                        row = row.next()
-                    except StopIteration:
-                        pass
-
-                    else:
-                        if row:
-                            result.append(row[0])
-
-            return result
-
-        return _wrapped_method
-
-    _one_statement_value = proxy_factory(_one_statement_value__dict,
-                                         _one_statement_value__list)
-
-    def _one_statement_register__dict(self, sql):
-        def _wrapped_method(_, kwargs):
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                row = cursor.execute(sql, kwargs)
-
-                try:
-                    return row.next()
-                except StopIteration:
-                    pass
-
-        return _wrapped_method
-
-    def _one_statement_register__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
-            result = []
-
-            with self.tx_manager as conn:
-                cursor = conn.cursor()
-
-                for kwargs in list_kwargs:
-                    row = cursor.execute(sql, kwargs)
-
-                    try:
-                        result.append(row.next())
-                    except StopIteration:
-                        pass
-
-            return result
-
-        return _wrapped_method
-
-    _one_statement_register = proxy_factory(_one_statement_register__dict,
-                                            _one_statement_register__list)
+#    def _one_statement_register__dict(self, sql):
+#        def _wrapped_method(_, kwargs):
+#            with self.tx_manager as conn:
+#                cursor = conn.cursor()
+#
+#                row = cursor.execute(sql, kwargs)
+#
+#                try:
+#                    return row.next()
+#                except StopIteration:
+#                    pass
+#
+#        return _wrapped_method
+#
+#    def _one_statement_register__list(self, sql):
+#        def _wrapped_method(_, list_kwargs):
+#            result = []
+#
+#            with self.tx_manager as conn:
+#                cursor = conn.cursor()
+#
+#                for kwargs in list_kwargs:
+#                    row = cursor.execute(sql, kwargs)
+#
+#                    try:
+#                        result.append(row.next())
+#                    except StopIteration:
+#                        pass
+#
+#            return result
+#
+#        return _wrapped_method
+#
+#    _one_statement_register = proxy_factory(_one_statement_register__dict,
+#                                            _one_statement_register__list)

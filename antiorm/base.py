@@ -402,8 +402,13 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                result = cursor.execute(sql, kwargs).fetchone()
+                try:
+                    result = cursor.fetchone()
+                except AttributeError:  # APSW
+                    result = cursor.next()
+
                 if result:
                     return result[0]
 
@@ -417,7 +422,13 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    value = cursor.execute(sql, kwargs).fetchone()
+                    cursor = cursor.execute(sql, kwargs)
+
+                    try:
+                        value = cursor.fetchone()
+                    except AttributeError:  # APSW
+                        value = cursor.next()
+
                     if value:
                         value = value[0]
                     result.append(value)
@@ -433,8 +444,12 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                return cursor.execute(sql, kwargs).fetchone()
+                try:
+                    return cursor.fetchone()
+                except AttributeError:  # APSW
+                    return cursor.next()
 
         return _wrapped_method
 
@@ -446,7 +461,14 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    result.append(cursor.execute(sql, kwargs).fetchone())
+                    cursor = cursor.execute(sql, kwargs)
+
+                    try:
+                        result2 = cursor.fetchone()
+                    except AttributeError:  # APSW
+                        result2 = cursor.next()
+
+                    result.append(result2)
 
             return result
 
