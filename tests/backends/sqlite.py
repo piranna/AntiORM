@@ -18,11 +18,11 @@ from base import OneStatement_value, OneStatement_register, OneStatement_table
 from base import MultipleStatement
 
 
-class TestSqlite(TestCase,
-                  Basic,
-                  StatementINSERTSingle, StatementINSERTMultiple,
-                  OneStatement_value, OneStatement_register, OneStatement_table,
-                  MultipleStatement):
+class Driver(TestCase,
+              Basic,
+              StatementINSERTSingle, StatementINSERTMultiple,
+              OneStatement_value, OneStatement_register, OneStatement_table,
+              MultipleStatement):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
@@ -42,11 +42,11 @@ class TestSqlite(TestCase,
         pass
 
 
-class TestGeneric(TestCase,
-                   Basic,
-                   StatementINSERTSingle, StatementINSERTMultiple,
-                   OneStatement_value, OneStatement_register, OneStatement_table,
-                   MultipleStatement):
+class Generic(TestCase,
+               Basic,
+               StatementINSERTSingle, StatementINSERTMultiple,
+               OneStatement_value, OneStatement_register, OneStatement_table,
+               MultipleStatement):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')

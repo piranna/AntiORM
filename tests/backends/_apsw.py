@@ -18,11 +18,11 @@ from base import MultipleStatement
 
 
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
-class TestAPSW(TestCase,
-               Basic,
-               StatementINSERTSingle, StatementINSERTMultiple,
-               OneStatement_value, OneStatement_register, OneStatement_table,
-               MultipleStatement):
+class Driver(TestCase,
+              Basic,
+              StatementINSERTSingle, StatementINSERTMultiple,
+              OneStatement_value, OneStatement_register, OneStatement_table,
+              MultipleStatement):
     "Test for the AntiORM APSW driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
@@ -37,6 +37,28 @@ class TestAPSW(TestCase,
 
     def test_row_factory(self):
         pass
+
+
+@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
+class Generic(TestCase,
+               Basic,
+               StatementINSERTSingle, StatementINSERTMultiple,
+               OneStatement_value, OneStatement_register, OneStatement_table,
+               MultipleStatement):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = Connection(":memory:")
+        self.engine = Generic(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        for base in self.__class__.__bases__:
+            if hasattr(base, 'setUp'):
+                base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
 
 
 if __name__ == "__main__":
