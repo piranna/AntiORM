@@ -375,15 +375,17 @@ class Base(object):
 #                "Exec the statement and return the number of updated rows"
 #                with self.tx_manager as conn:
 #                    cursor = conn.cursor()
+#                    cursor = cursor.execute(sql, kwargs)
 #
-#                    cursor.execute(sql, kwargs).rowcount
+#                    cursor.rowcount
 #
 #            def _priv_list(list_kwargs):
 #                "Exec the statement and return the number of updated rows"
 #                with self.tx_manager as conn:
 #                    cursor = conn.cursor()
+#                    cursor = cursor.executemany(sql, list_kwargs)
 #
-#                    return cursor.executemany(sql, list_kwargs).rowcount
+#                    return cursor.rowcount
 #
 #            # Received un-named parameter, it would be a iterable
 #            if list_or_dict != None:
@@ -400,11 +402,7 @@ class Base(object):
                 cursor = conn.cursor()
                 cursor = cursor.execute(sql, kwargs)
 
-                try:
-                    row = cursor.fetchone()
-                except AttributeError:  # APSW
-                    row = cursor.next()
-
+                row = cursor.fetchone()
                 if row:
                     return row[0]
 
@@ -418,11 +416,7 @@ class Base(object):
                 for kwargs in list_kwargs:
                     cursor = cursor.execute(sql, kwargs)
 
-                    try:
-                        row = cursor.fetchone()
-                    except AttributeError:  # APSW
-                        row = cursor.next()
-
+                    row = cursor.fetchone()
                     if row:
                         yield row[0]
 
@@ -437,10 +431,7 @@ class Base(object):
                 cursor = conn.cursor()
                 cursor = cursor.execute(sql, kwargs)
 
-                try:
-                    return cursor.fetchone()
-                except AttributeError:  # APSW
-                    return cursor.next()
+                return cursor.fetchone()
 
         return _wrapped_method
 
@@ -452,10 +443,7 @@ class Base(object):
                 for kwargs in list_kwargs:
                     cursor = cursor.execute(sql, kwargs)
 
-                    try:
-                        yield cursor.fetchone()
-                    except AttributeError:  # APSW
-                        yield cursor.next()
+                    yield cursor.fetchone()
 
         return _wrapped_method
 
@@ -466,8 +454,9 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                return cursor.execute(sql, kwargs).fetchall()
+                return cursor.fetchall()
 
         return _wrapped_method
 
@@ -477,7 +466,9 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    yield cursor.execute(sql, kwargs).fetchall()
+                    cursor = cursor.execute(sql, kwargs)
+
+                    yield cursor.fetchall()
 
         return _wrapped_method
 

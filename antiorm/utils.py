@@ -14,12 +14,7 @@ import backends
 def Namedtuple_factory(cursor, row):
     "Create a namedtuple from a DB-API 2.0 cursor description and its values"
 
-    try:
-        description = cursor.description
-
-    # APSW
-    except AttributeError:
-        description = cursor.getdescription()
+    description = cursor.description
 
     return namedtuple('namedtuple', (col[0] for col in description))(*row)
 

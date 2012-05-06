@@ -29,6 +29,20 @@ class CursorWrapper(object):
     def __getattr__(self, name):
         return getattr(self._cursor, name)
 
+    def execute(self, *args, **kwargs):
+        self._cursor = self._cursor.execute(*args, **kwargs)
+        return self
+
+    def fetchone(self):
+        try:
+            return self._cursor.next()
+        except StopIteration:
+            pass
+
+#    @property
+#    def description(self):
+#        return self._cursor.getdescription()
+
     @property
     def lastrowid(self):
         return self._cursor.getconnection().last_insert_rowid()
