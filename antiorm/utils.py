@@ -37,6 +37,13 @@ class _TransactionManager(object):
         self.connection = db_conn
 
     def __enter__(self):
+        # Use the connection context manager if its supported
+        try:
+            return self.connection.__enter__()
+        except AttributeError:
+            pass
+
+        # Use custom context manager
         if self._in_transaction:
             raise InTransactionError("Already in a transaction")
 
@@ -45,6 +52,12 @@ class _TransactionManager(object):
         return self.connection
 
     def __exit__(self, exc_type, exc_value, traceback):
+        # Use the connection context manager if its supported
+        try:
+            return self.connection.__exit__(exc_type, exc_value, traceback)
+        except AttributeError:
+            pass
+
         # There was an exception on the context manager, rollback and raise
         if exc_type:
             self.connection.rollback()
