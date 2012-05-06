@@ -8,8 +8,9 @@ from sqlite3 import connect
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.backends.sqlite import Sqlite
-from antiorm.utils           import Namedtuple_factory
+from antiorm.backends.generic import Generic
+from antiorm.backends.sqlite  import Sqlite
+from antiorm.utils            import Namedtuple_factory
 
 from base import Basic
 from base import StatementINSERTSingle, StatementINSERTMultiple
@@ -18,10 +19,10 @@ from base import MultipleStatement
 
 
 class TestSqlite(TestCase,
-                 Basic,
-                 StatementINSERTSingle, StatementINSERTMultiple,
-                 OneStatement_value, OneStatement_register, OneStatement_table,
-                 MultipleStatement):
+                  Basic,
+                  StatementINSERTSingle, StatementINSERTMultiple,
+                  OneStatement_value, OneStatement_register, OneStatement_table,
+                  MultipleStatement):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
@@ -39,6 +40,27 @@ class TestSqlite(TestCase,
 
     def test_row_factory(self):
         pass
+
+
+class TestGeneric(TestCase,
+                   Basic,
+                   StatementINSERTSingle, StatementINSERTMultiple,
+                   OneStatement_value, OneStatement_register, OneStatement_table,
+                   MultipleStatement):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        for base in self.__class__.__bases__:
+            if hasattr(base, 'setUp'):
+                base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
 
 
 if __name__ == "__main__":
