@@ -80,7 +80,8 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_keyw(self, **kwargs)
 
         # Register and return types proxy
-        setattr(self.__class__, method_name, _proxy_types)
+        setattr(self, method_name, _proxy_types)
+#        setattr(self.__class__, method_name, _proxy_types)
         return _proxy_types
 
     return _wrapped_method
