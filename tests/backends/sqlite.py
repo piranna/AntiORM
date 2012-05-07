@@ -28,7 +28,7 @@ class Driver(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
-        self.engine = Sqlite(self.connection, self.dir_path, True)
+        self.engine = Sqlite(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
@@ -52,7 +52,7 @@ class GenericDriver(TestCase,
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
-        self.engine = Generic(self.connection, self.dir_path, True)
+        self.engine = Generic(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
         for base in self.__class__.__bases__:
