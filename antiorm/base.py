@@ -16,7 +16,8 @@ def register(func):
         "Get method name for registration and give the other args to the func"
         _wrapped_method = func(self, *args, **kwargs)
 
-        setattr(self.__class__, method_name, _wrapped_method)
+        setattr(self, method_name, _wrapped_method)
+#        setattr(self.__class__, method_name, _wrapped_method)
         return _wrapped_method
 
     return wrapper
