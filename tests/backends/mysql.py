@@ -28,9 +28,6 @@ class Driver(TestCase, Base):
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
     def test_row_factory(self):
         pass
 
@@ -50,9 +47,6 @@ class GenericDriver(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
 
 
 if __name__ == "__main__":

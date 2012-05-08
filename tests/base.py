@@ -19,6 +19,9 @@ class Base:
         cursor.close()
 #        self.connection.commit()
 
+    def tearDown(self):
+        self.connection.close()
+
     def test_method_notparsed(self):
         with self.assertRaises(AttributeError):
             self.engine.notparsed()
