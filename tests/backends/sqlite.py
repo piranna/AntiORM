@@ -16,12 +16,8 @@ from base import Base
 
 
 @skip
-class Driver(TestCase, Base):
+class Driver(Base, TestCase):
     "Test for the AntiORM SQLite driver"
-    @classmethod
-    def setUpClass(cls):
-        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path)
@@ -34,12 +30,8 @@ class Driver(TestCase, Base):
 
 
 @skip
-class Driver__ByPass(TestCase, Base):
+class Driver__ByPass(Base, TestCase):
     "Test for the AntiORM SQLite driver"
-    @classmethod
-    def setUpClass(cls):
-        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True)
@@ -51,12 +43,8 @@ class Driver__ByPass(TestCase, Base):
         self.assertIsInstance(self.engine, Sqlite)
 
 
-class Driver__LazyLoading(TestCase, Base):
+class Driver__LazyLoading(Base, TestCase):
     "Test for the AntiORM SQLite driver"
-    @classmethod
-    def setUpClass(cls):
-        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, False, True)
@@ -69,11 +57,9 @@ class Driver__LazyLoading(TestCase, Base):
 
 
 @skip
-class Driver__ByPass__LazyLoading(TestCase, Base):
+class Driver__ByPass__LazyLoading(Base, TestCase):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True, True)
         self.engine.row_factory = Namedtuple_factory
@@ -85,11 +71,9 @@ class Driver__ByPass__LazyLoading(TestCase, Base):
 
 
 @skip
-class GenericDriver(TestCase, Base):
+class GenericDriver(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path)
         self.engine.row_factory = Namedtuple_factory
@@ -98,11 +82,9 @@ class GenericDriver(TestCase, Base):
 
 
 @skip
-class GenericDriver__ByPass(TestCase, Base):
+class GenericDriver__ByPass(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, True)
         self.engine.row_factory = Namedtuple_factory
@@ -110,12 +92,8 @@ class GenericDriver__ByPass(TestCase, Base):
         Base.setUp(self)
 
 
-class GenericDriver__LazyLoading(TestCase, Base):
+class GenericDriver__LazyLoading(Base, TestCase):
     "Test for the AntiORM generic driver"
-    @classmethod
-    def setUpClass(cls):
-        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
@@ -125,11 +103,9 @@ class GenericDriver__LazyLoading(TestCase, Base):
 
 
 @skip
-class GenericDriver__ByPass__LazyLoading(TestCase, Base):
+class GenericDriver__ByPass__LazyLoading(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, True, True)
         self.engine.row_factory = Namedtuple_factory

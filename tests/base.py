@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from os.path  import abspath, dirname, join
+
 
 class Base:
+    @classmethod
+    def setUpClass(cls):
+        cls.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
+
     def setUp(self):
         cursor = self.connection.cursor()
 
