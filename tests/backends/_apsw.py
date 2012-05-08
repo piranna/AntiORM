@@ -27,9 +27,6 @@ class Driver(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
     def test_driver_factory(self):
         self.assertIsInstance(self.engine, APSW)
 

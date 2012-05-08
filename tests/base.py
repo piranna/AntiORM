@@ -226,3 +226,6 @@ class Base:
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
         self.assertListEqual(result, [(u'e',)])
+
+    def test_row_factory(self):
+        pass
