@@ -23,7 +23,67 @@ class Driver(TestCase, Base):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
+        self.engine = MySQL(self.connection, self.dir_path)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+    def test_row_factory(self):
+        pass
+
+
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+class Driver__ByPass(TestCase, Base):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
+        self.engine = MySQL(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+    def test_row_factory(self):
+        pass
+
+
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+class Driver__LazyLoading(TestCase, Base):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
         self.engine = MySQL(self.connection, self.dir_path, False, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+    def test_row_factory(self):
+        pass
+
+
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+class Driver__ByPass__LazyLoading(TestCase, Base):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
+        self.engine = MySQL(self.connection, self.dir_path, True, True)
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
@@ -43,7 +103,58 @@ class GenericDriver(TestCase, Base):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+class GenericDriver__ByPass(TestCase, Base):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+class GenericDriver__LazyLoading(TestCase, Base):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def tearDown(self):
+        self.connection.close()
+
+
+@skip
+#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+class GenericDriver__ByPass__LazyLoading(TestCase, Base):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+
+        self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path, True, True)
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
