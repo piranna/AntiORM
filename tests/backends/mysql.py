@@ -28,9 +28,6 @@ class Driver(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
@@ -44,9 +41,6 @@ class Driver__ByPass(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def test_row_factory(self):
-        pass
 
 
 @skip
@@ -62,9 +56,6 @@ class Driver__LazyLoading(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
@@ -78,9 +69,6 @@ class Driver__ByPass__LazyLoading(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def test_row_factory(self):
-        pass
 
 
 @skip

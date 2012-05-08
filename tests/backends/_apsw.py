@@ -27,9 +27,6 @@ class Driver(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
 
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 class Driver__ByPass(TestCase, Base):
@@ -42,9 +39,6 @@ class Driver__ByPass(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def test_row_factory(self):
-        pass
 
 
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
@@ -59,9 +53,6 @@ class Driver__LazyLoading(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
 
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 class Driver__ByPass__LazyLoading(TestCase, Base):
@@ -74,9 +65,6 @@ class Driver__ByPass__LazyLoading(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def test_row_factory(self):
-        pass
 
 
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")

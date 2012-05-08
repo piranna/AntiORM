@@ -26,9 +26,6 @@ class Driver(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
 
 class Driver__ByPass(TestCase, Base):
     "Test for the AntiORM SQLite driver"
@@ -40,9 +37,6 @@ class Driver__ByPass(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def test_row_factory(self):
-        pass
 
 
 class Driver__LazyLoading(TestCase, Base):
@@ -56,9 +50,6 @@ class Driver__LazyLoading(TestCase, Base):
 
         Base.setUp(self)
 
-    def test_row_factory(self):
-        pass
-
 
 class Driver__ByPass__LazyLoading(TestCase, Base):
     "Test for the AntiORM SQLite driver"
@@ -70,9 +61,6 @@ class Driver__ByPass__LazyLoading(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def test_row_factory(self):
-        pass
 
 
 class GenericDriver(TestCase, Base):
