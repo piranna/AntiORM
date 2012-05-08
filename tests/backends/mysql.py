@@ -28,9 +28,6 @@ class Driver(TestCase, Base):
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
     def test_row_factory(self):
         pass
 
@@ -47,9 +44,6 @@ class Driver__ByPass(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
 
     def test_row_factory(self):
         pass
@@ -68,9 +62,6 @@ class Driver__LazyLoading(TestCase, Base):
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
     def test_row_factory(self):
         pass
 
@@ -87,9 +78,6 @@ class Driver__ByPass__LazyLoading(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
 
     def test_row_factory(self):
         pass
@@ -108,9 +96,6 @@ class GenericDriver(TestCase, Base):
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
@@ -124,9 +109,6 @@ class GenericDriver__ByPass(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
 
 
 @skip
@@ -142,9 +124,6 @@ class GenericDriver__LazyLoading(TestCase, Base):
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
@@ -159,9 +138,6 @@ class GenericDriver__ByPass__LazyLoading(TestCase, Base):
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
@@ -175,9 +151,6 @@ class Factory(TestCase):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
 
     def test_driver_factory(self):
         self.assertIsInstance(self.engine, MySQL)
