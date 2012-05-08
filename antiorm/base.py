@@ -124,7 +124,8 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_keyw(self, **kwargs)
 
         # Register and return types proxy
-        setattr(self.__class__, method_name, _proxy_types)
+        setattr(self, method_name, _proxy_types)
+#        setattr(self.__class__, method_name, _proxy_types)
         return _proxy_types
 
     return _wrapped_method
@@ -379,15 +380,17 @@ class Base(object):
 #                "Exec the statement and return the number of updated rows"
 #                with self.tx_manager as conn:
 #                    cursor = conn.cursor()
+#                    cursor = cursor.execute(sql, kwargs)
 #
-#                    cursor.execute(sql, kwargs).rowcount
+#                    cursor.rowcount
 #
 #            def _priv_list(list_kwargs):
 #                "Exec the statement and return the number of updated rows"
 #                with self.tx_manager as conn:
 #                    cursor = conn.cursor()
+#                    cursor = cursor.executemany(sql, list_kwargs)
 #
-#                    return cursor.executemany(sql, list_kwargs).rowcount
+#                    return cursor.rowcount
 #
 #            # Received un-named parameter, it would be a iterable
 #            if list_or_dict != None:
@@ -402,8 +405,9 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                result = cursor.execute(sql, kwargs).fetchone()
+                result = cursor.fetchone()
                 if result:
                     return result[0]
 
@@ -417,7 +421,9 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    value = cursor.execute(sql, kwargs).fetchone()
+                    cursor = cursor.execute(sql, kwargs)
+
+                    value = cursor.fetchone()
                     if value:
                         value = value[0]
                     result.append(value)
@@ -433,8 +439,9 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                return cursor.execute(sql, kwargs).fetchone()
+                return cursor.fetchone()
 
         return _wrapped_method
 
@@ -446,7 +453,9 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    result.append(cursor.execute(sql, kwargs).fetchone())
+                    cursor = cursor.execute(sql, kwargs)
+
+                    result.append(cursor.fetchone())
 
             return result
 
@@ -459,8 +468,9 @@ class Base(object):
         def _wrapped_method(_, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
+                cursor = cursor.execute(sql, kwargs)
 
-                return cursor.execute(sql, kwargs).fetchall()
+                return cursor.fetchall()
 
         return _wrapped_method
 
@@ -472,7 +482,9 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    result.append(cursor.execute(sql, kwargs).fetchall())
+                    cursor = cursor.execute(sql, kwargs)
+
+                    result.append(cursor.fetchall())
 
             return result
 

@@ -4,8 +4,8 @@ Created on 20/01/2012
 @author: piranna
 '''
 
-from ..base  import Base, proxy_factory
-from ..utils import named2pyformat
+from antiorm.base  import Base, proxy_factory
+from antiorm.utils import named2pyformat
 
 
 class Sqlite(Base):
