@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path  import abspath, dirname, join
-from unittest import main, TestCase
+from unittest import main, skip, TestCase
 
 from sqlite3 import connect
 
@@ -15,6 +15,7 @@ from antiorm.utils            import Namedtuple_factory, driver_factory
 from base import Base
 
 
+@skip
 class Driver(TestCase, Base):
     "Test for the AntiORM SQLite driver"
     @classmethod
@@ -32,6 +33,7 @@ class Driver(TestCase, Base):
         self.assertIsInstance(self.engine, Sqlite)
 
 
+@skip
 class Driver__ByPass(TestCase, Base):
     "Test for the AntiORM SQLite driver"
     @classmethod
@@ -66,6 +68,7 @@ class Driver__LazyLoading(TestCase, Base):
         self.assertIsInstance(self.engine, Sqlite)
 
 
+@skip
 class Driver__ByPass__LazyLoading(TestCase, Base):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
@@ -81,6 +84,7 @@ class Driver__ByPass__LazyLoading(TestCase, Base):
         self.assertIsInstance(self.engine, Sqlite)
 
 
+@skip
 class GenericDriver(TestCase, Base):
     "Test for the AntiORM generic driver"
     def setUp(self):
@@ -93,6 +97,7 @@ class GenericDriver(TestCase, Base):
         Base.setUp(self)
 
 
+@skip
 class GenericDriver__ByPass(TestCase, Base):
     "Test for the AntiORM generic driver"
     def setUp(self):
@@ -119,6 +124,7 @@ class GenericDriver__LazyLoading(TestCase, Base):
         Base.setUp(self)
 
 
+@skip
 class GenericDriver__ByPass__LazyLoading(TestCase, Base):
     "Test for the AntiORM generic driver"
     def setUp(self):
