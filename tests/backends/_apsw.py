@@ -18,9 +18,11 @@ from base import Base
 #@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 #class Driver(TestCase, Base):
 #    "Test for the AntiORM APSW driver"
-#    def setUp(self):
-#        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+#    @classmethod
+#    def setUpClass(cls):
+#        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 #
+#    def setUp(self):
 #        self.connection = Connection(":memory:")
 #        self.engine = driver_factory(self.connection, self.dir_path)
 #        self.engine.row_factory = Namedtuple_factory
@@ -34,9 +36,11 @@ from base import Base
 #@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 #class Driver__ByPass(TestCase, Base):
 #    "Test for the AntiORM APSW driver"
-#    def setUp(self):
-#        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+#    @classmethod
+#    def setUpClass(cls):
+#        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 #
+#    def setUp(self):
 #        self.connection = Connection(":memory:")
 #        self.engine = driver_factory(self.connection, self.dir_path, True)
 #        self.engine.row_factory = Namedtuple_factory
@@ -50,9 +54,11 @@ from base import Base
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 class Driver__LazyLoading(TestCase, Base):
     "Test for the AntiORM APSW driver"
-    def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+    @classmethod
+    def setUpClass(cls):
+        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
+    def setUp(self):
         self.connection = Connection(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
@@ -66,9 +72,11 @@ class Driver__LazyLoading(TestCase, Base):
 #@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 #class Driver__ByPass__LazyLoading(TestCase, Base):
 #    "Test for the AntiORM APSW driver"
-#    def setUp(self):
-#        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+#    @classmethod
+#    def setUpClass(cls):
+#        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 #
+#    def setUp(self):
 #        self.connection = Connection(":memory:")
 #        self.engine = driver_factory(self.connection, self.dir_path, True, True)
 #        self.engine.row_factory = Namedtuple_factory
@@ -82,9 +90,11 @@ class Driver__LazyLoading(TestCase, Base):
 #@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 #class GenericDriver(TestCase, Base):
 #    "Test for the AntiORM generic driver"
-#    def setUp(self):
-#        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+#    @classmethod
+#    def setUpClass(cls):
+#        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 #
+#    def setUp(self):
 #        self.connection = Connection(":memory:")
 #        self.engine = Generic(self.connection, self.dir_path)
 #        self.engine.row_factory = Namedtuple_factory
@@ -95,9 +105,11 @@ class Driver__LazyLoading(TestCase, Base):
 #@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 #class GenericDriver__ByPass(TestCase, Base):
 #    "Test for the AntiORM generic driver"
-#    def setUp(self):
-#        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+#    @classmethod
+#    def setUpClass(cls):
+#        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 #
+#    def setUp(self):
 #        self.connection = Connection(":memory:")
 #        self.engine = Generic(self.connection, self.dir_path, True)
 #        self.engine.row_factory = Namedtuple_factory
@@ -108,9 +120,11 @@ class Driver__LazyLoading(TestCase, Base):
 @skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 class GenericDriver__LazyLoading(TestCase, Base):
     "Test for the AntiORM generic driver"
-    def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+    @classmethod
+    def setUpClass(cls):
+        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
+    def setUp(self):
         self.connection = Connection(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
@@ -121,9 +135,11 @@ class GenericDriver__LazyLoading(TestCase, Base):
 #@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 #class GenericDriver__ByPass__LazyLoading(TestCase, Base):
 #    "Test for the AntiORM generic driver"
-#    def setUp(self):
-#        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+#    @classmethod
+#    def setUpClass(cls):
+#        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 #
+#    def setUp(self):
 #        self.connection = Connection(":memory:")
 #        self.engine = Generic(self.connection, self.dir_path, True, True)
 #        self.engine.row_factory = Namedtuple_factory

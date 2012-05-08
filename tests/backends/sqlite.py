@@ -17,9 +17,11 @@ from base import Base
 
 class Driver(TestCase, Base):
     "Test for the AntiORM SQLite driver"
-    def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+    @classmethod
+    def setUpClass(cls):
+        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
+    def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
@@ -32,9 +34,11 @@ class Driver(TestCase, Base):
 
 class GenericDriver(TestCase, Base):
     "Test for the AntiORM generic driver"
-    def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+    @classmethod
+    def setUpClass(cls):
+        cls.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
+    def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
