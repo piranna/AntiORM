@@ -21,16 +21,13 @@ class Driver(TestCase, Base):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
 
         self.connection = connect(":memory:")
-        self.engine = Sqlite(self.connection, self.dir_path, False, True)
+        self.engine = driver_factory(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
-    def test_row_factory(self):
-        pass
+    def test_driver_factory(self):
+        self.assertIsInstance(self.engine, Sqlite)
 
 
 class GenericDriver(TestCase, Base):
@@ -43,27 +40,6 @@ class GenericDriver(TestCase, Base):
         self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
-
-
-class Factory(TestCase):
-    "Test for drivers factory using the AntiORM SQLite driver"
-    def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
-        self.connection = connect(":memory:")
-        self.engine = driver_factory(self.connection, self.dir_path, True)
-        self.engine.row_factory = Namedtuple_factory
-
-        Base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
-
-    def test_driver_factory(self):
-        self.assertIsInstance(self.engine, Sqlite)
 
 
 if __name__ == "__main__":

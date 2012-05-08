@@ -19,6 +19,9 @@ class Base:
         cursor.close()
 #        self.connection.commit()
 
+    def tearDown(self):
+        self.connection.close()
+
     def test_method_notparsed(self):
         with self.assertRaises(AttributeError):
             self.engine.notparsed()
@@ -223,3 +226,6 @@ class Base:
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
         self.assertListEqual(result, [(u'e',)])
+
+    def test_row_factory(self):
+        pass
