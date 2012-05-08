@@ -1,7 +1,24 @@
 # -*- coding: utf-8 -*-
 
 
-class Basic:
+class Base:
+    def setUp(self):
+        cursor = self.connection.cursor()
+
+        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
+        cursor.execute("""CREATE TABLE test_multiple_statement_INSERT
+        (
+            key   TEXT,
+            value TEXT NULL
+        );""")
+        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
+        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
+        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
+        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
+
+        cursor.close()
+#        self.connection.commit()
+
     def test_method_notparsed(self):
         with self.assertRaises(AttributeError):
             self.engine.notparsed()
@@ -9,14 +26,6 @@ class Basic:
     def test_method_exists(self):
         attr = getattr(self.engine, 'test_statement_INSERT_single', None)
         self.assertNotEqual(attr, None)
-
-
-class StatementINSERTSingle:
-    def setUp(self):
-        cursor = self.connection.cursor()
-        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
-        cursor.close()
-#        self.connection.commit()
 
     def test_statement_INSERT_single(self):
         rowid = self.engine.test_statement_INSERT_single(key="hola")
@@ -61,18 +70,6 @@ class StatementINSERTSingle:
         self.assertEqual(result[0][0], u'a')
         self.assertEqual(len(result[1]), 1)
         self.assertEqual(result[1][0], u'b')
-
-
-class StatementINSERTMultiple:
-    def setUp(self):
-        cursor = self.connection.cursor()
-        cursor.execute("""CREATE TABLE test_multiple_statement_INSERT
-        (
-            key   TEXT,
-            value TEXT NULL
-        );""")
-        cursor.close()
-#        self.connection.commit()
 
     def test_multiple_statement_INSERT(self):
         rowid = self.engine.test_multiple_statement_INSERT(key='a')
@@ -125,14 +122,6 @@ class StatementINSERTMultiple:
         self.assertEqual(result[1][0], u'd')
         self.assertEqual(result[1][0], result[1][1])
 
-
-class OneStatement_value:
-    def setUp(self):
-        cursor = self.connection.cursor()
-        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
-        cursor.close()
-#        self.connection.commit()
-
     def test_one_statement_value(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('a')")
@@ -156,14 +145,6 @@ class OneStatement_value:
         result = self.engine.test_one_statement_value([{'key': 'c'}])
 
         self.assertListEqual(result, [u'c'])
-
-
-class OneStatement_register:
-    def setUp(self):
-        cursor = self.connection.cursor()
-        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
-        cursor.close()
-#        self.connection.commit()
 
     def test_one_statement_register(self):
         cursor = self.connection.cursor()
@@ -189,14 +170,6 @@ class OneStatement_register:
 
         self.assertListEqual(result, [(u'c',)])
 
-
-class OneStatement_table:
-    def setUp(self):
-        cursor = self.connection.cursor()
-        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
-        cursor.close()
-#        self.connection.commit()
-
     def test_one_statement_table(self):
         cursor = self.connection.cursor()
         cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('a')")
@@ -220,14 +193,6 @@ class OneStatement_table:
         result = self.engine.test_one_statement_table([{'key': 'c'}])
 
         self.assertListEqual(result, [[(u'c',)]])
-
-
-class MultipleStatement:
-    def setUp(self):
-        cursor = self.connection.cursor()
-        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
-        cursor.close()
-#        self.connection.commit()
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()

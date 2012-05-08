@@ -12,17 +12,10 @@ from antiorm.backends.generic import Generic
 from antiorm.backends.sqlite  import Sqlite
 from antiorm.utils            import Namedtuple_factory, driver_factory
 
-from base import Basic
-from base import StatementINSERTSingle, StatementINSERTMultiple
-from base import OneStatement_value, OneStatement_register, OneStatement_table
-from base import MultipleStatement
+from base import Base
 
 
-class Driver(TestCase,
-              Basic,
-              StatementINSERTSingle, StatementINSERTMultiple,
-              OneStatement_value, OneStatement_register, OneStatement_table,
-              MultipleStatement):
+class Driver(TestCase, Base):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
@@ -42,11 +35,7 @@ class Driver(TestCase,
         pass
 
 
-class GenericDriver(TestCase,
-                      Basic,
-                      StatementINSERTSingle, StatementINSERTMultiple,
-                      OneStatement_value, OneStatement_register, OneStatement_table,
-                      MultipleStatement):
+class GenericDriver(TestCase, Base):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
