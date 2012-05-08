@@ -25,9 +25,7 @@ class Driver(TestCase, Base):
         self.engine = APSW(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
-        for base in self.__class__.__bases__:
-            if hasattr(base, 'setUp'):
-                base.setUp(self)
+        Base.setUp(self)
 
     def tearDown(self):
         self.connection.close()
@@ -46,9 +44,7 @@ class GenericDriver(TestCase, Base):
         self.engine = Generic(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
-        for base in self.__class__.__bases__:
-            if hasattr(base, 'setUp'):
-                base.setUp(self)
+        Base.setUp(self)
 
     def tearDown(self):
         self.connection.close()
@@ -64,9 +60,7 @@ class Factory(TestCase):
         self.engine = driver_factory(self.connection, self.dir_path, True)
         self.engine.row_factory = Namedtuple_factory
 
-        for base in self.__class__.__bases__:
-            if hasattr(base, 'setUp'):
-                base.setUp(self)
+        Base.setUp(self)
 
     def tearDown(self):
         self.connection.close()
