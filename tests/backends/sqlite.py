@@ -25,7 +25,6 @@ class TestFactory(Base):
         self.assertIsInstance(self.engine, Sqlite)
 
 
-@skip
 class Driver(TestFactory, TestCase):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
@@ -64,7 +63,6 @@ class Driver__ByPass__LazyLoading(TestFactory, TestCase):
         TestFactory.setUp(self)
 
 
-@skip
 class GenericDriver(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):

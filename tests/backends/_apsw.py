@@ -25,8 +25,7 @@ class TestFactory(Base):
         self.assertIsInstance(self.engine, APSW)
 
 
-@skip
-#@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
+@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 class Driver(TestFactory, TestCase):
     "Test for the AntiORM APSW driver"
     def setUp(self):
@@ -68,8 +67,7 @@ class Driver__ByPass__LazyLoading(TestFactory, TestCase):
         TestFactory.setUp(self)
 
 
-@skip
-#@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
+@skipIf('apsw' not in sys.modules, "APSW not installed on the system")
 class GenericDriver(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
