@@ -182,7 +182,7 @@ class Base(object):
 
         # method was not marked for lazy loading, raise exception
         except KeyError:
-            raise AttributeError
+            raise AttributeError(method_name)
 
         # Do the parsing right now and return the method
         result = parser(data, method_name, dir_path, bypass_types)
