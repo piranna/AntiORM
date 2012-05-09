@@ -36,7 +36,7 @@ class Sqlite(Base):
     def _multiple_statement_standard__dict(self, stmts):
         sql = named2pyformat(''.join(stmts))
 
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -47,7 +47,7 @@ class Sqlite(Base):
     def _multiple_statement_standard__list(self, stmts):
         sql = named2pyformat(''.join(stmts))
 
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             result = []
             with self.tx_manager as conn:
                 cursor = conn.cursor()
