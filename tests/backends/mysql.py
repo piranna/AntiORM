@@ -15,63 +15,57 @@ from antiorm.utils            import Namedtuple_factory, driver_factory
 from base import Base
 
 
+class TestFactory(Base):
+    def setUp(self):
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+    def test_driver_factory(self):
+        self.assertIsInstance(self.engine, MySQL)
+
+
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
-class Driver(Base, TestCase):
+class Driver(TestFactory, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path)
-        self.engine.row_factory = Namedtuple_factory
 
-        Base.setUp(self)
-
-    def test_driver_factory(self):
-        self.assertIsInstance(self.engine, MySQL)
+        TestFactory.setUp(self)
 
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
-class Driver__ByPass(Base, TestCase):
+class Driver__ByPass(TestFactory, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True)
-        self.engine.row_factory = Namedtuple_factory
 
-        Base.setUp(self)
-
-    def test_driver_factory(self):
-        self.assertIsInstance(self.engine, MySQL)
+        TestFactory.setUp(self)
 
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
-class Driver__LazyLoading(Base, TestCase):
+class Driver__LazyLoading(TestFactory, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, False, True)
-        self.engine.row_factory = Namedtuple_factory
 
-        Base.setUp(self)
-
-    def test_driver_factory(self):
-        self.assertIsInstance(self.engine, MySQL)
+        TestFactory.setUp(self)
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
-class Driver__ByPass__LazyLoading(Base, TestCase):
+class Driver__ByPass__LazyLoading(TestFactory, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True, True)
-        self.engine.row_factory = Namedtuple_factory
 
-        Base.setUp(self)
-
-    def test_driver_factory(self):
-        self.assertIsInstance(self.engine, MySQL)
+        TestFactory.setUp(self)
 
 
 @skip
