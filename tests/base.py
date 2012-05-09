@@ -53,9 +53,6 @@ class Base:
         self.assertEqual(len(result[0]), 1)
         self.assertEqual(result[0][0], u'hola')
 
-        # row factory
-        self.assertEqual(result[0].key, u'hola')
-
     def test_statement_INSERT_single_dict(self):
         rowid = self.engine.test_statement_INSERT_single({'key': "adios"})
 
@@ -68,9 +65,6 @@ class Base:
         self.assertEqual(len(result), 1)
         self.assertEqual(len(result[0]), 1)
         self.assertEqual(result[0][0], u'adios')
-
-        # row factory
-        self.assertEqual(result[0].key, u'adios')
 
     def test_statement_INSERT_single_list(self):
         rowid = self.engine.test_statement_INSERT_single([{'key': 'a'},
@@ -90,10 +84,6 @@ class Base:
         self.assertEqual(len(result[1]), 1)
         self.assertEqual(result[1][0], u'b')
 
-        # row factory
-        self.assertEqual(result[0].key, u'a')
-        self.assertEqual(result[1].key, u'b')
-
     def test_multiple_statement_INSERT(self):
         rowid = self.engine.test_multiple_statement_INSERT(key='a')
 
@@ -107,10 +97,6 @@ class Base:
         self.assertEqual(len(result[0]), 2)
         self.assertEqual(result[0][0], u'a')
         self.assertEqual(result[0][0], result[0][1])
-
-        # row factory
-        self.assertEqual(result[0].key, u'a')
-        self.assertEqual(result[0].key, result[0].value)
 
     def test_multiple_statement_INSERT_dict(self):
         rowid = self.engine.test_multiple_statement_INSERT({'key': 'b'})
@@ -250,3 +236,11 @@ class Base:
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
         self.assertListEqual(result, [(u'e',)])
+
+    def test_row_factory(self):
+        result = self.engine.test_row_factory()
+
+        self.assertTupleEqual(result, (u'Phineas', u'Flinn'))
+
+        self.assertEqual(result.name, u'Phineas')
+        self.assertEqual(result.surname, u'Flinn')
