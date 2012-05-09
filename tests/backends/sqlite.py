@@ -53,7 +53,6 @@ class Driver__LazyLoading(TestFactory, TestCase):
         TestFactory.setUp(self)
 
 
-@skip
 class Driver__ByPass__LazyLoading(TestFactory, TestCase):
     "Test for the AntiORM SQLite driver"
     def setUp(self):
@@ -94,7 +93,6 @@ class GenericDriver__LazyLoading(Base, TestCase):
         Base.setUp(self)
 
 
-@skip
 class GenericDriver__ByPass__LazyLoading(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
