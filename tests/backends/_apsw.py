@@ -10,17 +10,12 @@ sys.path.insert(0, '..')
 
 from antiorm.backends.apsw    import APSW
 from antiorm.backends.generic import Generic
-from antiorm.utils            import Namedtuple_factory, driver_factory
+from antiorm.utils            import driver_factory
 
 from base import Base
 
 
 class TestFactory(Base):
-    def setUp(self):
-        self.engine.row_factory = Namedtuple_factory
-
-        Base.setUp(self)
-
     def test_driver_factory(self):
         self.assertIsInstance(self.engine, APSW)
 
