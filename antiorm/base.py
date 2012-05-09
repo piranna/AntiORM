@@ -124,8 +124,8 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_keyw(self, **kwargs)
 
         # Register and return types proxy
-        setattr(self, method_name, _proxy_types)
-#        setattr(self.__class__, method_name, _proxy_types)
+#        setattr(self, method_name, _proxy_types)
+        setattr(self.__class__, method_name, _proxy_types)
         return _proxy_types
 
     return _wrapped_method
@@ -334,7 +334,7 @@ class Base(object):
     #
 
     def _one_statement_INSERT__dict(self, sql):
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             "Exec the statement and return the inserted row id"
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -345,7 +345,7 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_INSERT__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             "Exec the statement and return the inserted row id"
             result = []
 
@@ -402,7 +402,7 @@ class Base(object):
 #        return _wrapped_method
 
     def _one_statement_value__dict(self, sql):
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor = cursor.execute(sql, kwargs)
@@ -414,7 +414,7 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_value__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -436,7 +436,7 @@ class Base(object):
                                          _one_statement_value__list)
 
     def _one_statement_register__dict(self, sql):
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor = cursor.execute(sql, kwargs)
@@ -446,7 +446,7 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_register__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -465,7 +465,7 @@ class Base(object):
                                             _one_statement_register__list)
 
     def _one_statement_table__dict(self, sql):
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor = cursor.execute(sql, kwargs)
@@ -475,7 +475,7 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_table__list(self, sql):
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -494,7 +494,7 @@ class Base(object):
                                          _one_statement_table__list)
 
     def _multiple_statement_INSERT__dict(self, stmts):
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             "Exec the statements and return the row id of the first"
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -510,7 +510,7 @@ class Base(object):
         return _wrapped_method
 
     def _multiple_statement_INSERT__list(self, stmts):
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             "Exec the statements and return the row id of the first"
             result = []
 
@@ -532,7 +532,7 @@ class Base(object):
                                                _multiple_statement_INSERT__list)
 
     def _multiple_statement_standard__dict(self, stmts):
-        def _wrapped_method(_, kwargs):
+        def _wrapped_method(self, kwargs):
             result = []
 
             with self.tx_manager as conn:
@@ -546,7 +546,7 @@ class Base(object):
         return _wrapped_method
 
     def _multiple_statement_standard__list(self, stmts):
-        def _wrapped_method(_, list_kwargs):
+        def _wrapped_method(self, list_kwargs):
             result = []
 
             with self.tx_manager as conn:
