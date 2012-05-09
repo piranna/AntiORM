@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path  import abspath, dirname, join
-from unittest import main, TestCase
+from unittest import main, skip, TestCase
 
 from sqlite3 import connect
 
@@ -12,75 +12,97 @@ from antiorm.backends.generic import Generic
 from antiorm.backends.sqlite  import Sqlite
 from antiorm.utils            import Namedtuple_factory, driver_factory
 
-from base import Basic
-from base import StatementINSERTSingle, StatementINSERTMultiple
-from base import OneStatement_value, OneStatement_register, OneStatement_table
-from base import MultipleStatement
+from base import Base
 
 
-class Driver(TestCase,
-              Basic,
-              StatementINSERTSingle, StatementINSERTMultiple,
-              OneStatement_value, OneStatement_register, OneStatement_table,
-              MultipleStatement):
-    "Test for the AntiORM SQLite driver"
+class TestFactory(Base):
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
-        self.connection = connect(":memory:")
-        self.engine = Sqlite(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
-        for base in self.__class__.__bases__:
-            if hasattr(base, 'setUp'):
-                base.setUp(self)
+        Base.setUp(self)
 
-    def tearDown(self):
-        self.connection.close()
-
-    def test_row_factory(self):
-        pass
+    def test_driver_factory(self):
+        self.assertIsInstance(self.engine, Sqlite)
 
 
-class GenericDriver(TestCase,
-                      Basic,
-                      StatementINSERTSingle, StatementINSERTMultiple,
-                      OneStatement_value, OneStatement_register, OneStatement_table,
-                      MultipleStatement):
+class Driver(TestFactory, TestCase):
+    "Test for the AntiORM SQLite driver"
+    def setUp(self):
+        self.connection = connect(":memory:")
+        self.engine = driver_factory(self.connection, self.dir_path)
+
+        TestFactory.setUp(self)
+
+
+@skip
+class Driver__ByPass(TestFactory, TestCase):
+    "Test for the AntiORM SQLite driver"
+    def setUp(self):
+        self.connection = connect(":memory:")
+        self.engine = driver_factory(self.connection, self.dir_path, True)
+
+        TestFactory.setUp(self)
+
+
+class Driver__LazyLoading(TestFactory, TestCase):
+    "Test for the AntiORM SQLite driver"
+    def setUp(self):
+        self.connection = connect(":memory:")
+        self.engine = driver_factory(self.connection, self.dir_path, False, True)
+
+        TestFactory.setUp(self)
+
+
+@skip
+class Driver__ByPass__LazyLoading(TestFactory, TestCase):
+    "Test for the AntiORM SQLite driver"
+    def setUp(self):
+        self.connection = connect(":memory:")
+        self.engine = driver_factory(self.connection, self.dir_path, True, True)
+
+        TestFactory.setUp(self)
+
+
+class GenericDriver(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
+        self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path)
+        self.engine.row_factory = Namedtuple_factory
 
+        Base.setUp(self)
+
+
+@skip
+class GenericDriver__ByPass(Base, TestCase):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
+        self.connection = connect(":memory:")
+        self.engine = Generic(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
+
+class GenericDriver__LazyLoading(Base, TestCase):
+    "Test for the AntiORM generic driver"
+    def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
         self.engine.row_factory = Namedtuple_factory
 
-        for base in self.__class__.__bases__:
-            if hasattr(base, 'setUp'):
-                base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
+        Base.setUp(self)
 
 
-class Factory(TestCase):
-    "Test for drivers factory using the AntiORM SQLite driver"
+@skip
+class GenericDriver__ByPass__LazyLoading(Base, TestCase):
+    "Test for the AntiORM generic driver"
     def setUp(self):
-        self.dir_path = join(abspath(dirname(__file__)), '../samples_sql')
-
         self.connection = connect(":memory:")
-        self.engine = driver_factory(self.connection, self.dir_path, True)
+        self.engine = Generic(self.connection, self.dir_path, True, True)
         self.engine.row_factory = Namedtuple_factory
 
-        for base in self.__class__.__bases__:
-            if hasattr(base, 'setUp'):
-                base.setUp(self)
-
-    def tearDown(self):
-        self.connection.close()
-
-    def test_driver_factory(self):
-        self.assertIsInstance(self.engine, Sqlite)
+        Base.setUp(self)
 
 
 if __name__ == "__main__":
