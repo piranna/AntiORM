@@ -9,6 +9,25 @@ from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
 
 
+class GenericConnection(object):
+    def __init__(self, connection):
+        # This protect of apply the wrapper over another one
+        if isinstance(connection, ConnectionWrapper):
+            self._connection = connection._connection
+        else:
+            self._connection = connection
+
+        from connection.__class__.__module__ import Cursor
+
+        class cursorclass(Cursor):
+            pass
+
+        self._cursorclass = cursorclass
+
+    def cursor(self):
+        return self._connection.cursor(self._cursorclass)
+
+
 class Generic(Base):
     """Generic driver for AntiORM.
 
@@ -30,7 +49,17 @@ class Generic(Base):
         # Check if database connection is from APSW so we force the wrapper
         if db_conn.__class__.__module__ == 'apsw':
             db_conn = ConnectionWrapper(db_conn)
+        else:
+            db_conn = GenericConnection(db_conn)
 
         Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
         self.tx_manager = _TransactionManager(db_conn)
+
+    @property
+    def row_factory(self):
+        return self.connection._connection.getrowtrace()
+
+    @row_factory.setter
+    def row_factory(self, value):
+        self.connection._connection.setrowtrace(value)
