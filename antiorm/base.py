@@ -24,28 +24,37 @@ LOAD_ATTR = opmap['LOAD_ATTR']
 
 def proxy_factory(priv_dict, priv_list):
     def _wrapped_method(self, method_name, sql, bypass_types):
-        """Single INSERT statement query
+        """
+        Single INSERT statement query
 
-        @return: the inserted row id
+        :returns: the inserted row id
         """
         _priv_dict = priv_dict(self, sql)
         _priv_list = priv_list(self, sql)
 
         def _priv_l_kw(self, *args):
-            "Exec the statement and return the inserted row id"
+            """
+            Exec the statement and return the inserted row id
+            """
+
             return _priv_dict(self, args)
 
         def _priv_keyw(self, **kwargs):
-            "Exec the statement and return the inserted row id"
+            """
+            Exec the statement and return the inserted row id
+            """
+
             return _priv_dict(self, kwargs)
 
         # Use type specific functions
         if bypass_types:
             def _bypass_types(self, list_or_dict=None, *args, **kwargs):
-                """Execute the INSERT statement
-
-                @return: the inserted row id (or a list with them)
                 """
+                Execute the INSERT statement
+
+                :returns: the inserted row id (or a list with them)
+                """
+
                 def bypass(suffix):
                     # Get the caller stack frame
                     frame = _getframe(2)
@@ -80,7 +89,7 @@ def proxy_factory(priv_dict, priv_list):
                         code.code[method_index] = (LOAD_ATTR,
                                                    method_name + suffix)
 
-#                        func.func_code = code.to_code()
+                        #func.func_code = code.to_code()
                         func.__func__.func_code = code.to_code()
 
                 # Do the by-pass on the caller function
@@ -110,10 +119,12 @@ def proxy_factory(priv_dict, priv_list):
             return _bypass_types
 
         def _proxy_types(self, list_or_dict=None, *args, **kwargs):
-            """Execute the INSERT statement
-
-            @return: the inserted row id (or a list with them)
             """
+            Execute the INSERT statement
+
+            :returns: the inserted row id (or a list with them)
+            """
+
             # Received un-named parameter, it would be a iterable
             if list_or_dict != None:
                 if isinstance(list_or_dict, dict):
@@ -124,7 +135,6 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_keyw(self, **kwargs)
 
         # Register and return types proxy
-#        setattr(self, method_name, _proxy_types)
         setattr(self.__class__, method_name, _proxy_types)
         return _proxy_types
 
@@ -156,14 +166,15 @@ class Base(object):
     # TODO: database independent layer with full transaction management
 
     def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
-        """Constructor
+        """
+        Constructor
 
-        @param db_conn: connection of the database
-        @type db_conn: DB-API 2.0 database connection
-        @param dir_path: path of the dir with files from where to load SQL code
-        @type dir_path: string
-        @param lazy: set if SQL code at dir_path should be lazy loaded
-        @type lazy: boolean
+        :param db_conn: connection of the database
+        :type db_conn: DB-API 2.0 database connection
+        :param dir_path: path of the dir with files from where to load SQL code
+        :type dir_path: string
+        :param lazy: set if SQL code at dir_path should be lazy loaded
+        :type lazy: boolean
         """
         self.connection = db_conn
 
@@ -194,13 +205,13 @@ class Base(object):
 
         Also add the functions as a methods to the AntiORM class
 
-        @param dir_path: path to the dir with the SQL files (for INCLUDE)
-        @type dir_path: string
-        @param lazy: set if parsing should be postpone until required
-        @type lazy: boolean
+        :param dir_path: path to the dir with the SQL files (for INCLUDE)
+        :type dir_path: string
+        :param lazy: set if parsing should be postpone until required
+        :type lazy: boolean
 
-        @return: nothing
-        @rtype: None
+        :return: nothing
+        :rtype: None
         """
 
 #        # Lazy processing, store data & only do the parse if later is required
@@ -219,17 +230,17 @@ class Base(object):
 
         Also add the function as a method to the AntiORM class
 
-        @param file_path: the path of SQL file of the method to be parsed
-        @type file_path: string
-        @param method_name: the name of the method
-        @type method_name: string
-        @param dir_path: path to the dir with the SQL files (for INCLUDE)
-        @type dir_path: string
-        @param lazy: set if parsing should be postpone until required
-        @type lazy: boolean
+        :param file_path: the path of SQL file of the method to be parsed
+        :type file_path: string
+        :param method_name: the name of the method
+        :type method_name: string
+        :param dir_path: path to the dir with the SQL files (for INCLUDE)
+        :type dir_path: string
+        :param lazy: set if parsing should be postpone until required
+        :type lazy: boolean
 
-        @return: the parsed function (except if lazy is True)
-        @rtype: function
+        :returns: the parsed function (except if lazy is True)
+        :rtype: function
         """
 
         if not method_name:
@@ -252,17 +263,17 @@ class Base(object):
 
         Also add the function as a method to the AntiORM class
 
-        @param sql: the SQL code of the method to be parsed
-        @type sql: string
-        @param method_name: the name of the method
-        @type method_name: string
-        @param dir_path: path to the dir with the SQL files (for INCLUDE)
-        @type dir_path: string
-        @param lazy: set if parsing should be postpone until required
-        @type lazy: boolean
+        :param sql: the SQL code of the method to be parsed
+        :type sql: string
+        :param method_name: the name of the method
+        :type method_name: string
+        :param dir_path: path to the dir with the SQL files (for INCLUDE)
+        :type dir_path: string
+        :param lazy: set if parsing should be postpone until required
+        :type lazy: boolean
 
-        @return: the parsed function or None if `lazy` is True
-        @rtype: function or None
+        :return: the parsed function or None if `lazy` is True
+        :rtype: function or None
         """
 
         # Lazy processing, store data & only do the parse if later is required
@@ -296,9 +307,9 @@ class Base(object):
         if IsType('INSERT')(stream):
             return self._one_statement_INSERT(method_name, sql, bypass_types)
 
-#        # Update statement (return affected row count)
-#        if IsType('UPDATE')(stream):
-#            return self._one_statement_UPDATE(method_name, sql, bypass_types)
+        ## Update statement (return affected row count)
+        #if IsType('UPDATE')(stream):
+        #    return self._one_statement_UPDATE(method_name, sql, bypass_types)
 
         # One-value function (a row of a cell)
         if GetLimit(stream) == 1:
@@ -329,13 +340,13 @@ class Base(object):
         return self._multiple_statement_standard(method_name, stmts,
                                                  bypass_types)
 
-    #
     # Optimized functions
-    #
 
     def _one_statement_INSERT__dict(self, sql):
         def _wrapped_method(self, kwargs):
-            "Exec the statement and return the inserted row id"
+            """
+            Exec the statement and return the inserted row id
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -346,7 +357,9 @@ class Base(object):
 
     def _one_statement_INSERT__list(self, sql):
         def _wrapped_method(self, list_kwargs):
-            "Exec the statement and return the inserted row id"
+            """
+            Exec the statement and return the inserted row id
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -359,43 +372,43 @@ class Base(object):
     _one_statement_INSERT = proxy_factory(_one_statement_INSERT__dict,
                                           _one_statement_INSERT__list)
 
-#    @register
-#    def _statement_UPDATE_single(self, stmts):
-#        """Single UPDATE statement query
-#
-#        @return: the number of updated rows
-#        """
-#        sql = unicode(stmts[0])
-#
-#        def _wrapped_method(self, list_or_dict=None, **kwargs):
-#            """Execute the UPDATE statement
-#
-#            @return: the inserted row id (or a list with them)
-#            """
-#            def _priv(kwargs):
-#                "Exec the statement and return the number of updated rows"
-#                with self.tx_manager as conn:
-#                    cursor = conn.cursor()
-#                    cursor = cursor.execute(sql, kwargs)
-#
-#                    cursor.rowcount
-#
-#            def _priv_list(list_kwargs):
-#                "Exec the statement and return the number of updated rows"
-#                with self.tx_manager as conn:
-#                    cursor = conn.cursor()
-#                    cursor = cursor.executemany(sql, list_kwargs)
-#
-#                    return cursor.rowcount
-#
-#            # Received un-named parameter, it would be a iterable
-#            if list_or_dict != None:
-#                if isinstance(list_or_dict, dict):
-#                    return _priv(list_or_dict)
-#                return _priv_list(list_or_dict)
-#            return _priv(kwargs)
-#
-#        return _wrapped_method
+    #@register
+    #def _statement_UPDATE_single(self, stmts):
+    #    """Single UPDATE statement query
+    #
+    #    @return: the number of updated rows
+    #    """
+    #    sql = unicode(stmts[0])
+    #
+    #    def _wrapped_method(self, list_or_dict=None, **kwargs):
+    #        """Execute the UPDATE statement
+    #
+    #        @return: the inserted row id (or a list with them)
+    #        """
+    #        def _priv(kwargs):
+    #            "Exec the statement and return the number of updated rows"
+    #            with self.tx_manager as conn:
+    #                cursor = conn.cursor()
+    #                cursor = cursor.execute(sql, kwargs)
+    #
+    #                cursor.rowcount
+    #
+    #        def _priv_list(list_kwargs):
+    #            "Exec the statement and return the number of updated rows"
+    #            with self.tx_manager as conn:
+    #                cursor = conn.cursor()
+    #                cursor = cursor.executemany(sql, list_kwargs)
+    #
+    #                return cursor.rowcount
+    #
+    #        # Received un-named parameter, it would be a iterable
+    #        if list_or_dict != None:
+    #            if isinstance(list_or_dict, dict):
+    #                return _priv(list_or_dict)
+    #            return _priv_list(list_or_dict)
+    #        return _priv(kwargs)
+    #
+    #    return _wrapped_method
 
     def _one_statement_value__dict(self, sql):
         def _wrapped_method(self, kwargs):
@@ -478,7 +491,9 @@ class Base(object):
 
     def _multiple_statement_INSERT__dict(self, stmts):
         def _wrapped_method(self, kwargs):
-            "Exec the statements and return the row id of the first"
+            """
+            Exec the statements and return the row id of the first
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -494,7 +509,9 @@ class Base(object):
 
     def _multiple_statement_INSERT__list(self, stmts):
         def _wrapped_method(self, list_kwargs):
-            "Exec the statements and return the row id of the first"
+            """
+            Exec the statements and return the row id of the first
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
