@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from os.path  import abspath, dirname, join
 from unittest import main, skip, TestCase
 
 from sqlite3 import connect
@@ -10,17 +9,12 @@ sys.path.insert(0, '..')
 
 from antiorm.backends.generic import Generic
 from antiorm.backends.sqlite  import Sqlite
-from antiorm.utils            import Namedtuple_factory, driver_factory
+from antiorm.utils            import driver_factory
 
 from base import Base
 
 
 class TestFactory(Base):
-    def setUp(self):
-        self.engine.row_factory = Namedtuple_factory
-
-        Base.setUp(self)
-
     def test_driver_factory(self):
         self.assertIsInstance(self.engine, Sqlite)
 
@@ -67,7 +61,6 @@ class GenericDriver(Base, TestCase):
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path)
-        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
@@ -78,7 +71,6 @@ class GenericDriver__ByPass(Base, TestCase):
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, True)
-        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
@@ -88,7 +80,6 @@ class GenericDriver__LazyLoading(Base, TestCase):
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
-        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
@@ -98,7 +89,6 @@ class GenericDriver__ByPass__LazyLoading(Base, TestCase):
     def setUp(self):
         self.connection = connect(":memory:")
         self.engine = Generic(self.connection, self.dir_path, True, True)
-        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 

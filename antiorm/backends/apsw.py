@@ -83,14 +83,6 @@ class ConnectionWrapper(object):
         self._activecursor.close()
         return self._connection.__exit__(exc_type, exc_value, traceback)
 
-    @property
-    def row_factory(self):
-        return self._connection.getrowtrace()
-
-    @row_factory.setter
-    def row_factory(self, value):
-        self._connection.setrowtrace(value)
-
 
 class APSW(Base):
     "APSW driver for AntiORM"
@@ -130,3 +122,11 @@ class APSW(Base):
                     (self._cachedmethods, self._max_cachedmethods))
 
         return result
+
+    @property
+    def row_factory(self):
+        return self.connection._connection.getrowtrace()
+
+    @row_factory.setter
+    def row_factory(self, value):
+        self.connection._connection.setrowtrace(value)
