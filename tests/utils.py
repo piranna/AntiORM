@@ -36,7 +36,7 @@ class TestUtils(TestCase):
         self.assertEqual(named2pyformat(""), "")
         self.assertEqual(named2pyformat("asdf"), "asdf")
         self.assertEqual(named2pyformat("a :formated word"),
-                         "a %(formated)s word")
+                         "a '%(formated)s' word")
 
 
 if __name__ == "__main__":
