@@ -2,6 +2,7 @@
 
 from collections import namedtuple
 from re          import sub
+from thread      import allocate_lock
 
 # Factory classes
 import backends
@@ -43,16 +44,12 @@ def driver_factory(db_conn, *args, **kwargs):
     return backends.generic.Generic(db_conn, *args, **kwargs)
 
 
-class InTransactionError(Exception):
-    pass
-
-
 class _TransactionManager(object):
     """
     Transaction context manager for databases that doesn't has support for it
     """
 
-    _in_transaction = False
+    _lock = allocate_lock()
 
     def __init__(self, db_conn):
         self.connection = db_conn
@@ -65,11 +62,7 @@ class _TransactionManager(object):
             pass
 
         # Use custom context manager
-        if self._in_transaction:
-            raise InTransactionError("Already in a transaction")
-
-        self._in_transaction = True
-
+        self._lock.acquire()
         return self.connection
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -82,10 +75,10 @@ class _TransactionManager(object):
         # There was an exception on the context manager, rollback and raise
         if exc_type:
             self.connection.rollback()
-            self._in_transaction = False
+            self._lock.release()
 
             raise exc_type, exc_value, traceback
 
         # There were no problems on the context manager, commit
         self.connection.commit()
-        self._in_transaction = False
+        self._lock.release()
