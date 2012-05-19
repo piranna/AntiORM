@@ -4,6 +4,8 @@ Created on 05/03/2012
 @author: piranna
 '''
 
+from imp import find_module, load_module
+
 from antiorm.backends.apsw import ConnectionWrapper
 from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
@@ -17,15 +19,30 @@ class GenericConnection(object):
         else:
             self._connection = connection
 
-        from connection.__class__.__module__ import Cursor
+        # Import correct Cursor class for the connection
+        name = connection.__class__.__module__
+        file, filename, description = find_module(name)
+        module = load_module(name, file, filename, description)
+        Cursor = module.Cursor
 
         class cursorclass(Cursor):
-            pass
+            row_factory = None
 
         self._cursorclass = cursorclass
 
+    def commit(self):
+        return self._connection.commit()
+
     def cursor(self):
         return self._connection.cursor(self._cursorclass)
+
+    @property
+    def row_factory(self):
+        return self._cursorclass.row_factory
+
+    @row_factory.setter
+    def row_factory(self, value):
+        self._cursorclass.row_factory = value
 
 
 class Generic(Base):
@@ -58,8 +75,8 @@ class Generic(Base):
 
     @property
     def row_factory(self):
-        return self.connection._connection.getrowtrace()
+        return self.connection.row_factory
 
     @row_factory.setter
     def row_factory(self, value):
-        self.connection._connection.setrowtrace(value)
+        self.connection.row_factory
