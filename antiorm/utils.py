@@ -57,9 +57,11 @@ class _TransactionManager(object):
     def __enter__(self):
         # Use the connection context manager if its supported
         try:
-            return self.connection.__enter__()
+            func = self.connection.__enter__
         except AttributeError:
             pass
+        else:
+            return func()
 
         # Use custom context manager
         self._lock.acquire()
@@ -68,9 +70,11 @@ class _TransactionManager(object):
     def __exit__(self, exc_type, exc_value, traceback):
         # Use the connection context manager if its supported
         try:
-            return self.connection.__exit__(exc_type, exc_value, traceback)
+            func = self.connection.__exit__
         except AttributeError:
             pass
+        else:
+            return func(exc_type, exc_value, traceback)
 
         # There was an exception on the context manager, rollback and raise
         if exc_type:
