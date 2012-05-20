@@ -93,7 +93,7 @@ class APSWConnection(object):
 
 
 class APSW(Base):
-    "APSW driver for AntiORM"
+    """APSW driver for AntiORM"""
     _max_cachedmethods = 100
 
     def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):

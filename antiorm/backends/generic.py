@@ -12,7 +12,13 @@ from antiorm.utils         import _TransactionManager
 
 
 class GenericConnection(object):
+    """Connection class wrapper that add support to define row_factory"""
     def __init__(self, connection):
+        """Constructor
+
+        @param connection: the connection to wrap
+        @type connection: DB-API 2.0 connection
+        """
         # This protect of apply the wrapper over another one
         if isinstance(connection, GenericConnection):
             self._connection = connection._connection
@@ -26,6 +32,7 @@ class GenericConnection(object):
         Cursor = module.Cursor
 
         class cursorclass(Cursor):
+            """Cursor class wrapper that add support to define row_factory"""
             row_factory = None
 
             def fetchone(self):
