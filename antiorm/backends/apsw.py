@@ -9,7 +9,7 @@ from logging import warning
 from antiorm.base import Base
 
 
-class CursorWrapper(object):
+class APSWCursor(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects
 
     This is done this way because since apsw.Cursor is a compiled extension
@@ -21,7 +21,7 @@ class CursorWrapper(object):
         @param cursor: the cursor to wrap
         @type cursor: apsw.Cursor"""
         # This protect of apply the wrapper over another one
-        if isinstance(cursor, CursorWrapper):
+        if isinstance(cursor, APSWCursor):
             self._cursor = cursor._cursor
         else:
             self._cursor = cursor
@@ -71,7 +71,7 @@ class APSWConnection(object):
         self._connection.close()
 
     def cursor(self):
-        self._activecursor = CursorWrapper(self._connection.cursor())
+        self._activecursor = APSWCursor(self._connection.cursor())
         return self._activecursor
 
     # Context manager - this two should be get via __getattr__...
