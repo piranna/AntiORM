@@ -130,11 +130,3 @@ class APSW(Base):
                     (self._cachedmethods, self._max_cachedmethods))
 
         return result
-
-    @property
-    def row_factory(self):
-        return self.connection.row_factory
-
-    @row_factory.setter
-    def row_factory(self, value):
-        self.connection.row_factory
