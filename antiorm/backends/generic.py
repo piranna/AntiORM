@@ -14,7 +14,7 @@ from antiorm.utils         import _TransactionManager
 class GenericConnection(object):
     def __init__(self, connection):
         # This protect of apply the wrapper over another one
-        if isinstance(connection, APSWConnection):
+        if isinstance(connection, GenericConnection):
             self._connection = connection._connection
         else:
             self._connection = connection
