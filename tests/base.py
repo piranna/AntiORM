@@ -13,16 +13,21 @@ class Base:
     def setUp(self):
         cursor = self.connection.cursor()
 
-        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
-        cursor.execute("""CREATE TABLE test_multiple_statement_INSERT
+        cursor.execute("""CREATE TEMPORARY TABLE test_statement_INSERT_single
+        (key TEXT);""")
+        cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement_INSERT
         (
             key   TEXT,
             value TEXT NULL
         );""")
-        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
-        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
-        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
-        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
+        cursor.execute("""CREATE TEMPORARY TABLE test_one_statement_value
+        (key TEXT);""")
+        cursor.execute("""CREATE TEMPORARY TABLE test_one_statement_register
+        (key TEXT);""")
+        cursor.execute("""CREATE TEMPORARY TABLE test_one_statement_table
+        (key TEXT);""")
+        cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement
+        (key TEXT);""")
 
         cursor.close()
 #        self.connection.commit()
