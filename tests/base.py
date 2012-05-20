@@ -11,8 +11,6 @@ class Base:
         cls.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
 
     def setUp(self):
-        self.engine.row_factory = Namedtuple_factory
-
         cursor = self.connection.cursor()
 
         cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
@@ -238,6 +236,8 @@ class Base:
         self.assertListEqual(result, [(u'e',)])
 
     def test_row_factory(self):
+        self.engine.row_factory = Namedtuple_factory
+
         result = self.engine.test_row_factory()
 
         self.assertTupleEqual(result, (u'Phineas', u'Flinn'))

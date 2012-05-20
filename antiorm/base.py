@@ -297,7 +297,6 @@ class Base(object):
         # Multiple statement query
         return self._multiple_statement(method_name, stream, bypass_types)
 
-
     @property
     def row_factory(self):
         return self.connection.row_factory
