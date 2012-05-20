@@ -72,11 +72,3 @@ class Generic(Base):
         Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
         self.tx_manager = _TransactionManager(db_conn)
-
-    @property
-    def row_factory(self):
-        return self.connection.row_factory
-
-    @row_factory.setter
-    def row_factory(self, value):
-        self.connection.row_factory
