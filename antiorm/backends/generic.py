@@ -19,11 +19,8 @@ class GenericConnection(object):
         else:
             self._connection = connection
 
-        # Import correct Cursor class for the connection
-        name = connection.__class__.__module__
-        file, filename, description = find_module(name)
-        module = load_module(name, file, filename, description)
-        Cursor = module.Cursor
+        # Get correct Cursor class for the connection
+        Cursor = connection.cursor().__class__
 
         class cursorclass(Cursor):
             row_factory = None
