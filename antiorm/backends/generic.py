@@ -6,7 +6,7 @@ Created on 05/03/2012
 
 from imp import find_module, load_module
 
-from antiorm.backends.apsw import ConnectionWrapper
+from antiorm.backends.apsw import APSWConnection
 from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
 
@@ -14,7 +14,7 @@ from antiorm.utils         import _TransactionManager
 class GenericConnection(object):
     def __init__(self, connection):
         # This protect of apply the wrapper over another one
-        if isinstance(connection, ConnectionWrapper):
+        if isinstance(connection, APSWConnection):
             self._connection = connection._connection
         else:
             self._connection = connection
@@ -65,7 +65,7 @@ class Generic(Base):
         """
         # Check if database connection is from APSW so we force the wrapper
         if db_conn.__class__.__module__ == 'apsw':
-            db_conn = ConnectionWrapper(db_conn)
+            db_conn = APSWConnection(db_conn)
         else:
             db_conn = GenericConnection(db_conn)
 
