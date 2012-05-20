@@ -28,6 +28,12 @@ class GenericConnection(object):
         class cursorclass(Cursor):
             row_factory = None
 
+            def fetchone(self):
+                result = Cursor.fetchone(self)
+                if self.row_factory:
+                    result = self.row_factory(result)
+                return result
+
         self._cursorclass = cursorclass
 
     def commit(self):
@@ -35,6 +41,9 @@ class GenericConnection(object):
 
     def cursor(self):
         return self._connection.cursor(self._cursorclass)
+
+    def rollback(self):
+        return self._connection.rollback()
 
     @property
     def row_factory(self):
