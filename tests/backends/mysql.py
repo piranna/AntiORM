@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from subprocess import check_call
 from unittest   import skip, skipIf, main, TestCase
 
 from MySQLdb import connect
@@ -69,16 +68,17 @@ class GenericDriver(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
         self.test_name = 'test_' + self.__class__.__name__
-        check_call(['mysql', '-e',
-                    'CREATE DATABASE IF NOT EXISTS %s' % self.test_name])
 
-        self.connection = connect(db=self.test_name)
+        self.connection = connect()
+        self.connection.execute('CREATE DATABASE IF NOT EXISTS %s' % self.test_name)
+        self.connection.execute('USE %s' % self.test_name)
+
         self.engine = Generic(self.connection, self.dir_path)
 
         Base.setUp(self)
 
     def tearDown(self):
-        check_call(['mysql', '-e', 'DROP DATABASE %s' % self.test_name])
+        self.connection.execute('DROP DATABASE %s' % self.test_name)
 
 
 @skip
