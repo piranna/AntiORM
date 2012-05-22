@@ -6,6 +6,10 @@ from antiorm.utils import Namedtuple_factory
 
 
 class Base:
+    def __init__(self):
+        self.engine = None
+        self.connection = None
+
     @classmethod
     def setUpClass(cls):
         cls.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
