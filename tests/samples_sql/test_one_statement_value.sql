@@ -1,3 +1,2 @@
-SELECT key FROM test_one_statement_value
-WHERE key=:key
+SELECT :doing AS doing
 LIMIT 1
