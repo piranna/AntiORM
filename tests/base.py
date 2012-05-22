@@ -6,9 +6,8 @@ from antiorm.utils import Namedtuple_factory
 
 
 class Base:
-    def __init__(self):
-        self.engine = None
-        self.connection = None
+    engine = None
+    connection = None
 
     @classmethod
     def setUpClass(cls):
@@ -24,8 +23,6 @@ class Base:
             key   TEXT,
             value TEXT NULL
         );""")
-        cursor.execute("""CREATE TEMPORARY TABLE test_one_statement_table
-        (key TEXT);""")
         cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement
         (key TEXT);""")
 
@@ -139,58 +136,49 @@ class Base:
         self.assertEqual(result[1][0], result[1][1])
 
     def test_one_statement_value(self):
-        result = self.engine.test_one_statement_value(doing='Roller Coaster')
-
-        self.assertEqual(result, u'Roller Coaster')
-
-    def test_one_statement_value_dict(self):
-        result = self.engine.test_one_statement_value({'doing': 'Rocket'})
+        result = self.engine.test_one_statement_value(doing='Rocket')
 
         self.assertEqual(result, u'Rocket')
 
-    def test_one_statement_value_list(self):
-        result = self.engine.test_one_statement_value([{'doing': 'Mummy'}])
+    def test_one_statement_value_dict(self):
+        result = self.engine.test_one_statement_value({'doing': 'Mummy'})
 
-        self.assertListEqual(result, [u'Mummy'])
+        self.assertEqual(result, u'Mummy')
+
+    def test_one_statement_value_list(self):
+        result = self.engine.test_one_statement_value([{'doing': 'Eiffel Tower'}])
+
+        self.assertListEqual(result, [u'Eiffel Tower'])
 
     def test_one_statement_register(self):
-        result = self.engine.test_one_statement_register(doing='Eiffel Tower')
+        result = self.engine.test_one_statement_register(doing='Monster')
 
-        self.assertTupleEqual(result, (u'Eiffel Tower',))
+        self.assertTupleEqual(result, (u'Monster',))
 
     def test_one_statement_register_dict(self):
-        result = self.engine.test_one_statement_register({'doing': 'Dodo'})
+        result = self.engine.test_one_statement_register({'doing': 'Monkey'})
 
-        self.assertTupleEqual(result, (u'Dodo',))
+        self.assertTupleEqual(result, (u'Monkey',))
 
     def test_one_statement_register_list(self):
-        result = self.engine.test_one_statement_register([{'doing': 'Monkey'}])
+        result = self.engine.test_one_statement_register([{'doing': 'Waves'}])
 
-        self.assertListEqual(result, [(u'Monkey',)])
+        self.assertListEqual(result, [(u'Waves',)])
 
     def test_one_statement_table(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('a')")
+        result = self.engine.test_one_statement_table(doing='Nanobots')
 
-        result = self.engine.test_one_statement_table(key='a')
-
-        self.assertListEqual(result, [(u'a',)])
+        self.assertListEqual(result, [(u'Nanobots',)])
 
     def test_one_statement_table_dict(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('b')")
+        result = self.engine.test_one_statement_table({'doing': 'Frankestein'})
 
-        result = self.engine.test_one_statement_table({'key': 'b'})
-
-        self.assertListEqual(result, [(u'b',)])
+        self.assertListEqual(result, [(u'Frankestein',)])
 
     def test_one_statement_table_list(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('c')")
+        result = self.engine.test_one_statement_table([{'doing': 'Painting'}])
 
-        result = self.engine.test_one_statement_table([{'key': 'c'}])
-
-        self.assertListEqual(result, [[(u'c',)]])
+        self.assertListEqual(result, [[(u'Painting',)]])
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()
