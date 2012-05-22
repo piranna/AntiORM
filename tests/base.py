@@ -17,7 +17,7 @@ class Base:
         cursor = self.connection.cursor()
 
         cursor.execute("""CREATE TEMPORARY TABLE test_statement_INSERT_single
-        (key TEXT);""")
+        (name TEXT);""")
         cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement_INSERT
         (
             name    TEXT,
@@ -41,7 +41,7 @@ class Base:
         self.assertNotEqual(attr, None)
 
     def test_statement_INSERT_single(self):
-        rowid = self.engine.test_statement_INSERT_single(key="hola")
+        rowid = self.engine.test_statement_INSERT_single(name="Gretchen")
 
         self.assertIsNotNone(rowid)
 
@@ -49,12 +49,10 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(len(result[0]), 1)
-        self.assertEqual(result[0][0], u'hola')
+        self.assertListEqual(result, [(u'Gretchen',)])
 
     def test_statement_INSERT_single_dict(self):
-        rowid = self.engine.test_statement_INSERT_single({'key': "adios"})
+        rowid = self.engine.test_statement_INSERT_single({'name': "Holly"})
 
         self.assertIsNotNone(rowid)
 
@@ -62,13 +60,11 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(len(result[0]), 1)
-        self.assertEqual(result[0][0], u'adios')
+        self.assertListEqual(result, [(u'Gretchen',)])
 
     def test_statement_INSERT_single_list(self):
-        rowid = self.engine.test_statement_INSERT_single([{'key': 'a'},
-                                                          {'key': 'b'}])
+        rowid = self.engine.test_statement_INSERT_single([{'name': 'Katie'},
+                                                          {'name': 'Milly'}])
 
         self.assertIsNotNone(rowid)
         self.assertIsNotNone(rowid[0])
@@ -78,11 +74,8 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(result[0]), 1)
-        self.assertEqual(result[0][0], u'a')
-        self.assertEqual(len(result[1]), 1)
-        self.assertEqual(result[1][0], u'b')
+        self.assertListEqual(result, [(u'Katie',),
+                                      (u'Milly',)])
 
     def test_multiple_statement_INSERT(self):
         rowid = self.engine.test_multiple_statement_INSERT(name='Isabella',
