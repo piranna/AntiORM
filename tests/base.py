@@ -24,7 +24,7 @@ class Base:
             surname TEXT NULL
         );""")
         cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement
-        (key TEXT);""")
+        (name TEXT);""")
 
         cursor.close()
 #        self.connection.commit()
@@ -60,7 +60,7 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Gretchen',)])
+        self.assertListEqual(result, [(u'Holly',)])
 
     def test_statement_INSERT_single_list(self):
         rowid = self.engine.test_statement_INSERT_single([{'name': 'Katie'},
@@ -102,8 +102,10 @@ class Base:
         self.assertListEqual(result, [(u'Buford', u'van Stomm')])
 
     def test_multiple_statement_INSERT_list(self):
-        rowid = self.engine.test_multiple_statement_INSERT([{'Candance': 'Flinn'},
-                                                            {'Jeremy': 'Johnson'}])
+        rowid = self.engine.test_multiple_statement_INSERT([{'name': 'Candance',
+                                                             'surname': 'Flinn'},
+                                                            {'name': 'Jeremy',
+                                                             'surname': 'Johnson'}])
 
         self.assertIsNotNone(rowid)
         self.assertIsNotNone(rowid[0])
@@ -165,34 +167,33 @@ class Base:
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()
-        cursor.execute("""INSERT INTO test_multiple_statement(name)
-                          VALUES('Phineas')""")
+        cursor.execute("INSERT INTO test_multiple_statement(name) VALUES('a')")
 
-        self.engine.test_multiple_statement(key='c')
+        self.engine.test_multiple_statement(name='Adyson Sweetwater')
 
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
-        self.assertListEqual(result, [(u'c',)])
+        self.assertListEqual(result, [(u'Adyson Sweetwater',)])
 
     def test_multiple_statement_dict(self):
         cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+        cursor.execute("INSERT INTO test_multiple_statement(name) VALUES('a')")
 
-        self.engine.test_multiple_statement({'key': 'd'})
+        self.engine.test_multiple_statement({'name': 'Ginger'})
 
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
-        self.assertListEqual(result, [(u'd',)])
+        self.assertListEqual(result, [(u'Ginger',)])
 
     def test_multiple_statement_list(self):
         cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+        cursor.execute("INSERT INTO test_multiple_statement(name) VALUES('a')")
 
-        self.engine.test_multiple_statement([{'key': 'e'}])
+        self.engine.test_multiple_statement([{'name': 'Perry the Platypus'}])
 
         result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
 
-        self.assertListEqual(result, [(u'e',)])
+        self.assertListEqual(result, [(u'Perry the Platypus',)])
 
     def test_row_factory(self):
         self.engine.row_factory = Namedtuple_factory
