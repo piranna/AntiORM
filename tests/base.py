@@ -20,8 +20,6 @@ class Base:
             key   TEXT,
             value TEXT NULL
         );""")
-        cursor.execute("""CREATE TEMPORARY TABLE test_one_statement_register
-        (key TEXT);""")
         cursor.execute("""CREATE TEMPORARY TABLE test_one_statement_table
         (key TEXT);""")
         cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement
@@ -152,28 +150,19 @@ class Base:
         self.assertListEqual(result, [u'Mummy'])
 
     def test_one_statement_register(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('a')")
+        result = self.engine.test_one_statement_register(doing='Eiffel Tower')
 
-        result = self.engine.test_one_statement_register(key='a')
-
-        self.assertTupleEqual(result, (u'a',))
+        self.assertTupleEqual(result, (u'Eiffel Tower',))
 
     def test_one_statement_register_dict(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('b')")
+        result = self.engine.test_one_statement_register({'doing': 'Dodo'})
 
-        result = self.engine.test_one_statement_register({'key': 'b'})
-
-        self.assertTupleEqual(result, (u'b',))
+        self.assertTupleEqual(result, (u'Dodo',))
 
     def test_one_statement_register_list(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('c')")
+        result = self.engine.test_one_statement_register([{'doing': 'Monkey'}])
 
-        result = self.engine.test_one_statement_register([{'key': 'c'}])
-
-        self.assertListEqual(result, [(u'c',)])
+        self.assertListEqual(result, [(u'Monkey',)])
 
     def test_one_statement_table(self):
         cursor = self.connection.cursor()

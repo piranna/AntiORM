@@ -1,3 +1,5 @@
-SELECT * FROM test_one_statement_register
-WHERE key=:key
+SELECT * FROM
+(
+    SELECT :doing AS doing
+)
 LIMIT 1
