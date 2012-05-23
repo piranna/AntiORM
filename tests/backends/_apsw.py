@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from os.path  import abspath, dirname, join
 from unittest import skip, skipIf, main, TestCase
 
 from apsw import Connection
@@ -9,12 +10,17 @@ sys.path.insert(0, '..')
 
 from antiorm.backends.apsw    import APSW
 from antiorm.backends.generic import Generic
-from antiorm.utils            import driver_factory
+from antiorm.utils            import Namedtuple_factory, driver_factory
 
 from base import Base
 
 
 class TestFactory(Base):
+    def setUp(self):
+        self.engine.row_factory = Namedtuple_factory
+
+        Base.setUp(self)
+
     def test_driver_factory(self):
         self.assertIsInstance(self.engine, APSW)
 
@@ -66,6 +72,7 @@ class GenericDriver(Base, TestCase):
     def setUp(self):
         self.connection = Connection(":memory:")
         self.engine = Generic(self.connection, self.dir_path)
+        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
@@ -77,6 +84,7 @@ class GenericDriver__ByPass(Base, TestCase):
     def setUp(self):
         self.connection = Connection(":memory:")
         self.engine = Generic(self.connection, self.dir_path, True)
+        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
@@ -87,6 +95,7 @@ class GenericDriver__LazyLoading(Base, TestCase):
     def setUp(self):
         self.connection = Connection(":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
+        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 
@@ -97,6 +106,7 @@ class GenericDriver__ByPass__LazyLoading(Base, TestCase):
     def setUp(self):
         self.connection = Connection(":memory:")
         self.engine = Generic(self.connection, self.dir_path, True, True)
+        self.engine.row_factory = Namedtuple_factory
 
         Base.setUp(self)
 

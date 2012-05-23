@@ -9,7 +9,7 @@ from logging import warning
 from antiorm.base import Base
 
 
-class APSWCursor(object):
+class CursorWrapper(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects
 
     This is done this way because since apsw.Cursor is a compiled extension
@@ -21,7 +21,7 @@ class APSWCursor(object):
         @param cursor: the cursor to wrap
         @type cursor: apsw.Cursor"""
         # This protect of apply the wrapper over another one
-        if isinstance(cursor, APSWCursor):
+        if isinstance(cursor, CursorWrapper):
             self._cursor = cursor._cursor
         else:
             self._cursor = cursor
@@ -48,7 +48,7 @@ class APSWCursor(object):
         return self._cursor.getconnection().last_insert_rowid()
 
 
-class APSWConnection(object):
+class ConnectionWrapper(object):
     """Python DB-API 2.0 compatibility wrapper for APSW Connection objects
 
     This is done this way because since apsw.Connection is a compiled extension
@@ -60,7 +60,7 @@ class APSWConnection(object):
         @type connection: apsw.Connection
         """
         # This protect of apply the wrapper over another one
-        if isinstance(connection, APSWConnection):
+        if isinstance(connection, ConnectionWrapper):
             self._connection = connection._connection
         else:
             self._connection = connection
@@ -71,7 +71,7 @@ class APSWConnection(object):
         self._connection.close()
 
     def cursor(self):
-        self._activecursor = APSWCursor(self._connection.cursor())
+        self._activecursor = CursorWrapper(self._connection.cursor())
         return self._activecursor
 
     # Context manager - this two should be get via __getattr__...
@@ -93,7 +93,7 @@ class APSWConnection(object):
 
 
 class APSW(Base):
-    """APSW driver for AntiORM"""
+    "APSW driver for AntiORM"
     _max_cachedmethods = 100
 
     def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
@@ -108,7 +108,7 @@ class APSW(Base):
         """
         self._cachedmethods = 0
 
-        db_conn = APSWConnection(db_conn)
+        db_conn = ConnectionWrapper(db_conn)
 
         Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 

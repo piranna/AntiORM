@@ -2,8 +2,6 @@
 
 from os.path  import abspath, dirname, join
 
-from antiorm.utils import Namedtuple_factory
-
 
 class Base:
     @classmethod
@@ -236,11 +234,4 @@ class Base:
         self.assertListEqual(result, [(u'e',)])
 
     def test_row_factory(self):
-        self.engine.row_factory = Namedtuple_factory
-
-        result = self.engine.test_row_factory()
-
-        self.assertTupleEqual(result, (u'Phineas', u'Flinn'))
-
-        self.assertEqual(result.name, u'Phineas')
-        self.assertEqual(result.surname, u'Flinn')
+        pass
