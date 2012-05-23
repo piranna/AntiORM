@@ -4,8 +4,6 @@ Created on 05/03/2012
 @author: piranna
 '''
 
-from imp import find_module, load_module
-
 from antiorm.backends.apsw import APSWConnection
 from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager

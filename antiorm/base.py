@@ -179,6 +179,15 @@ class Base(object):
         """
         self.connection = db_conn
 
+        self._paramstyle = None
+
+#        modulename = db_conn.__class__.__module__
+#        if modulename == 'antiorm.backends.generic':
+#            modulename = db_conn._connection.__class__.__module__
+#
+#        from sys import modules
+#        print modules[modulename].paramstyle
+
         self._lazy = {}
 
         if dir_path:
@@ -292,6 +301,9 @@ class Base(object):
         pipe = Pipeline()
         pipe.append(tokenize)
         pipe.append(IncludeStatement(dir_path))
+
+        if self._paramstyle:
+            pipe.append(self._paramstyle)
 
         stream = compact(pipe(sql.strip()))
 
