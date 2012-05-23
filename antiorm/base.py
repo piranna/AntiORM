@@ -302,9 +302,6 @@ class Base(object):
         pipe.append(tokenize)
         pipe.append(IncludeStatement(dir_path))
 
-        if self._paramstyle:
-            pipe.append(self._paramstyle)
-
         stream = compact(pipe(sql.strip()))
 
         # One statement query
@@ -327,6 +324,9 @@ class Base(object):
         `stream` SQL code only have one statement
         """
         sql = Tokens2Unicode(stream)
+
+        if self._paramstyle:
+            sql = self._paramstyle(sql)
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
@@ -355,6 +355,9 @@ class Base(object):
         `stream` SQL have several statements (script)
         """
         stmts = map(unicode, split2(stream))
+
+        if self._paramstyle:
+            stmts = map(self._paramstyle, stmts)
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
