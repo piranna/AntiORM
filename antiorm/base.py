@@ -19,6 +19,8 @@ from sqlparse.functions import IsType, getcolumns, getlimit
 from sqlparse.lexer     import tokenize
 from sqlparse.pipeline  import Pipeline
 
+from antiorm.utils import named2pyformat
+
 
 LOAD_ATTR = opmap['LOAD_ATTR']
 
@@ -179,14 +181,14 @@ class Base(object):
         """
         self.connection = db_conn
 
-        self._paramstyle = None
+        type_conn = db_conn.__class__.__module__
+        if type_conn == 'antiorm.backends.generic':
+            type_conn = db_conn._connection.__class__.__module__
 
-#        modulename = db_conn.__class__.__module__
-#        if modulename == 'antiorm.backends.generic':
-#            modulename = db_conn._connection.__class__.__module__
-#
-#        from sys import modules
-#        print modules[modulename].paramstyle
+        if type_conn == 'MySQLdb.connections':
+            self._paramstyle = named2pyformat
+        else:
+            self._paramstyle = None
 
         self._lazy = {}
 
