@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from os.path  import abspath, dirname, join
 from unittest import skip, skipIf, main, TestCase
 
 from apsw import Connection

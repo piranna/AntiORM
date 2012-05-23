@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from os.path  import abspath, dirname, join
+from os.path import abspath, dirname, join
 
 from antiorm.utils import Namedtuple_factory
 

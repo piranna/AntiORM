@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from os.path  import abspath, dirname, join
 from unittest import main, skip, TestCase
 
 from sqlite3 import connect
