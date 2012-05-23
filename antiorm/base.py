@@ -448,7 +448,7 @@ class Base(object):
         def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
-                cursor = cursor.execute(sql, kwargs)
+                cursor.execute(sql, kwargs)
 
                 result = cursor.fetchone()
                 if result:
@@ -464,7 +464,7 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    cursor = cursor.execute(sql, kwargs)
+                    cursor.execute(sql, kwargs)
 
                     value = cursor.fetchone()
                     if value:
@@ -482,7 +482,7 @@ class Base(object):
         def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
-                cursor = cursor.execute(sql, kwargs)
+                cursor.execute(sql, kwargs)
 
                 return cursor.fetchone()
 
@@ -496,7 +496,7 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    cursor = cursor.execute(sql, kwargs)
+                    cursor.execute(sql, kwargs)
 
                     result.append(cursor.fetchone())
 
@@ -511,7 +511,7 @@ class Base(object):
         def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
-                cursor = cursor.execute(sql, kwargs)
+                cursor.execute(sql, kwargs)
 
                 return cursor.fetchall()
 
@@ -525,7 +525,7 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    cursor = cursor.execute(sql, kwargs)
+                    cursor.execute(sql, kwargs)
 
                     result.append(cursor.fetchall())
 
