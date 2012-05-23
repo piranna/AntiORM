@@ -171,9 +171,10 @@ class Base:
 
         self.engine.test_multiple_statement(name='Adyson Sweetwater')
 
-        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+        cursor.execute("SELECT * FROM test_multiple_statement")
+        result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Adyson Sweetwater',)])
+        self.assertSequenceEqual(result, [(u'Adyson Sweetwater',)])
 
     def test_multiple_statement_dict(self):
         cursor = self.connection.cursor()
@@ -181,9 +182,10 @@ class Base:
 
         self.engine.test_multiple_statement({'name': 'Ginger'})
 
-        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+        cursor.execute("SELECT * FROM test_multiple_statement")
+        result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Ginger',)])
+        self.assertSequenceEqual(result, [(u'Ginger',)])
 
     def test_multiple_statement_list(self):
         cursor = self.connection.cursor()
@@ -191,9 +193,10 @@ class Base:
 
         self.engine.test_multiple_statement([{'name': 'Perry the Platypus'}])
 
-        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+        cursor.execute("SELECT * FROM test_multiple_statement")
+        result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Perry the Platypus',)])
+        self.assertSequenceEqual(result, [(u'Perry the Platypus',)])
 
     def test_row_factory(self):
         self.engine.row_factory = Namedtuple_factory
