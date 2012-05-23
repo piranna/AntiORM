@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from unittest   import skip, skipIf, main, TestCase
+from unittest import skip, skipIf, main, TestCase
 
 from MySQLdb import connect
 
@@ -50,7 +50,6 @@ class Driver__LazyLoading(TestFactory, TestCase):
         self.engine = driver_factory(self.connection, self.dir_path, False, True)
 
         TestFactory.setUp(self)
-
 
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")

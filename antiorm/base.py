@@ -13,10 +13,11 @@ except ImportError:
 
 from byteplay import Code, SetLineno
 
-from sqlparse         import split2
-from sqlparse.filters import Compact, Tokens2Unicode
-
-from sqlparse.functions import getcolumns, getlimit, IsType
+from sqlparse           import split2
+from sqlparse.filters   import compact, IncludeStatement, Tokens2Unicode
+from sqlparse.functions import IsType, getcolumns, getlimit
+from sqlparse.lexer     import tokenize
+from sqlparse.pipeline  import Pipeline
 
 
 LOAD_ATTR = opmap['LOAD_ATTR']
@@ -288,7 +289,11 @@ class Base(object):
                                 "Disabling by-pass of types."))
             bypass_types = False
 
-        stream = Compact(sql.strip(), dir_path)
+        pipe = Pipeline()
+        pipe.append(tokenize)
+        pipe.append(IncludeStatement(dir_path))
+
+        stream = compact(pipe(sql.strip()))
 
         # One statement query
         if len(split2(stream)) == 1:
