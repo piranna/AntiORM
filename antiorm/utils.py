@@ -26,7 +26,7 @@ def Namedtuple_factory(cursor, row):
 
 def named2pyformat(sql):
     "Convert from 'named' paramstyle format to Python string 'pyformat' format"
-    return sub(":\w+", lambda m: "%'%(%s)s'" % m.group(0)[1:], sql)
+    return sub(":\w+", lambda m: "'%%(%s)s'" % m.group(0)[1:], sql)
 
 
 def driver_factory(db_conn, *args, **kwargs):

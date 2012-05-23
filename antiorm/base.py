@@ -13,11 +13,11 @@ except ImportError:
 
 from byteplay import Code, SetLineno
 
-from sqlparse         import split2
-from sqlparse.filters import IncludeStatement, Tokens2Unicode
-from sqlparse.lexer   import tokenize
-
-from sql import Compact, GetColumns, GetLimit, IsType
+from sqlparse           import split2
+from sqlparse.filters   import compact, IncludeStatement, Tokens2Unicode
+from sqlparse.functions import IsType, getcolumns, getlimit
+from sqlparse.lexer     import tokenize
+from sqlparse.pipeline  import Pipeline
 
 
 LOAD_ATTR = opmap['LOAD_ATTR']
@@ -325,8 +325,8 @@ class Base(object):
         #    return self._one_statement_UPDATE(method_name, sql, bypass_types)
 
         # One-value function (a row of a cell)
-        if GetLimit(stream) == 1:
-            columns = GetColumns(stream)
+        if getlimit(stream) == 1:
+            columns = getcolumns(stream)
 
             # Value function (one row, one field)
             if len(columns) == 1 and columns[0] != '*':
