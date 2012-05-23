@@ -153,12 +153,12 @@ class Base:
     def test_one_statement_table(self):
         result = self.engine.test_one_statement_table(doing='Nanobots')
 
-        self.assertListEqual(result, [(u'Nanobots',)])
+        self.assertSequenceEqual(result, [(u'Nanobots',)])
 
     def test_one_statement_table_dict(self):
         result = self.engine.test_one_statement_table({'doing': 'Frankestein'})
 
-        self.assertListEqual(result, [(u'Frankestein',)])
+        self.assertSequenceEqual(result, [(u'Frankestein',)])
 
     def test_one_statement_table_list(self):
         result = self.engine.test_one_statement_table([{'doing': 'Painting'}])
