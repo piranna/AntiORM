@@ -49,7 +49,7 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Gretchen',)])
+        self.assertSequenceEqual(result, [(u'Gretchen',)])
 
     def test_statement_INSERT_single_dict(self):
         rowid = self.engine.test_statement_INSERT_single({'name': "Holly"})
@@ -60,7 +60,7 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Holly',)])
+        self.assertSequenceEqual(result, [(u'Holly',)])
 
     def test_statement_INSERT_single_list(self):
         rowid = self.engine.test_statement_INSERT_single([{'name': 'Katie'},
@@ -74,8 +74,8 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Katie',),
-                                      (u'Milly',)])
+        self.assertSequenceEqual(result, [(u'Katie',),
+                                          (u'Milly',)])
 
     def test_multiple_statement_INSERT(self):
         rowid = self.engine.test_multiple_statement_INSERT(name='Isabella',
@@ -87,7 +87,7 @@ class Base:
         cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Isabella', u'Saphiro')])
+        self.assertSequenceEqual(result, [(u'Isabella', u'Saphiro')])
 
     def test_multiple_statement_INSERT_dict(self):
         rowid = self.engine.test_multiple_statement_INSERT({'name': 'Buford',
@@ -99,7 +99,7 @@ class Base:
         cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'Buford', u'van Stomm')])
+        self.assertSequenceEqual(result, [(u'Buford', u'van Stomm')])
 
     def test_multiple_statement_INSERT_list(self):
         rowid = self.engine.test_multiple_statement_INSERT([{'name': 'Candance',
@@ -117,8 +117,8 @@ class Base:
 
         self.assertEqual(len(result), 2)
 
-        self.assertListEqual(result, [(u'Candance', u'Flinn'),
-                                      (u'Jeremy', u'Johnson')])
+        self.assertSequenceEqual(result, [(u'Candance', u'Flinn'),
+                                          (u'Jeremy', u'Johnson')])
 
     def test_one_statement_value(self):
         result = self.engine.test_one_statement_value(doing='Rocket')
