@@ -11,6 +11,20 @@ from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
 
 
+def RowfactoryCursor_factory(baseclass):
+    class cursorclass(baseclass):
+        """Cursor class wrapper that add support to define row_factory"""
+        row_factory = None
+
+        def fetchone(self):
+            result = baseclass.fetchone(self)
+            if self.row_factory:
+                result = self.row_factory(result)
+            return result
+
+    return cursorclass
+
+
 class GenericConnection(object):
     """Connection class wrapper that add support to define row_factory"""
     def __init__(self, connection):
@@ -29,19 +43,8 @@ class GenericConnection(object):
         name = connection.__class__.__module__
         file, filename, description = find_module(name)
         module = load_module(name, file, filename, description)
-        Cursor = module.Cursor
 
-        class cursorclass(Cursor):
-            """Cursor class wrapper that add support to define row_factory"""
-            row_factory = None
-
-            def fetchone(self):
-                result = Cursor.fetchone(self)
-                if self.row_factory:
-                    result = self.row_factory(result)
-                return result
-
-        self._cursorclass = cursorclass
+        self._cursorclass = RowfactoryCursor_factory(module.Cursor)
 
     def commit(self):
         return self._connection.commit()
