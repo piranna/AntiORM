@@ -13,6 +13,14 @@ def quote_sql(sql):
     return "'%s'" % sql.replace(r"'", r"''")
 
 
+def _quote_sql_fromdict(d):
+    "Quote for SQL all the items on a dict"
+    result = {}
+    for key, value in d.iteritems():
+        result[key] = quote_sql(value)
+    return result
+
+
 class Sqlite(Base):
     "SQLite driver for AntiORM"
 
@@ -34,7 +42,7 @@ class Sqlite(Base):
         sql = named2pyformat(''.join(stmts))
 
         def _wrapped_method(self, kwargs):
-            kwargs = quote_sql(kwargs)
+            kwargs = _quote_sql_fromdict(kwargs)
 
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -47,7 +55,7 @@ class Sqlite(Base):
         sql = named2pyformat(''.join(stmts))
 
         def _wrapped_method(self, list_kwargs):
-            list_kwargs = map(quote_sql, list_kwargs)
+            list_kwargs = map(_quote_sql_fromdict, list_kwargs)
 
             result = []
             with self.tx_manager as conn:
