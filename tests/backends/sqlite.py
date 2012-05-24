@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from os.path  import abspath, dirname, join
-from unittest import main, skip, TestCase
+try:
+    from unittest2 import main, skip, TestCase
+except ImportError:
+    from unittest2 import main, skip, TestCase
 
 from sqlite3 import connect
 
