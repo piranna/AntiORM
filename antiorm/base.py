@@ -11,13 +11,18 @@ try:
 except ImportError:
     pass
 
-from byteplay import Code, SetLineno
+try:
+    import byteplay
+except ImportError:
+    byteplay = None
 
 from sqlparse           import split2
 from sqlparse.filters   import compact, IncludeStatement, Tokens2Unicode
 from sqlparse.functions import IsType, getcolumns, getlimit
 from sqlparse.lexer     import tokenize
 from sqlparse.pipeline  import Pipeline
+
+from antiorm.utils import named2pyformat
 
 
 LOAD_ATTR = opmap['LOAD_ATTR']
@@ -48,7 +53,7 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_dict(self, kwargs)
 
         # Use type specific functions
-        if bypass_types:
+        if byteplay and bypass_types:
             def _bypass_types(self, list_or_dict=None, *args, **kwargs):
                 """
                 Execute the INSERT statement
@@ -67,7 +72,7 @@ def proxy_factory(priv_dict, priv_list):
 
                     # Get the code object of the function and convert it in a
                     # list of instructions to work with them
-                    code = Code.from_code(func.func_code)
+                    code = byteplay.Code.from_code(func.func_code)
 
                     # Loop over the instructions looking for the last load of
                     # the method attribute before (or on) the current source
@@ -77,7 +82,7 @@ def proxy_factory(priv_dict, priv_list):
                     lineno = frame.f_lineno
                     for index, (opcode, arg) in enumerate(code.code):
                         # We have reached the current source code line
-                        if opcode == SetLineno and arg > lineno:
+                        if opcode == byteplay.SetLineno and arg > lineno:
                             break
 
                         # We have found a load of the method attribute, store
@@ -178,6 +183,15 @@ class Base(object):
         :type lazy: boolean
         """
         self.connection = db_conn
+
+        type_conn = db_conn.__class__.__module__
+        if type_conn == 'antiorm.backends.generic':
+            type_conn = db_conn._connection.__class__.__module__
+
+        if type_conn == 'MySQLdb.connections':
+            self._paramstyle = named2pyformat
+        else:
+            self._paramstyle = None
 
         self._lazy = {}
 
@@ -316,6 +330,9 @@ class Base(object):
         """
         sql = Tokens2Unicode(stream)
 
+        if self._paramstyle:
+            sql = self._paramstyle(sql)
+
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
             return self._one_statement_INSERT(method_name, sql, bypass_types)
@@ -343,6 +360,9 @@ class Base(object):
         `stream` SQL have several statements (script)
         """
         stmts = map(unicode, split2(stream))
+
+        if self._paramstyle:
+            stmts = map(self._paramstyle, stmts)
 
         # Insert statement (return last row id)
         if IsType('INSERT')(stream):
@@ -427,7 +447,7 @@ class Base(object):
         def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
-                cursor = cursor.execute(sql, kwargs)
+                cursor.execute(sql, kwargs)
 
                 row = cursor.fetchone()
                 if row:
@@ -441,7 +461,7 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    cursor = cursor.execute(sql, kwargs)
+                    cursor.execute(sql, kwargs)
 
                     row = cursor.fetchone()
                     if row:
@@ -456,7 +476,7 @@ class Base(object):
         def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
-                cursor = cursor.execute(sql, kwargs)
+                cursor.execute(sql, kwargs)
 
                 return cursor.fetchone()
 
@@ -468,7 +488,7 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    cursor = cursor.execute(sql, kwargs)
+                    cursor.execute(sql, kwargs)
 
                     yield cursor.fetchone()
 
@@ -481,7 +501,7 @@ class Base(object):
         def _wrapped_method(self, kwargs):
             with self.tx_manager as conn:
                 cursor = conn.cursor()
-                cursor = cursor.execute(sql, kwargs)
+                cursor.execute(sql, kwargs)
 
                 return cursor.fetchall()
 
@@ -493,9 +513,9 @@ class Base(object):
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
-                    cursor = cursor.execute(sql, kwargs)
+                    cursor.execute(sql, kwargs)
 
-                    yield cursor.fetchall()
+                    yield list(cursor.fetchall())
 
         return _wrapped_method
 

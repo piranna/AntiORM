@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from os.path  import abspath, dirname, join
-from unittest import skip, skipIf, main, TestCase
+try:
+    from unittest import skip, skipIf, main, TestCase
+except ImportError:
+    from unittest2 import skip, skipIf, main, TestCase
 
 from MySQLdb import connect
 
@@ -23,9 +25,9 @@ class TestFactory(Base):
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
 class Driver(TestFactory, TestCase):
-    "Test for the AntiORM generic driver"
+    "Test for the AntiORM MySQL driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = driver_factory(self.connection, self.dir_path)
 
         TestFactory.setUp(self)
@@ -34,9 +36,9 @@ class Driver(TestFactory, TestCase):
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
 class Driver__ByPass(TestFactory, TestCase):
-    "Test for the AntiORM generic driver"
+    "Test for the AntiORM MySQL driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True)
 
         TestFactory.setUp(self)
@@ -45,9 +47,9 @@ class Driver__ByPass(TestFactory, TestCase):
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
 class Driver__LazyLoading(TestFactory, TestCase):
-    "Test for the AntiORM generic driver"
+    "Test for the AntiORM MySQL driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, False, True)
 
         TestFactory.setUp(self)
@@ -55,23 +57,32 @@ class Driver__LazyLoading(TestFactory, TestCase):
 @skip
 #@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
 class Driver__ByPass__LazyLoading(TestFactory, TestCase):
-    "Test for the AntiORM generic driver"
+    "Test for the AntiORM MySQL driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = driver_factory(self.connection, self.dir_path, True, True)
 
         TestFactory.setUp(self)
 
 
-@skip
-#@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
+@skipIf('MySQLdb' not in sys.modules, "MySQLdb not installed on the system")
 class GenericDriver(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.test_name = 'test_' + self.__class__.__name__
+
+        self.connection = connect()
+        cursor = self.connection.cursor()
+        cursor.execute('CREATE DATABASE IF NOT EXISTS %s' % self.test_name)
+        cursor.execute('USE %s' % self.test_name)
+
         self.engine = Generic(self.connection, self.dir_path)
 
         Base.setUp(self)
+
+    def tearDown(self):
+        cursor = self.connection.cursor()
+        cursor.execute('DROP DATABASE %s' % self.test_name)
 
 
 @skip
@@ -79,7 +90,7 @@ class GenericDriver(Base, TestCase):
 class GenericDriver__ByPass(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = Generic(self.connection, self.dir_path, True)
 
         Base.setUp(self)
@@ -90,7 +101,7 @@ class GenericDriver__ByPass(Base, TestCase):
 class GenericDriver__LazyLoading(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = Generic(self.connection, self.dir_path, False, True)
 
         Base.setUp(self)
@@ -101,7 +112,7 @@ class GenericDriver__LazyLoading(Base, TestCase):
 class GenericDriver__ByPass__LazyLoading(Base, TestCase):
     "Test for the AntiORM generic driver"
     def setUp(self):
-        self.connection = connect(":memory:")
+        self.connection = connect(db=":memory:")
         self.engine = Generic(self.connection, self.dir_path, True, True)
 
         Base.setUp(self)

@@ -6,6 +6,9 @@ from antiorm.utils import Namedtuple_factory
 
 
 class Base:
+    engine = None
+    connection = None
+
     @classmethod
     def setUpClass(cls):
         cls.dir_path = join(abspath(dirname(__file__)), 'samples_sql')
@@ -13,16 +16,15 @@ class Base:
     def setUp(self):
         cursor = self.connection.cursor()
 
-        cursor.execute("CREATE TABLE test_statement_INSERT_single (key TEXT);")
-        cursor.execute("""CREATE TABLE test_multiple_statement_INSERT
+        cursor.execute("""CREATE TEMPORARY TABLE test_statement_INSERT_single
+        (name TEXT);""")
+        cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement_INSERT
         (
-            key   TEXT,
-            value TEXT NULL
+            name    TEXT,
+            surname TEXT NULL
         );""")
-        cursor.execute("CREATE TABLE test_one_statement_value (key TEXT);")
-        cursor.execute("CREATE TABLE test_one_statement_register (key TEXT);")
-        cursor.execute("CREATE TABLE test_one_statement_table (key TEXT);")
-        cursor.execute("CREATE TABLE test_multiple_statement (key TEXT);")
+        cursor.execute("""CREATE TEMPORARY TABLE test_multiple_statement
+        (name TEXT);""")
 
         cursor.close()
 #        self.connection.commit()
@@ -39,7 +41,7 @@ class Base:
         self.assertNotEqual(attr, None)
 
     def test_statement_INSERT_single(self):
-        rowid = self.engine.test_statement_INSERT_single(key="hola")
+        rowid = self.engine.test_statement_INSERT_single(name="Gretchen")
 
         self.assertIsNotNone(rowid)
 
@@ -47,12 +49,10 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(len(result[0]), 1)
-        self.assertEqual(result[0][0], u'hola')
+        self.assertSequenceEqual(result, [(u'Gretchen',)])
 
     def test_statement_INSERT_single_dict(self):
-        rowid = self.engine.test_statement_INSERT_single({'key': "adios"})
+        rowid = self.engine.test_statement_INSERT_single({'name': "Holly"})
 
         self.assertIsNotNone(rowid)
 
@@ -60,13 +60,11 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(len(result[0]), 1)
-        self.assertEqual(result[0][0], u'adios')
+        self.assertSequenceEqual(result, [(u'Holly',)])
 
     def test_statement_INSERT_single_list(self):
-        rowids = list(self.engine.test_statement_INSERT_single([{'key': 'a'},
-                                                                {'key': 'b'}]))
+        rowid = self.engine.test_statement_INSERT_single([{'name': 'Katie'},
+                                                          {'name': 'Milly'}])
 
         self.assertIsNotNone(rowids)
         self.assertIsNotNone(rowids[0])
@@ -76,14 +74,12 @@ class Base:
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 2)
-        self.assertEqual(len(result[0]), 1)
-        self.assertEqual(result[0][0], u'a')
-        self.assertEqual(len(result[1]), 1)
-        self.assertEqual(result[1][0], u'b')
+        self.assertSequenceEqual(result, [(u'Katie',),
+                                          (u'Milly',)])
 
     def test_multiple_statement_INSERT(self):
-        rowid = self.engine.test_multiple_statement_INSERT(key='a')
+        rowid = self.engine.test_multiple_statement_INSERT(name='Isabella',
+                                                           surname='Saphiro')
 
         self.assertIsNotNone(rowid)
 
@@ -91,13 +87,11 @@ class Base:
         cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 1)
-        self.assertEqual(len(result[0]), 2)
-        self.assertEqual(result[0][0], u'a')
-        self.assertEqual(result[0][0], result[0][1])
+        self.assertSequenceEqual(result, [(u'Isabella', u'Saphiro')])
 
     def test_multiple_statement_INSERT_dict(self):
-        rowid = self.engine.test_multiple_statement_INSERT({'key': 'b'})
+        rowid = self.engine.test_multiple_statement_INSERT({'name': 'Buford',
+                                                            'surname': 'van Stomm'})
 
         self.assertIsNotNone(rowid)
 
@@ -105,15 +99,13 @@ class Base:
         cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
         result = cursor.fetchall()
 
-        self.assertEqual(len(result), 1)
-
-        self.assertEqual(len(result[0]), 2)
-        self.assertEqual(result[0][0], u'b')
-        self.assertEqual(result[0][0], result[0][1])
+        self.assertSequenceEqual(result, [(u'Buford', u'van Stomm')])
 
     def test_multiple_statement_INSERT_list(self):
-        rowid = list(self.engine.test_multiple_statement_INSERT([{'key': 'c'},
-                                                                 {'key': 'd'}]))
+        rowid = self.engine.test_multiple_statement_INSERT([{'name': 'Candance',
+                                                             'surname': 'Flinn'},
+                                                            {'name': 'Jeremy',
+                                                             'surname': 'Johnson'}])
 
         self.assertIsNotNone(rowid)
         self.assertIsNotNone(rowid[0])
@@ -125,115 +117,86 @@ class Base:
 
         self.assertEqual(len(result), 2)
 
-        self.assertEqual(len(result[0]), 2)
-        self.assertEqual(result[0][0], u'c')
-        self.assertEqual(result[0][0], result[0][1])
-
-        self.assertEqual(len(result[1]), 2)
-        self.assertEqual(result[1][0], u'd')
-        self.assertEqual(result[1][0], result[1][1])
+        self.assertSequenceEqual(result, [(u'Candance', u'Flinn'),
+                                          (u'Jeremy', u'Johnson')])
 
     def test_one_statement_value(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('a')")
+        result = self.engine.test_one_statement_value(doing='Rocket')
 
-        result = self.engine.test_one_statement_value(key='a')
-
-        self.assertEqual(result, u'a')
+        self.assertEqual(result, u'Rocket')
 
     def test_one_statement_value_dict(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('b')")
+        result = self.engine.test_one_statement_value({'doing': 'Mummy'})
 
-        result = self.engine.test_one_statement_value({'key': 'b'})
-
-        self.assertEqual(result, u'b')
+        self.assertEqual(result, u'Mummy')
 
     def test_one_statement_value_list(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_value(key) VALUES('c')")
+        result = self.engine.test_one_statement_value([{'doing': 'Eiffel Tower'}])
 
-        result = list(self.engine.test_one_statement_value([{'key': 'c'}]))
-
-        self.assertListEqual(result, [u'c'])
+        self.assertListEqual(result, [u'Eiffel Tower'])
 
     def test_one_statement_register(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('a')")
+        result = self.engine.test_one_statement_register(doing='Monster')
 
-        result = self.engine.test_one_statement_register(key='a')
-
-        self.assertTupleEqual(result, (u'a',))
+        self.assertTupleEqual(result, (u'Monster',))
 
     def test_one_statement_register_dict(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('b')")
+        result = self.engine.test_one_statement_register({'doing': 'Monkey'})
 
-        result = self.engine.test_one_statement_register({'key': 'b'})
-
-        self.assertTupleEqual(result, (u'b',))
+        self.assertTupleEqual(result, (u'Monkey',))
 
     def test_one_statement_register_list(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_register(key) VALUES('c')")
+        result = self.engine.test_one_statement_register([{'doing': 'Waves'}])
 
-        result = list(self.engine.test_one_statement_register([{'key': 'c'}]))
-
-        self.assertListEqual(result, [(u'c',)])
+        self.assertListEqual(result, [(u'Waves',)])
 
     def test_one_statement_table(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('a')")
+        result = self.engine.test_one_statement_table(doing='Nanobots')
 
-        result = self.engine.test_one_statement_table(key='a')
-
-        self.assertListEqual(result, [(u'a',)])
+        self.assertSequenceEqual(result, [(u'Nanobots',)])
 
     def test_one_statement_table_dict(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('b')")
+        result = self.engine.test_one_statement_table({'doing': 'Frankestein'})
 
-        result = self.engine.test_one_statement_table({'key': 'b'})
-
-        self.assertListEqual(result, [(u'b',)])
+        self.assertSequenceEqual(result, [(u'Frankestein',)])
 
     def test_one_statement_table_list(self):
-        cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_one_statement_table(key) VALUES('c')")
+        result = self.engine.test_one_statement_table([{'doing': 'Painting'}])
 
-        result = list(self.engine.test_one_statement_table([{'key': 'c'}]))
-
-        self.assertListEqual(result, [[(u'c',)]])
+        self.assertListEqual(result, [[(u'Painting',)]])
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+        cursor.execute("INSERT INTO test_multiple_statement(name) VALUES('a')")
 
-        self.engine.test_multiple_statement(key='c')
+        self.engine.test_multiple_statement(name='Adyson Sweetwater')
 
-        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+        cursor.execute("SELECT * FROM test_multiple_statement")
+        result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'c',)])
+        self.assertSequenceEqual(result, [(u'Adyson Sweetwater',)])
 
     def test_multiple_statement_dict(self):
         cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+        cursor.execute("INSERT INTO test_multiple_statement(name) VALUES('a')")
 
-        self.engine.test_multiple_statement({'key': 'd'})
+        self.engine.test_multiple_statement({'name': 'Ginger'})
 
-        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+        cursor.execute("SELECT * FROM test_multiple_statement")
+        result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'd',)])
+        self.assertSequenceEqual(result, [(u'Ginger',)])
 
     def test_multiple_statement_list(self):
         cursor = self.connection.cursor()
-        cursor.execute("INSERT INTO test_multiple_statement(key) VALUES('a')")
+        cursor.execute("INSERT INTO test_multiple_statement(name) VALUES('a')")
 
-        self.engine.test_multiple_statement([{'key': 'e'}])
+        self.engine.test_multiple_statement([{'name': 'Perry the Platypus'}])
 
-        result = list(cursor.execute("SELECT * FROM test_multiple_statement"))
+        cursor.execute("SELECT * FROM test_multiple_statement")
+        result = cursor.fetchall()
 
-        self.assertListEqual(result, [(u'e',)])
+        self.assertSequenceEqual(result, [(u'Perry the Platypus',)])
 
     def test_row_factory(self):
         self.engine.row_factory = Namedtuple_factory

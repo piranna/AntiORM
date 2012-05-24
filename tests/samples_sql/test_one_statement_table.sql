@@ -1,2 +1,4 @@
-SELECT * FROM test_one_statement_table
-WHERE key=:key
+SELECT * FROM
+(
+    SELECT :doing AS doing
+) AS mysql_is_idiot

@@ -4,8 +4,6 @@ Created on 05/03/2012
 @author: piranna
 '''
 
-from imp import find_module, load_module
-
 from antiorm.backends.apsw import APSWConnection
 from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
@@ -39,12 +37,10 @@ class GenericConnection(object):
         else:
             self._connection = connection
 
-        # Import correct Cursor class for the connection
-        name = connection.__class__.__module__
-        file, filename, description = find_module(name)
-        module = load_module(name, file, filename, description)
+        # Get correct Cursor class for the connection
+        baseclass = connection.cursor().__class__
 
-        self._cursorclass = RowfactoryCursor_factory(module.Cursor)
+        self._cursorclass = RowfactoryCursor_factory(baseclass)
 
     def commit(self):
         return self._connection.commit()

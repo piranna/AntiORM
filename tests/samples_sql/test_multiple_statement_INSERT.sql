@@ -1,2 +1,2 @@
-INSERT INTO test_multiple_statement_INSERT (key) VALUES (:key);
-UPDATE test_multiple_statement_INSERT SET value = :key WHERE key = :key;
+INSERT INTO test_multiple_statement_INSERT (name) VALUES (:name);
+UPDATE test_multiple_statement_INSERT SET surname = :surname WHERE name = :name;
