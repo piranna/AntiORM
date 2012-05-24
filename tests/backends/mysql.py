@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 
-from unittest import skip, skipIf, main, TestCase
+try:
+    from unittest import skip, skipIf, main, TestCase
+except ImportError:
+    from unittest2 import skip, skipIf, main, TestCase
 
 from MySQLdb import connect
 

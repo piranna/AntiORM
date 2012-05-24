@@ -11,7 +11,10 @@ try:
 except ImportError:
     pass
 
-from byteplay import Code, SetLineno
+try:
+    import byteplay
+except ImportError:
+    byteplay = None
 
 from sqlparse           import split2
 from sqlparse.filters   import compact, IncludeStatement, Tokens2Unicode
@@ -50,7 +53,7 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_dict(self, kwargs)
 
         # Use type specific functions
-        if bypass_types:
+        if byteplay and bypass_types:
             def _bypass_types(self, list_or_dict=None, *args, **kwargs):
                 """
                 Execute the INSERT statement
@@ -69,7 +72,7 @@ def proxy_factory(priv_dict, priv_list):
 
                     # Get the code object of the function and convert it in a
                     # list of instructions to work with them
-                    code = Code.from_code(func.func_code)
+                    code = byteplay.Code.from_code(func.func_code)
 
                     # Loop over the instructions looking for the last load of
                     # the method attribute before (or on) the current source
@@ -79,7 +82,7 @@ def proxy_factory(priv_dict, priv_list):
                     lineno = frame.f_lineno
                     for index, (opcode, arg) in enumerate(code.code):
                         # We have reached the current source code line
-                        if opcode == SetLineno and arg > lineno:
+                        if opcode == byteplay.SetLineno and arg > lineno:
                             break
 
                         # We have found a load of the method attribute, store
