@@ -8,6 +8,11 @@ from antiorm.base  import Base, proxy_factory
 from antiorm.utils import named2pyformat
 
 
+def quote_sql(sql):
+    "Quote correctly the SQL string according to SQL standard"
+    return "'%s'" % sql.replace(r"'", r"''")
+
+
 class Sqlite(Base):
     "SQLite driver for AntiORM"
 
@@ -29,6 +34,8 @@ class Sqlite(Base):
         sql = named2pyformat(''.join(stmts))
 
         def _wrapped_method(self, kwargs):
+            kwargs = quote_sql(kwargs)
+
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -40,6 +47,8 @@ class Sqlite(Base):
         sql = named2pyformat(''.join(stmts))
 
         def _wrapped_method(self, list_kwargs):
+            list_kwargs = map(quote_sql, list_kwargs)
+
             result = []
             with self.tx_manager as conn:
                 cursor = conn.cursor()
