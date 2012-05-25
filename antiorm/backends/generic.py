@@ -9,18 +9,32 @@ from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
 
 
-def RowfactoryCursor_factory(baseclass):
-    class cursorclass(baseclass):
-        """Cursor class wrapper that add support to define row_factory"""
-        row_factory = None
+class GenericCursor:
+    """Cursor class wrapper that add support to define row_factory"""
+    def __init__(self, cursor, conn=None):
+        """Constructor
 
-        def fetchone(self):
-            result = baseclass.fetchone(self)
-            if self.row_factory:
-                result = self.row_factory(result)
-            return result
+        @param cursor: the cursor to wrap
+        @type cursor: apsw.Cursor"""
+        # This protect of apply the wrapper over another one
+        if isinstance(cursor, GenericCursor):
+            self._cursor = cursor._cursor
+        else:
+            self._cursor = cursor
 
-    return cursorclass
+        self._conn = conn
+
+    def __getattr__(self, name):
+        return getattr(self._cursor, name)
+
+    def fetchone(self):
+        result = self._cursor.fetchone()
+
+        row_factory = self._conn.row_factory
+        if row_factory:
+            result = row_factory(self, result)
+
+        return result
 
 
 class GenericConnection(object):
@@ -37,27 +51,16 @@ class GenericConnection(object):
         else:
             self._connection = connection
 
-        # Get correct Cursor class for the connection
-        baseclass = connection.cursor().__class__
-
-        self._cursorclass = RowfactoryCursor_factory(baseclass)
+        self.row_factory = None
 
     def commit(self):
         return self._connection.commit()
 
     def cursor(self):
-        return self._connection.cursor(self._cursorclass)
+        return GenericCursor(self._connection.cursor(), self)
 
     def rollback(self):
         return self._connection.rollback()
-
-    @property
-    def row_factory(self):
-        return self._cursorclass.row_factory
-
-    @row_factory.setter
-    def row_factory(self, value):
-        self._cursorclass.row_factory = value
 
 
 class Generic(Base):
