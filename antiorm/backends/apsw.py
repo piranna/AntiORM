@@ -43,7 +43,7 @@ class APSWConnection(object):
         @type connection: apsw.Connection
         """
         # This protect of apply the wrapper over another one
-        if isinstance(connection, APSWConnection):
+        if isinstance(connection, self.__class__):
             self._connection = connection._connection
         else:
             self._connection = connection

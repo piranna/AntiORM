@@ -31,7 +31,7 @@ class GenericConnection(object):
         @type connection: DB-API 2.0 connection
         """
         # This protect of apply the wrapper over another one
-        if isinstance(connection, GenericConnection):
+        if isinstance(connection, self.__class__):
             self._connection = connection._connection
         else:
             self._connection = connection
