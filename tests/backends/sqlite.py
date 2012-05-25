@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 try:
-    from unittest2 import main, skip, TestCase
+    from unittest import main, skip, TestCase
 except ImportError:
     from unittest2 import main, skip, TestCase
 

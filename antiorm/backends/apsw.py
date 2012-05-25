@@ -6,29 +6,16 @@ Created on 17/02/2012
 
 from logging import warning
 
-from antiorm.base import Base
+from antiorm.backends import BaseConnection, BaseCursor
+from antiorm.base     import Base
 
 
-class APSWCursor(object):
+class APSWCursor(BaseCursor):
     """Python DB-API 2.0 compatibility wrapper for APSW Cursor objects
 
     This is done this way because since apsw.Cursor is a compiled extension
     it doesn't allow to set attributes, and also it's called internally so i
     can't be able to make a subclass"""
-    def __init__(self, cursor):
-        """Constructor
-
-        @param cursor: the cursor to wrap
-        @type cursor: apsw.Cursor"""
-        # This protect of apply the wrapper over another one
-        if isinstance(cursor, APSWCursor):
-            self._cursor = cursor._cursor
-        else:
-            self._cursor = cursor
-
-    def __getattr__(self, name):
-        return getattr(self._cursor, name)
-
     def execute(self, *args, **kwargs):
         self._cursor = self._cursor.execute(*args, **kwargs)
         return self
@@ -39,16 +26,12 @@ class APSWCursor(object):
         except StopIteration:
             pass
 
-#    @property
-#    def description(self):
-#        return self._cursor.getdescription()
-
     @property
     def lastrowid(self):
         return self._cursor.getconnection().last_insert_rowid()
 
 
-class APSWConnection(object):
+class APSWConnection(BaseConnection):
     """Python DB-API 2.0 compatibility wrapper for APSW Connection objects
 
     This is done this way because since apsw.Connection is a compiled extension
@@ -59,11 +42,7 @@ class APSWConnection(object):
         @param connection: the connection to wrap
         @type connection: apsw.Connection
         """
-        # This protect of apply the wrapper over another one
-        if isinstance(connection, APSWConnection):
-            self._connection = connection._connection
-        else:
-            self._connection = connection
+        BaseConnection.__init__(self, connection)
 
         self._activecursor = None
 
