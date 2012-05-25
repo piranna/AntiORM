@@ -4,29 +4,14 @@ Created on 05/03/2012
 @author: piranna
 '''
 
+from antiorm.backends      import BaseCursor
 from antiorm.backends.apsw import APSWConnection
 from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
 
 
-class GenericCursor:
+class GenericCursor(BaseCursor):
     """Cursor class wrapper that add support to define row_factory"""
-    def __init__(self, cursor, conn=None):
-        """Constructor
-
-        @param cursor: the cursor to wrap
-        @type cursor: apsw.Cursor"""
-        # This protect of apply the wrapper over another one
-        if isinstance(cursor, self.__class__):
-            self._cursor = cursor._cursor
-        else:
-            self._cursor = cursor
-
-        self._conn = conn
-
-    def __getattr__(self, name):
-        return getattr(self._cursor, name)
-
     def fetchone(self):
         result = self._cursor.fetchone()
 
