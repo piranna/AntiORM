@@ -21,7 +21,7 @@ class APSWCursor(object):
         @param cursor: the cursor to wrap
         @type cursor: apsw.Cursor"""
         # This protect of apply the wrapper over another one
-        if isinstance(cursor, APSWCursor):
+        if isinstance(cursor, self.__class__):
             self._cursor = cursor._cursor
         else:
             self._cursor = cursor
