@@ -6,7 +6,7 @@ Created on 17/02/2012
 
 from logging import warning
 
-from antiorm.backends import BaseCursor
+from antiorm.backends import BaseConnection, BaseCursor
 from antiorm.base     import Base
 
 
@@ -31,7 +31,7 @@ class APSWCursor(BaseCursor):
         return self._cursor.getconnection().last_insert_rowid()
 
 
-class APSWConnection(object):
+class APSWConnection(BaseConnection):
     """Python DB-API 2.0 compatibility wrapper for APSW Connection objects
 
     This is done this way because since apsw.Connection is a compiled extension
@@ -42,11 +42,7 @@ class APSWConnection(object):
         @param connection: the connection to wrap
         @type connection: apsw.Connection
         """
-        # This protect of apply the wrapper over another one
-        if isinstance(connection, self.__class__):
-            self._connection = connection._connection
-        else:
-            self._connection = connection
+        BaseConnection.__init__(self, connection)
 
         self._activecursor = None
 

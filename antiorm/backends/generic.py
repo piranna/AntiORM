@@ -4,7 +4,7 @@ Created on 05/03/2012
 @author: piranna
 '''
 
-from antiorm.backends      import BaseCursor
+from antiorm.backends      import BaseConnection, BaseCursor
 from antiorm.backends.apsw import APSWConnection
 from antiorm.base          import Base
 from antiorm.utils         import _TransactionManager
@@ -22,7 +22,7 @@ class GenericCursor(BaseCursor):
         return result
 
 
-class GenericConnection(object):
+class GenericConnection(BaseConnection):
     """Connection class wrapper that add support to define row_factory"""
     def __init__(self, connection):
         """Constructor
@@ -30,11 +30,7 @@ class GenericConnection(object):
         @param connection: the connection to wrap
         @type connection: DB-API 2.0 connection
         """
-        # This protect of apply the wrapper over another one
-        if isinstance(connection, self.__class__):
-            self._connection = connection._connection
-        else:
-            self._connection = connection
+        BaseConnection.__init__(self, connection)
 
         self.row_factory = None
 
