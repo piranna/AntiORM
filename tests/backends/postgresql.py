@@ -22,17 +22,20 @@ class GenericDriver(Base, TestCase):
         self.test_name = 'test_' + self.__class__.__name__
 
         self.connection = connect("")
+        self.connection.set_isolation_level(0)
         cursor = self.connection.cursor()
-        cursor.execute('CREATE DATABASE IF NOT EXISTS %s' % self.test_name)
-        cursor.execute('USE %s' % self.test_name)
+        cursor.execute('CREATE DATABASE %s' % self.test_name)
+        self.connection.set_isolation_level(1)
 
         self.engine = Generic(self.connection, self.dir_path)
 
         Base.setUp(self)
 
     def tearDown(self):
+        self.connection.set_isolation_level(0)
         cursor = self.connection.cursor()
         cursor.execute('DROP DATABASE %s' % self.test_name)
+        self.connection.set_isolation_level(1)
 
 
 @skip
