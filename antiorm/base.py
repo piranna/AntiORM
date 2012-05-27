@@ -184,11 +184,13 @@ class Base(object):
         """
         self.connection = db_conn
 
+        # Get type of the connection
         type_conn = db_conn.__class__.__module__
         if type_conn == 'antiorm.backends.generic':
             type_conn = db_conn._connection.__class__.__module__
 
-        if type_conn == 'MySQLdb.connections':
+        # Get paramstyle adapter for the connection
+        if type_conn in ('MySQLdb.connections', 'psycopg2._psycopg'):
             self._paramstyle = named2pyformat
         else:
             self._paramstyle = None

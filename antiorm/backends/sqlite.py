@@ -4,13 +4,28 @@ Created on 20/01/2012
 @author: piranna
 '''
 
+from types import NoneType
+
 from antiorm.base  import Base, proxy_factory
 from antiorm.utils import named2pyformat
 
 
-def quote_sql(sql):
+def quote_sql(value):
     "Quote correctly the SQL string according to SQL standard"
-    return "'%s'" % sql.replace(r"'", r"''")
+    # None - Null
+    if isinstance(value, NoneType):
+        return 'NULL'
+
+    # Boolean
+    if isinstance(value, bool):
+        return 'true' if value else 'false'
+
+    # Int, float, long or complex
+    if isinstance(value, (int, float, long, complex)):
+        return str(value)
+
+    # String
+    return "'%s'" % value.replace(r"'", r"''")
 
 
 def _quote_sql_fromdict(d):
