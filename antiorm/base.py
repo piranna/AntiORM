@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Base class of AntiORM wrapper class and proxy factory
+"""
 
 from io       import open
 from opcode   import opmap
@@ -341,10 +344,16 @@ class Base(object):
 
     @property
     def row_factory(self):
+        """
+        Getter of row_factory property
+        """
         return self.connection.row_factory
 
     @row_factory.setter
     def row_factory(self, value):
+        """
+        Setter of row_factory property
+        """
         self.connection.row_factory = value
 
     def _one_statement(self, method_name, stream, bypass_types):
@@ -715,9 +724,24 @@ class Base(object):
                                          _one_statement_table__list)
 
     def _multiple_statement_INSERT__dict(self, stmts):
+        """
+        Factory for functions with multiple INSERT statement by dict
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
             """
-            Exec the statements and return the row id of the first
+            Exec the statement and return the first inserted row id
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the first inserted row id
+            @rtype: integer
             """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -733,9 +757,24 @@ class Base(object):
         return _wrapped_method
 
     def _multiple_statement_INSERT__list(self, stmts):
+        """
+        Factory for functions with multiple INSERT statement by list
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
             """
-            Exec the statements and return the row id of the first
+            Exec the statement and return the inserted row ids
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the first inserted row ids
+            @rtype: list of integers
             """
             result = []
 
@@ -757,7 +796,25 @@ class Base(object):
                                                _multiple_statement_INSERT__list)
 
     def _multiple_statement_standard__dict(self, stmts):
+        """
+        Factory for functions with multiple statements by dict
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the result of executes
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the result of executes
+            @rtype: list
+            """
             result = []
 
             with self.tx_manager as conn:
@@ -771,7 +828,25 @@ class Base(object):
         return _wrapped_method
 
     def _multiple_statement_standard__list(self, stmts):
+        """
+        Factory for functions with multiple statements by list
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return the a list of lists of results
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the list of lists of results of execute
+            @rtype: list of lists
+            """
             result = []
 
             with self.tx_manager as conn:
