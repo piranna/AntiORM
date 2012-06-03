@@ -349,7 +349,14 @@ class Base(object):
 
     def _one_statement(self, method_name, stream, bypass_types):
         """
-        `stream` SQL code only have one statement
+        Route to the correct optimized function for one statement queries
+
+        :param method_name: the name of the method
+        :type method_name: string
+        :param stream: the stream of tokens
+        :type stream: iterable of tokens
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         """
         sql = Tokens2Unicode(stream)
 
@@ -380,7 +387,14 @@ class Base(object):
 
     def _multiple_statement(self, method_name, stream, bypass_types):
         """
-        `stream` SQL have several statements (script)
+        Route to the correct optimized function for multiple statements queries
+
+        :param method_name: the name of the method
+        :type method_name: string
+        :param stream: the stream of tokens
+        :type stream: iterable of tokens
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         """
         stmts = map(unicode, split2(stream))
 
@@ -399,9 +413,24 @@ class Base(object):
     # Optimized functions
 
     def _one_statement_INSERT__dict(self, sql):
+        """
+        Factory for functions with one INSERT statement by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
             """
             Exec the statement and return the inserted row id
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the inserted row id
+            @rtype: integer
             """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -412,9 +441,24 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_INSERT__list(self, sql):
+        """
+        Factory for functions with one INSERT statement by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
             """
-            Exec the statement and return the inserted row id
+            Exec the statement and return the inserted row ids
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the inserted row ids
+            @rtype: list of integers
             """
             result = []
 
@@ -471,7 +515,25 @@ class Base(object):
     #    return _wrapped_method
 
     def _one_statement_value__dict(self, sql):
+        """
+        Factory for functions with one statement that return a value by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the value
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the queried value
+            @rtype: stored value type or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, kwargs)
@@ -483,7 +545,25 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_value__list(self, sql):
+        """
+        Factory for functions with one statement that return a value by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return a list with the values
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the queried values
+            @rtype: list of stored value type or None
+            """
             result = []
 
             with self.tx_manager as conn:
@@ -505,7 +585,25 @@ class Base(object):
                                          _one_statement_value__list)
 
     def _one_statement_register__dict(self, sql):
+        """
+        Factory for functions with one statement that return a row by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the row
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the queried row
+            @rtype: row (tuple) or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, kwargs)
@@ -515,7 +613,25 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_register__list(self, sql):
+        """
+        Factory for functions with one statement that return a row by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return a list with the rows
+
+            @param list_kwargs: the keyword arguments of the query
+            @type list_kwargs: dict
+
+            @return: the queried rows
+            @rtype: list of rows (tuples) or None
+            """
             result = []
 
             with self.tx_manager as conn:
@@ -534,7 +650,25 @@ class Base(object):
                                             _one_statement_register__list)
 
     def _one_statement_table__dict(self, sql):
+        """
+        Factory for functions with one statement that return a query by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the query (table, list of tuples...)
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the query
+            @rtype: table or list of tuples or generator or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, kwargs)
@@ -544,7 +678,25 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_table__list(self, sql):
+        """
+        Factory for functions with one statement that return a table by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return a list with the queries
+
+            @param list_kwargs: the keyword arguments of the query
+            @type list_kwargs: dict
+
+            @return: the queried tables
+            @rtype: list of queries (tables, list of tuples...) or None
+            """
             result = []
 
             with self.tx_manager as conn:
