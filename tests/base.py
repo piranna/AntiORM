@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from os.path import abspath, dirname, join
+from types   import GeneratorType
 
 from antiorm.utils import Namedtuple_factory
 
@@ -63,12 +64,17 @@ class Base:
         self.assertSequenceEqual(result, [(u'Holly',)])
 
     def test_statement_INSERT_single_list(self):
-        rowid = self.engine.test_statement_INSERT_single([{'name': 'Katie'},
+        result = self.engine.test_statement_INSERT_single([{'name': 'Katie'},
                                                           {'name': 'Milly'}])
 
-        self.assertIsNotNone(rowids)
-        self.assertIsNotNone(rowids[0])
-        self.assertIsNotNone(rowids[1])
+        # Convert to list
+        if isinstance(result, GeneratorType):
+            result = list(result)
+
+        # Assert tests
+        self.assertIsNotNone(result)
+        self.assertIsNotNone(result[0])
+        self.assertIsNotNone(result[1])
 
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM test_statement_INSERT_single")
@@ -102,14 +108,19 @@ class Base:
         self.assertSequenceEqual(result, [(u'Buford', u'van Stomm')])
 
     def test_multiple_statement_INSERT_list(self):
-        rowid = self.engine.test_multiple_statement_INSERT([{'name': 'Candance',
-                                                             'surname': 'Flinn'},
-                                                            {'name': 'Jeremy',
-                                                             'surname': 'Johnson'}])
+        result = self.engine.test_multiple_statement_INSERT([{'name': 'Candance',
+                                                              'surname': 'Flinn'},
+                                                             {'name': 'Jeremy',
+                                                              'surname': 'Johnson'}])
 
-        self.assertIsNotNone(rowid)
-        self.assertIsNotNone(rowid[0])
-        self.assertIsNotNone(rowid[1])
+        # Convert to list
+        if isinstance(result, GeneratorType):
+            result = list(result)
+
+        # Assert tests
+        self.assertIsNotNone(result)
+        self.assertIsNotNone(result[0])
+        self.assertIsNotNone(result[1])
 
         cursor = self.connection.cursor()
         cursor.execute("SELECT * FROM test_multiple_statement_INSERT")
@@ -133,6 +144,11 @@ class Base:
     def test_one_statement_value_list(self):
         result = self.engine.test_one_statement_value([{'doing': 'Eiffel Tower'}])
 
+        # Convert to list
+        if isinstance(result, GeneratorType):
+            result = list(result)
+
+        # Assert tests
         self.assertListEqual(result, [u'Eiffel Tower'])
 
     def test_one_statement_register(self):
@@ -148,6 +164,11 @@ class Base:
     def test_one_statement_register_list(self):
         result = self.engine.test_one_statement_register([{'doing': 'Waves'}])
 
+        # Convert to list
+        if isinstance(result, GeneratorType):
+            result = list(result)
+
+        # Assert tests
         self.assertListEqual(result, [(u'Waves',)])
 
     def test_one_statement_table(self):
@@ -163,6 +184,11 @@ class Base:
     def test_one_statement_table_list(self):
         result = self.engine.test_one_statement_table([{'doing': 'Painting'}])
 
+        # Convert to list
+        if isinstance(result, GeneratorType):
+            result = list(result)
+
+        # Assert tests
         self.assertListEqual(result, [[(u'Painting',)]])
 
     def test_multiple_statement(self):
