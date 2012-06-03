@@ -162,8 +162,10 @@ class Base:
 
     def test_one_statement_table_list(self):
         result = self.engine.test_one_statement_table([{'doing': 'Painting'}])
+        expected = [[(u'Painting',)]]
 
-        self.assertListEqual(result, [[(u'Painting',)]])
+        for index, l in enumerate(result):
+            self.assertSequenceEqual(l, expected[index])
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()

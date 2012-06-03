@@ -705,7 +705,7 @@ class Base(object):
                 for kwargs in list_kwargs:
                     cursor.execute(sql, kwargs)
 
-                    result.append(list(cursor.fetchall()))
+                    result.append(cursor.fetchall())
 
             return result
 
