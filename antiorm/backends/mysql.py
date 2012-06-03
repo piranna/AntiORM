@@ -5,7 +5,7 @@ Created on 22/04/2012
 '''
 
 from antiorm.base  import Base
-from antiorm.utils import _TransactionManager
+from antiorm.utils import TransactionManager
 
 
 class MySQL(Base):
@@ -23,4 +23,4 @@ class MySQL(Base):
         """
         Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
-        self.tx_manager = _TransactionManager(db_conn)
+        self.tx_manager = TransactionManager(db_conn)
