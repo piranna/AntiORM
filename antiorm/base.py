@@ -173,16 +173,6 @@ def proxy_factory(priv_dict, priv_list):
     return _wrapped_method
 
 
-#def _transaction(func):
-#    def _wrapped(self, *args, **kwargs):
-#        try:
-#            return func(self, *args, **kwargs)
-#        finally:
-#            self.connection.commit()
-#
-#    return _wrapped
-
-
 class Base(object):
     """Base functionality for AntiORM.
 
