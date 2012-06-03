@@ -9,7 +9,7 @@ from warnings import warn
 try:
     from sys import _getframe
 except ImportError:
-    pass
+    _getframe = None
 
 try:
     import byteplay
@@ -194,6 +194,8 @@ class Base(object):
         :type db_conn: DB-API 2.0 database connection
         :param dir_path: path of the dir with files from where to load SQL code
         :type dir_path: string
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         :param lazy: set if SQL code at dir_path should be lazy loaded
         :type lazy: boolean
         """
@@ -239,6 +241,8 @@ class Base(object):
 
         :param dir_path: path to the dir with the SQL files (for INCLUDE)
         :type dir_path: string
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         :param lazy: set if parsing should be postpone until required
         :type lazy: boolean
 
@@ -301,6 +305,8 @@ class Base(object):
         :type method_name: string
         :param dir_path: path to the dir with the SQL files (for INCLUDE)
         :type dir_path: string
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         :param lazy: set if parsing should be postpone until required
         :type lazy: boolean
 
@@ -315,7 +321,7 @@ class Base(object):
             return
 
         # Disable by-pass of types if not using CPython compatible bytecode
-        if bypass_types and '_getframe' not in globals():
+        if bypass_types and not _getframe:
             warn(RuntimeWarning("Can't acces to stack. "
                                 "Disabling by-pass of types."))
             bypass_types = False
