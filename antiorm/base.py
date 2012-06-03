@@ -185,7 +185,6 @@ class Base(object):
     a very good reason to overwrite the functions of this Base class (like to
     check a functions cache if your database engine support it or similar).
     """
-    # TODO: database independent layer with full transaction management
 
     def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """
