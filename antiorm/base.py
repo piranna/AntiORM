@@ -29,39 +29,58 @@ LOAD_ATTR = opmap['LOAD_ATTR']
 
 
 def proxy_factory(priv_dict, priv_list):
+    """
+    Factory function to proxy the optimized functions to the class
+    """
     def _wrapped_method(self, method_name, sql, bypass_types):
         """
         Single INSERT statement query
 
-        :returns: the inserted row id
+        @param method_name: name of the method
+        @type method_name: string
+        @param sql: sql query of the optimized function
+        @type sql: string
+        @param bypass_types: flag to set if types should be bypassed on calling
+        @type bypass_types: boolean
+
+        :returns: the registered optimized function
         """
         _priv_dict = priv_dict(self, sql)
         _priv_list = priv_list(self, sql)
 
         def _priv_l_kw(self, *args):
             """
-            Exec the statement and return the inserted row id
+            Adapt `*args` to list and calls to _priv_list method
             """
-
-            return _priv_dict(self, args)
+            return _priv_list(self, args)
 
         def _priv_keyw(self, **kwargs):
             """
-            Exec the statement and return the inserted row id
+            Adapt `**kwargs` to dict and calls to _priv_dict method
             """
-
             return _priv_dict(self, kwargs)
 
         # Use type specific functions
         if byteplay and bypass_types:
             def _bypass_types(self, list_or_dict=None, *args, **kwargs):
                 """
-                Execute the INSERT statement
+                Proxy function that bypass types on calling function
 
-                :returns: the inserted row id (or a list with them)
+                @param list_or_dict: arguments passed as a list or a dict.
+                    Cannonically this should be called by *args or **kwargs
+                @type list_or_dict: a list or a dict
+
+                @return: the result of the call after being bypassed
+                @rtype: single value, a row or an iterable (depending of `sql`)
                 """
 
                 def bypass(suffix):
+                    """
+                    Do the bypass overriding the calling function
+
+                    @param suffix: the method suffix to be added to the call
+                    @type suffix: string
+                    """
                     # Get the caller stack frame
                     frame = _getframe(2)
 
@@ -76,7 +95,9 @@ def proxy_factory(priv_dict, priv_list):
 
                     # Loop over the instructions looking for the last load of
                     # the method attribute before (or on) the current source
-                    # code line and change it for the type specific one
+                    # code line and change it for the type specific one. This
+                    # is because if a function call occupy several lines it's
+                    # set internally as it's only on the last one.
                     method_index = None
 
                     lineno = frame.f_lineno
@@ -126,9 +147,14 @@ def proxy_factory(priv_dict, priv_list):
 
         def _proxy_types(self, list_or_dict=None, *args, **kwargs):
             """
-            Execute the INSERT statement
+            Proxy function that proxy to the correct type function
 
-            :returns: the inserted row id (or a list with them)
+            @param list_or_dict: arguments passed as a list or a dict.
+                Cannonically this should be called by *args or **kwargs
+            @type list_or_dict: a list or a dict
+
+            @return: the result of the call after being bypassed
+            @rtype: single value, a row or an iterable (depending of `sql`)
             """
 
             # Received un-named parameter, it would be a iterable
