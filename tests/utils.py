@@ -5,7 +5,7 @@ from unittest import main, TestCase
 import sys
 sys.path.insert(0, '..')
 
-from antiorm.utils import Namedtuple_factory, named2pyformat
+from antiorm.utils import namedtuple_factory, named2pyformat
 
 
 class FakeCursor:
@@ -18,8 +18,8 @@ class TestUtils(TestCase):
 
     fakecursor = FakeCursor(('a', 'b', 'c'))
 
-    def test_Namedtuple_factory(self):
-        namedtuple = Namedtuple_factory(self.fakecursor, ('x', 'y', 'z'))
+    def test_namedtuple_factory(self):
+        namedtuple = namedtuple_factory(self.fakecursor, ('x', 'y', 'z'))
 
         self.assertEqual(namedtuple, ('x', 'y', 'z'))
         self.assertEqual(namedtuple._asdict(), {'a': 'x', 'b': 'y', 'c': 'z'})

@@ -2,7 +2,7 @@
 
 from os.path import abspath, dirname, join
 
-from antiorm.utils import Namedtuple_factory
+from antiorm.utils import namedtuple_factory
 
 
 class Base:
@@ -199,7 +199,7 @@ class Base:
         self.assertSequenceEqual(result, [(u'Perry the Platypus',)])
 
     def test_row_factory(self):
-        self.engine.row_factory = Namedtuple_factory
+        self.engine.row_factory = namedtuple_factory
 
         result = self.engine.test_row_factory()
 

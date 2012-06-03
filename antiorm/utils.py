@@ -12,9 +12,17 @@ import backends
 #from backends.sqlite  import Sqlite
 
 
-def Namedtuple_factory(cursor, row):
+def namedtuple_factory(cursor, row):
     """
     Create a namedtuple from a DB-API 2.0 cursor description and its values
+
+    @param cursor: the cursor with the columsn description
+    @type cursor: a DB-API 2.0 cursor
+    @param row: the row of data to be returned
+    @type row: an iterable
+
+    @return: a namedtuple object with the row data
+    @rtype: namedtuple
     """
     try:
         description = cursor.description
@@ -25,7 +33,9 @@ def Namedtuple_factory(cursor, row):
 
 
 def named2pyformat(sql):
-    "Convert from 'named' paramstyle format to Python string 'pyformat' format"
+    """
+    Convert from 'named' paramstyle format to Python string 'pyformat' format
+    """
     return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
 
 
