@@ -1,4 +1,4 @@
-AntiORM is the ORM that goes against all
+AntiORM is the ORM that goes against all others
 
 While others ORM isolate the database creating internally SQL queries and DB tables from a class specification, AntiORM create for you a Python function parsing the SQL code, allowing to do more optimized or specialized hand-made queries. It's said: it works exactly the other way ORMs do.
 

@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Several utilities functions and classes
+"""
 
 from collections import namedtuple
 from re          import sub
@@ -12,9 +15,17 @@ import backends
 #from backends.sqlite  import Sqlite
 
 
-def Namedtuple_factory(cursor, row):
+def namedtuple_factory(cursor, row):
     """
     Create a namedtuple from a DB-API 2.0 cursor description and its values
+
+    @param cursor: the cursor with the columsn description
+    @type cursor: a DB-API 2.0 cursor
+    @param row: the row of data to be returned
+    @type row: an iterable
+
+    @return: a namedtuple object with the row data
+    @rtype: namedtuple
     """
     try:
         description = cursor.description
@@ -25,11 +36,28 @@ def Namedtuple_factory(cursor, row):
 
 
 def named2pyformat(sql):
-    "Convert from 'named' paramstyle format to Python string 'pyformat' format"
+    """
+    Convert from 'named' paramstyle format to Python string 'pyformat' format
+
+    @param sql: a sql query in named format
+    @type sql: string
+
+    @return: a sql query in pyformat format
+    @rtype: string
+    """
     return sub(":\w+", lambda m: "%%(%s)s" % m.group(0)[1:], sql)
 
 
 def driver_factory(db_conn, *args, **kwargs):
+    """
+    A factory function to generate the correct type of database driver backend
+
+    @param db_conn: connection to the database
+    @type db_conn: DB-API 2.0 connection
+
+    @return: an optimized backend driver for the database connection
+    @rtype: an antiorm.base.Base child class instance
+    """
     type_conn = db_conn.__class__.__module__
 
     if type_conn == 'apsw':
@@ -44,7 +72,7 @@ def driver_factory(db_conn, *args, **kwargs):
     return backends.generic.Generic(db_conn, *args, **kwargs)
 
 
-class _TransactionManager(object):
+class TransactionManager(object):
     """
     Transaction context manager for databases that doesn't has support for it
     """

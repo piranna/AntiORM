@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Base class of AntiORM wrapper class and proxy factory
+"""
 
 from io       import open
 from opcode   import opmap
@@ -9,7 +12,7 @@ from warnings import warn
 try:
     from sys import _getframe
 except ImportError:
-    pass
+    _getframe = None
 
 try:
     import byteplay
@@ -29,39 +32,58 @@ LOAD_ATTR = opmap['LOAD_ATTR']
 
 
 def proxy_factory(priv_dict, priv_list):
+    """
+    Factory function to proxy the optimized functions to the class
+    """
     def _wrapped_method(self, method_name, sql, bypass_types):
         """
         Single INSERT statement query
 
-        :returns: the inserted row id
+        @param method_name: name of the method
+        @type method_name: string
+        @param sql: sql query of the optimized function
+        @type sql: string
+        @param bypass_types: flag to set if types should be bypassed on calling
+        @type bypass_types: boolean
+
+        :returns: the registered optimized function
         """
         _priv_dict = priv_dict(self, sql)
         _priv_list = priv_list(self, sql)
 
         def _priv_l_kw(self, *args):
             """
-            Exec the statement and return the inserted row id
+            Adapt `*args` to list and calls to _priv_list method
             """
-
-            return _priv_dict(self, args)
+            return _priv_list(self, args)
 
         def _priv_keyw(self, **kwargs):
             """
-            Exec the statement and return the inserted row id
+            Adapt `**kwargs` to dict and calls to _priv_dict method
             """
-
             return _priv_dict(self, kwargs)
 
         # Use type specific functions
         if byteplay and bypass_types:
             def _bypass_types(self, list_or_dict=None, *args, **kwargs):
                 """
-                Execute the INSERT statement
+                Proxy function that bypass types on calling function
 
-                :returns: the inserted row id (or a list with them)
+                @param list_or_dict: arguments passed as a list or a dict.
+                    Cannonically this should be called by *args or **kwargs
+                @type list_or_dict: a list or a dict
+
+                @return: the result of the call after being bypassed
+                @rtype: single value, a row or an iterable (depending of `sql`)
                 """
 
                 def bypass(suffix):
+                    """
+                    Do the bypass overriding the calling function
+
+                    @param suffix: the method suffix to be added to the call
+                    @type suffix: string
+                    """
                     # Get the caller stack frame
                     frame = _getframe(2)
 
@@ -76,7 +98,9 @@ def proxy_factory(priv_dict, priv_list):
 
                     # Loop over the instructions looking for the last load of
                     # the method attribute before (or on) the current source
-                    # code line and change it for the type specific one
+                    # code line and change it for the type specific one. This
+                    # is because if a function call occupy several lines it's
+                    # set internally as it's only on the last one.
                     method_index = None
 
                     lineno = frame.f_lineno
@@ -126,9 +150,14 @@ def proxy_factory(priv_dict, priv_list):
 
         def _proxy_types(self, list_or_dict=None, *args, **kwargs):
             """
-            Execute the INSERT statement
+            Proxy function that proxy to the correct type function
 
-            :returns: the inserted row id (or a list with them)
+            @param list_or_dict: arguments passed as a list or a dict.
+                Cannonically this should be called by *args or **kwargs
+            @type list_or_dict: a list or a dict
+
+            @return: the result of the call after being bypassed
+            @rtype: single value, a row or an iterable (depending of `sql`)
             """
 
             # Received un-named parameter, it would be a iterable
@@ -147,16 +176,6 @@ def proxy_factory(priv_dict, priv_list):
     return _wrapped_method
 
 
-#def _transaction(func):
-#    def _wrapped(self, *args, **kwargs):
-#        try:
-#            return func(self, *args, **kwargs)
-#        finally:
-#            self.connection.commit()
-#
-#    return _wrapped
-
-
 class Base(object):
     """Base functionality for AntiORM.
 
@@ -169,7 +188,6 @@ class Base(object):
     a very good reason to overwrite the functions of this Base class (like to
     check a functions cache if your database engine support it or similar).
     """
-    # TODO: database independent layer with full transaction management
 
     def __init__(self, db_conn, dir_path=None, bypass_types=False, lazy=False):
         """
@@ -179,6 +197,8 @@ class Base(object):
         :type db_conn: DB-API 2.0 database connection
         :param dir_path: path of the dir with files from where to load SQL code
         :type dir_path: string
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         :param lazy: set if SQL code at dir_path should be lazy loaded
         :type lazy: boolean
         """
@@ -224,6 +244,8 @@ class Base(object):
 
         :param dir_path: path to the dir with the SQL files (for INCLUDE)
         :type dir_path: string
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         :param lazy: set if parsing should be postpone until required
         :type lazy: boolean
 
@@ -286,6 +308,8 @@ class Base(object):
         :type method_name: string
         :param dir_path: path to the dir with the SQL files (for INCLUDE)
         :type dir_path: string
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         :param lazy: set if parsing should be postpone until required
         :type lazy: boolean
 
@@ -300,7 +324,7 @@ class Base(object):
             return
 
         # Disable by-pass of types if not using CPython compatible bytecode
-        if bypass_types and '_getframe' not in globals():
+        if bypass_types and not _getframe:
             warn(RuntimeWarning("Can't acces to stack. "
                                 "Disabling by-pass of types."))
             bypass_types = False
@@ -320,15 +344,28 @@ class Base(object):
 
     @property
     def row_factory(self):
+        """
+        Getter of row_factory property
+        """
         return self.connection.row_factory
 
     @row_factory.setter
     def row_factory(self, value):
+        """
+        Setter of row_factory property
+        """
         self.connection.row_factory = value
 
     def _one_statement(self, method_name, stream, bypass_types):
         """
-        `stream` SQL code only have one statement
+        Route to the correct optimized function for one statement queries
+
+        :param method_name: the name of the method
+        :type method_name: string
+        :param stream: the stream of tokens
+        :type stream: iterable of tokens
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         """
         sql = Tokens2Unicode(stream)
 
@@ -359,7 +396,14 @@ class Base(object):
 
     def _multiple_statement(self, method_name, stream, bypass_types):
         """
-        `stream` SQL have several statements (script)
+        Route to the correct optimized function for multiple statements queries
+
+        :param method_name: the name of the method
+        :type method_name: string
+        :param stream: the stream of tokens
+        :type stream: iterable of tokens
+        :param bypass_types: set if parsing should bypass types
+        :type bypass_types: boolean
         """
         stmts = map(unicode, split2(stream))
 
@@ -378,9 +422,24 @@ class Base(object):
     # Optimized functions
 
     def _one_statement_INSERT__dict(self, sql):
+        """
+        Factory for functions with one INSERT statement by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
             """
             Exec the statement and return the inserted row id
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the inserted row id
+            @rtype: integer
             """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -391,9 +450,24 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_INSERT__list(self, sql):
+        """
+        Factory for functions with one INSERT statement by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
             """
-            Exec the statement and return the inserted row id
+            Exec the statement and return the inserted row ids
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the inserted row ids
+            @rtype: list of integers
             """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -446,7 +520,25 @@ class Base(object):
     #    return _wrapped_method
 
     def _one_statement_value__dict(self, sql):
+        """
+        Factory for functions with one statement that return a value by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the value
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the queried value
+            @rtype: stored value type or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, kwargs)
@@ -458,7 +550,25 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_value__list(self, sql):
+        """
+        Factory for functions with one statement that return a value by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return a list with the values
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the queried values
+            @rtype: list of stored value type or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -475,7 +585,25 @@ class Base(object):
                                          _one_statement_value__list)
 
     def _one_statement_register__dict(self, sql):
+        """
+        Factory for functions with one statement that return a row by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the row
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the queried row
+            @rtype: row (tuple) or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, kwargs)
@@ -485,7 +613,25 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_register__list(self, sql):
+        """
+        Factory for functions with one statement that return a row by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return a list with the rows
+
+            @param list_kwargs: the keyword arguments of the query
+            @type list_kwargs: dict
+
+            @return: the queried rows
+            @rtype: list of rows (tuples) or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
@@ -500,7 +646,25 @@ class Base(object):
                                             _one_statement_register__list)
 
     def _one_statement_table__dict(self, sql):
+        """
+        Factory for functions with one statement that return a query by dict
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the query (table, list of tuples...)
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the query
+            @rtype: table or list of tuples or generator or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
                 cursor.execute(sql, kwargs)
@@ -510,14 +674,32 @@ class Base(object):
         return _wrapped_method
 
     def _one_statement_table__list(self, sql):
+        """
+        Factory for functions with one statement that return a table by list
+
+        @param sql: the sql query
+        @type sql: string
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return a list with the queries
+
+            @param list_kwargs: the keyword arguments of the query
+            @type list_kwargs: dict
+
+            @return: the queried tables
+            @rtype: list of queries (tables, list of tuples...) or None
+            """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
 
                 for kwargs in list_kwargs:
                     cursor.execute(sql, kwargs)
 
-                    yield list(cursor.fetchall())
+                    yield cursor.fetchall()
 
         return _wrapped_method
 
@@ -525,9 +707,24 @@ class Base(object):
                                          _one_statement_table__list)
 
     def _multiple_statement_INSERT__dict(self, stmts):
+        """
+        Factory for functions with multiple INSERT statement by dict
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
             """
-            Exec the statements and return the row id of the first
+            Exec the statement and return the first inserted row id
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the first inserted row id
+            @rtype: integer
             """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -543,9 +740,24 @@ class Base(object):
         return _wrapped_method
 
     def _multiple_statement_INSERT__list(self, stmts):
+        """
+        Factory for functions with multiple INSERT statement by list
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
             """
-            Exec the statements and return the row id of the first
+            Exec the statement and return the inserted row ids
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the first inserted row ids
+            @rtype: list of integers
             """
             with self.tx_manager as conn:
                 cursor = conn.cursor()
@@ -563,7 +775,25 @@ class Base(object):
                                                _multiple_statement_INSERT__list)
 
     def _multiple_statement_standard__dict(self, stmts):
+        """
+        Factory for functions with multiple statements by dict
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, kwargs):
+            """
+            Exec the statement and return the result of executes
+
+            @param kwargs: the keyword arguments of the query
+            @type kwargs: dict
+
+            @return: the result of executes
+            @rtype: list
+            """
             result = []
 
             with self.tx_manager as conn:
@@ -578,7 +808,25 @@ class Base(object):
         return _wrapped_method
 
     def _multiple_statement_standard__list(self, stmts):
+        """
+        Factory for functions with multiple statements by list
+
+        @param stmts: the list of sql queries
+        @type stmts: iterable of strings
+
+        @return: the optimized function
+        @rtype: method function
+        """
         def _wrapped_method(self, list_kwargs):
+            """
+            Exec the statement and return the a list of lists of results
+
+            @param list_kwargs: a list with the keyword arguments of the query
+            @type list_kwargs: list of dicts
+
+            @return: the list of lists of results of execute
+            @rtype: list of lists
+            """
             result = []
 
             with self.tx_manager as conn:

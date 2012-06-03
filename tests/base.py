@@ -3,7 +3,7 @@
 from os.path import abspath, dirname, join
 from types   import GeneratorType
 
-from antiorm.utils import Namedtuple_factory
+from antiorm.utils import namedtuple_factory
 
 
 class Base:
@@ -183,13 +183,10 @@ class Base:
 
     def test_one_statement_table_list(self):
         result = self.engine.test_one_statement_table([{'doing': 'Painting'}])
+        expected = [[(u'Painting',)]]
 
-        # Convert to list
-        if isinstance(result, GeneratorType):
-            result = list(result)
-
-        # Assert tests
-        self.assertListEqual(result, [[(u'Painting',)]])
+        for index, l in enumerate(result):
+            self.assertSequenceEqual(l, expected[index])
 
     def test_multiple_statement(self):
         cursor = self.connection.cursor()
@@ -225,7 +222,7 @@ class Base:
         self.assertSequenceEqual(result, [(u'Perry the Platypus',)])
 
     def test_row_factory(self):
-        self.engine.row_factory = Namedtuple_factory
+        self.engine.row_factory = namedtuple_factory
 
         result = self.engine.test_row_factory()
 

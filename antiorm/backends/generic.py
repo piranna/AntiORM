@@ -7,7 +7,7 @@ Created on 05/03/2012
 from antiorm.backends      import BaseConnection, BaseCursor
 from antiorm.backends.apsw import APSWConnection
 from antiorm.base          import Base
-from antiorm.utils         import _TransactionManager
+from antiorm.utils         import TransactionManager
 
 
 class GenericCursor(BaseCursor):
@@ -69,4 +69,4 @@ class Generic(Base):
             db_conn = GenericConnection(db_conn)
         Base.__init__(self, db_conn, dir_path, bypass_types, lazy)
 
-        self.tx_manager = _TransactionManager(db_conn)
+        self.tx_manager = TransactionManager(db_conn)
