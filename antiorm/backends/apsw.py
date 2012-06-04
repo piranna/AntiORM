@@ -1,4 +1,6 @@
 '''
+AntiORM specialized backend for APSW(Another Python SQLite Wrapper)
+
 Created on 17/02/2012
 
 @author: piranna
@@ -16,8 +18,9 @@ class APSWCursor(BaseCursor):
     This is done this way because since apsw.Cursor is a compiled extension
     it doesn't allow to set attributes, and also it's called internally so i
     can't be able to make a subclass"""
+
     def execute(self, *args, **kwargs):
-        self._cursor = self._cursor.execute(*args, **kwargs)
+        self._cursor.execute(*args, **kwargs)
         return self
 
     def fetchone(self):
