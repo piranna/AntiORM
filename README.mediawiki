@@ -12,20 +12,24 @@ also with [http://code.google.com/p/apsw/ APSW]).
 
 = Dependencies =
 * Python >= 2.6 (by namedtuple, if installed 2.5 by sqlparse)
-* [https://github.com/andialbrecht/sqlparse sqlparse] >= 0.1.4.92757b0ee0c1543c14f28d3b045ff11ddf5f4297
+* [https://github.com/andialbrecht/sqlparse sqlparse] >=
+  0.1.4.92757b0ee0c1543c14f28d3b045ff11ddf5f4297
 * [http://code.google.com/p/byteplay byteplay] > 0.2 (optional, only needed to
   by-pass types)
 
 = How to use it =
 # Create a connection to your database as usual
-# Create an instance of an AntiORM driver (default or a specific one) passing it
-  the connection. Optionally, you can also give the path of a directory with SQL
-  files (a function will be generated for each file) and also if you want it to
-  be lazy loaded (don't parse the files inmediatelly, just wait until they are
-  required for the first time).
+# Create an instance of an AntiORM driver (generic or a specific one) passing it
+  the connection. You can also use the ''driver_factory'' found at the utils
+  module that auto-select the correct backend driver for this connection.
+  Optionally, you can also give the path of a directory with SQL
+  files (a function will be generated for each file) and also if you want to
+  enable the by-pass of the type checking calling directly to the specific
+  function, or if queries should be lazy loaded (don't parse the files
+  inmediatelly, just wait until they are required for the first time).
 # Optionally, add (more) functions to the AntiORM at any time calling to
-  parse_dir(), parse_file() or parse_string(), giving them a path to a folder
-  with SQL files, a path to a SQL file or a SQL string respectively.
+  ''parse_dir()'', ''parse_file()'' or ''parse_string()'', giving them a path to
+  a folder with SQL files, a path to a SQL file or a SQL string respectively.
 # Finally, call the generated methods on the AntiORM instance using the name
   given (generally the SQL file name without the extension) and giving the
   arguments using a named params style or passing a dictionary. You can also
@@ -46,6 +50,15 @@ to return instead a custom object putting a function factory that use the actual
 cursor and row as parameters, being the only restriction that they could be also
 able to be accessed by index just like tuples do. You can find a example at
 ''antiorm/utils.py'' module.
+
+Finally, the by-pass of types (currently only working if lazy loading is also
+enabled) is done modifying the byte-code of the caller function so it points to
+the correct types one, assuming that at this exact point the source code is
+doing the method call always with the same parameter types. It's said, you must
+be sure that if you enabled the ''bypass_types'' flag when parsing a SQL query,
+each different invocation can use different parameter types (keyword args, dict
+or list of dicts), but they must be called with the same parameter types it was
+called the first time at each different point on the source code.
 
 = Acknowledges =
 * [https://github.com/dansrocks Daniel Cabrera] for guidance on
