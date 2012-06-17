@@ -5,7 +5,10 @@ try:
 except ImportError:
     from unittest2 import skip, skipIf, main, TestCase
 
-from psycopg2 import connect
+try:
+    from psycopg2 import connect
+except ImportError:
+    pass
 
 import sys
 sys.path.insert(0, '..')
