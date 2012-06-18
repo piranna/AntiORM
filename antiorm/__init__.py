@@ -7,3 +7,5 @@ from utils import driver_factory as AntiORM
 #from backends.generic import Generic as AntiORM
 
 __all__ = ['AntiORM']
+
+__version__ = '1.0.0-RC1'

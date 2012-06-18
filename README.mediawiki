@@ -10,8 +10,11 @@ PirannaFS] filesystem project and focused in SQLite, it have been modified to be
 for general purpose and usable with any other DB-API 2.0 database engines (and
 also with [http://code.google.com/p/apsw/ APSW]).
 
+This code can be downloaded from the [https://github.com/piranna/AntiORM AntiORM
+Github repository].
+
 = Dependencies =
-* Python >= 2.6 (by namedtuple, if installed 2.5 by sqlparse)
+* Python >= 2.6 (by namedtuple, if installed 2.4 by sqlparse)
 * [https://github.com/andialbrecht/sqlparse sqlparse] >=
   0.1.4.92757b0ee0c1543c14f28d3b045ff11ddf5f4297
 * [http://code.google.com/p/byteplay byteplay] > 0.2 (optional, only needed to
