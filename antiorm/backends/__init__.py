@@ -26,7 +26,7 @@ class BaseCursor:
         """Constructor
 
         @param cursor: the cursor to wrap
-        @type cursor: apsw.Cursor
+        @type cursor: DB-API 2.0 Cursor
         """
         # This protect of apply the wrapper over another one
         if isinstance(cursor, self.__class__):
