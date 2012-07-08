@@ -4,6 +4,7 @@ Base class of AntiORM wrapper class and proxy factory
 """
 
 from io       import open
+from new      import instancemethod
 from opcode   import opmap
 from os       import listdir
 from os.path  import basename, join, splitext
@@ -125,27 +126,27 @@ def proxy_factory(priv_dict, priv_list):
                 # Do the by-pass on the caller function
                 if list_or_dict != None:
                     if isinstance(list_or_dict, dict):
-                        bypass('__dict')
+#                        bypass('__dict')
                         return _priv_dict(self, list_or_dict)
 
-                    bypass('__list')
+#                    bypass('__list')
                     return _priv_list(self, list_or_dict)
 
                 if args:
-                    bypass('__l_kw')
+#                    bypass('__l_kw')
                     return _priv_l_kw(self, *args)
 
-                bypass('__keyw')
+#                bypass('__keyw')
                 return _priv_keyw(self, **kwargs)
 
             # Register type specific optimized functions as class methods
-            setattr(self.__class__, method_name + '__dict', _priv_dict)
-            setattr(self.__class__, method_name + '__list', _priv_list)
-            setattr(self.__class__, method_name + '__l_kw', _priv_l_kw)
-            setattr(self.__class__, method_name + '__keyw', _priv_keyw)
+            setattr(self, method_name + '__dict', instancemethod(_priv_dict, self, self.__class__))
+            setattr(self, method_name + '__list', instancemethod(_priv_list, self, self.__class__))
+            setattr(self, method_name + '__l_kw', instancemethod(_priv_l_kw, self, self.__class__))
+            setattr(self, method_name + '__keyw', instancemethod(_priv_keyw, self, self.__class__))
 
             # Register and return by-pass
-            setattr(self.__class__, method_name, _bypass_types)
+            setattr(self, method_name, instancemethod(_bypass_types, self, self.__class__))
             return _bypass_types
 
         def _proxy_types(self, list_or_dict=None, *args, **kwargs):
@@ -170,7 +171,7 @@ def proxy_factory(priv_dict, priv_list):
             return _priv_keyw(self, **kwargs)
 
         # Register and return types proxy
-        setattr(self.__class__, method_name, _proxy_types)
+        setattr(self, method_name, instancemethod(_proxy_types, self, self.__class__))
         return _proxy_types
 
     return _wrapped_method
