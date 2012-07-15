@@ -217,6 +217,7 @@ class Base(object):
             self._paramstyle = None
 
         self._lazy = {}
+        self._dirpaths = []
 
         if dir_path:
             self.parse_dir(dir_path, bypass_types, lazy)
@@ -253,6 +254,9 @@ class Base(object):
         :return: nothing
         :rtype: None
         """
+
+        if dir_path not in self._dirpaths:
+            self._dirpaths.append(dir_path)
 
 #        # Lazy processing, store data & only do the parse if later is required
 #        if lazy:
@@ -330,9 +334,14 @@ class Base(object):
                                 "Disabling by-pass of types."))
             bypass_types = False
 
+        # Set the dirpaths where to look for the INCLUDE statements
+        dirpaths = self._dirpaths
+        if dir_path not in dirpaths:
+            dirpaths.append(dir_path)
+
         pipe = Pipeline()
         pipe.append(tokenize)
-        pipe.append(IncludeStatement(dir_path))
+        pipe.append(IncludeStatement(dirpaths))
 
         stream = compact(pipe(sql.strip()))
 
